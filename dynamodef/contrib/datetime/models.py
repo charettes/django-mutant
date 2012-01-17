@@ -20,6 +20,8 @@ class DateFieldDefinition(FieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
+        verbose_name = _(u'date field')
+        verbose_name_plural = _(u'date fields')
         defined_field_class = fields.DateField
         defined_field_options = ('auto_now', 'auto_now_add',)
         defined_field_category = _(u'datetime')
@@ -29,6 +31,8 @@ class TimeFieldDefinition(DateFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'time field')
+        verbose_name_plural = _(u'time fields')
         defined_field_class = fields.TimeField
 
 class DateTimeFieldDefinition(DateFieldDefinition):
@@ -36,4 +40,6 @@ class DateTimeFieldDefinition(DateFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'date time field')
+        verbose_name_plural = _(u'date time fields')
         defined_field_class = fields.DateTimeField

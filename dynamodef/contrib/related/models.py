@@ -104,6 +104,8 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
+        verbose_name = _(u'foreign key')
+        verbose_name_plural = _(u'foreign keys')
         defined_field_class = fields.related.ForeignKey
         defined_field_options = ('to_field',)
         
@@ -140,6 +142,8 @@ class OneToOneFieldDefinition(ForeignKeyDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'one to one field')
+        verbose_name_plural = _(u'one to one fields')
         defined_field_class = fields.related.OneToOneField
         
     def save(self, *args, **kwargs):
@@ -164,6 +168,8 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
+        verbose_name = _(u'many to many field')
+        verbose_name_plural = _(u'many to many fields')
         defined_field_class = fields.related.ManyToManyField
         defined_field_options = ('symmetrical', 'through', 'db_table')
 

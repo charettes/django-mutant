@@ -21,6 +21,8 @@ class FilePathFieldDefinition(FieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
+        verbose_name = _(u'file path field')
+        verbose_name_plural = _(u'file paths fields')
         defined_field_class = fields.FilePathField
         defined_field_options = ('path', 'match', 'recursive')
         defined_field_category = _(u'file')

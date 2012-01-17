@@ -10,6 +10,8 @@ class EmailFieldDefinition(FieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'email field')
+        verbose_name_plural = _(u'email fields')
         defined_field_class = fields.EmailField
         defined_field_category = _(u'web')
         
@@ -18,6 +20,8 @@ class URLFieldDefinition(FieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'URL field')
+        verbose_name_plural = _(u'URL fields')
         defined_field_class = fields.URLField
         defined_field_category = _(u'web')
         
@@ -26,18 +30,18 @@ class SlugFieldDefinition(FieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'slug field')
+        verbose_name_plural = _(u'slug fields')
         defined_field_class = fields.SlugField
         defined_field_category = _(u'web')
-        
-    @classmethod
-    def get_field_description(cls):
-        return _("Slug (up to 255)")
         
 class IPAddressFieldDefinition(FieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'IP address field')
+        verbose_name_plural = _(u'IP address fields')
         defined_field_class = fields.IPAddressField
         defined_field_category = _(u'web')
 
@@ -68,6 +72,8 @@ else:
         
         class Meta:
             app_label = 'dynamodef'
+            verbose_name = _(u'generic IP address field')
+            verbose_name_plural = _(u'generic IP address fields')
             defined_field_class = GenericIPAddressField
             defined_field_options = ('protocol', 'unpack_ipv4',)
             defined_field_category = _(u'web')

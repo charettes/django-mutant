@@ -23,28 +23,26 @@ class SmallIntegerFieldDefinition(NumericFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'small integer field')
+        verbose_name_plural = _(u'small integer fields')
         defined_field_class = fields.SmallIntegerField
-        
-    @classmethod
-    def get_field_description(cls):
-        return _(u'Small integer field')
         
 class PositiveSmallIntegerFieldDefinition(NumericFieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'positive small integer field')
+        verbose_name_plural = _(u'positive small integer fields')
         defined_field_class = fields.PositiveSmallIntegerField
-        
-    @classmethod
-    def get_field_description(cls):
-        return _(u'Positive small integer field')
         
 class IntegerFieldDefinition(NumericFieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'integer field')
+        verbose_name_plural = _(u'integer fields')
         defined_field_class = fields.IntegerField
         
 class PositiveIntegerFieldDefinition(NumericFieldDefinition):
@@ -52,17 +50,17 @@ class PositiveIntegerFieldDefinition(NumericFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'positive integer field')
+        verbose_name_plural = _(u'positive integer fields')
         defined_field_class = fields.PositiveIntegerField
-        
-    @classmethod
-    def get_field_description(cls):
-        return _(u'Positive integer field')
 
 class BigIntegerFieldDefinition(NumericFieldDefinition):
     
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'big integer field')
+        verbose_name_plural = _(u'big integer fields')
         defined_field_class = fields.BigIntegerField
         
 class FloatFieldDefinition(NumericFieldDefinition):
@@ -70,6 +68,8 @@ class FloatFieldDefinition(NumericFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'float field')
+        verbose_name_plural = _(u'float fields')
         defined_field_class = fields.FloatField
 
 max_digits_help_text = _(u'The maximum number of digits allowed in the number. '
@@ -88,6 +88,8 @@ class DecimalFieldDefinition(NumericFieldDefinition):
 
     class Meta:
         app_label = 'dynamodef'
+        verbose_name = _(u'decimal field')
+        verbose_name_plural = _(u'decimal fields')
         defined_field_class = fields.DecimalField
         defined_field_options = ('max_digits', 'decimal_places',)
         
@@ -96,4 +98,6 @@ class CommaSeparatedIntegerFieldDefinition(NumericFieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'comma separated integer field')
+        verbose_name_plural = _(u'comma separated integer fields')
         defined_field_class = fields.CommaSeparatedIntegerField

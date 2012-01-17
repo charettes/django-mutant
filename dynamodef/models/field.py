@@ -4,6 +4,7 @@ from django.contrib.contenttypes.generic import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.sql.constants import LOOKUP_SEP
+from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
 from south.db import db as south_api
 
@@ -226,7 +227,7 @@ class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
     
     @classmethod
     def get_field_description(cls):
-        return cls.get_field_class().description
+        return capfirst(cls._meta.verbose_name)
     
     def get_field_options(self):
         options = dict((opt, getattr(self, opt))

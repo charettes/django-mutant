@@ -11,14 +11,11 @@ class CharFieldDefinition(FieldDefinition):
     class Meta:
         app_label = 'dynamodef'
         proxy = True
+        verbose_name = _(u'char field')
+        verbose_name_plural = _(u'char fields')
         defined_field_class = fields.CharField
         defined_field_options = ('default',)
         defined_field_category = _(u'text')
-        
-    @classmethod
-    def get_field_description(cls):
-        description = super(CharFieldDefinition, cls).get_field_description()
-        return description % {'max_length': '255'}
         
 class TextFieldDefinition(CharFieldDefinition):
     
@@ -26,8 +23,3 @@ class TextFieldDefinition(CharFieldDefinition):
         app_label = 'dynamodef'
         proxy = True
         defined_field_class = fields.TextField
-        
-    @classmethod
-    def get_field_description(cls):
-        # Skip CharFieldDefinition.get_field_description
-        return super(CharFieldDefinition, cls).get_field_description()

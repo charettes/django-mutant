@@ -2,6 +2,7 @@ import sqlite3
 
 from django.db import connection, transaction
 from django.db.utils import DatabaseError, IntegrityError
+from django.utils.translation import ugettext_lazy as _
 
 from dynamodef.contrib.text.models import CharFieldDefinition
 from dynamodef.tests.models.utils import BaseModelDefinitionTestCase
@@ -66,3 +67,7 @@ class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
             Model.objects.create(name='Simon')
             with self.assertRaises(IntegrityError):
                 Model.objects.create(name='Simon')
+                
+    def test_field_description(self):
+        self.assertEqual(CharFieldDefinition.get_field_description(),
+                         _('Char field'))
