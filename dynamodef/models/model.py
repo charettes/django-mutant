@@ -194,7 +194,7 @@ class ModelDefinition(CachedObjectDefinition):
             '__module__': "dynamodef.apps.%s.models" % self.app_label,
         }
         
-        attrs.update(dict((f.name, f.defined_object)
+        attrs.update(dict((str(f.name), f.defined_object)
                             for f in self.fielddefinitions.select_subclasses()))
         
         return attrs
