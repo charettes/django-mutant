@@ -232,7 +232,6 @@ class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
         options = dict((opt, getattr(self, opt))
                             for opt in self._meta.defined_field_options)
         options['choices'] = tuple(self.choices.as_choices()) or None
-        options['name'] = str(self.name)
         return options
     
     def _get_object_definition(self):
