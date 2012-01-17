@@ -1,0 +1,8 @@
+
+syntax:glob
+*.db
+*.pyc
+*.orig
+.pydevproject
+.settings/*
+.DS_Store
