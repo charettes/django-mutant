@@ -9,44 +9,23 @@ from dynamodef.managers import FilteredQuerysetManager
 from dynamodef.models.field import FieldDefinition
 from dynamodef.models.model import ModelDefinition
 
-ON_DELETE_CHOICES = (('CASCADE', _(u'CASCADE')),
-                     ('PROTECT', _(u'PROTECT')),
-                     ('SET_NULL', _(u'SET_NULL')),
-                     ('SET_DEFAULT', _(u'SET_DEFAULT')),
-                     ('SET()', _(u'SET()')),
-                     ('DO_NOTHING', _(u'DO_NOTHING')))
-
-to_field_help_text = _(u'The field on the related object that the '
-                       u'relation is to.')
 
 related_name_help_text = _(u'The name to use for the relation from the '
                            u'related object back to this one.')
-
-on_delete_help_text = _(u'Behavior when an object referenced by this field '
-                        u'is deleted')
 
 class RelatedFieldDefinition(FieldDefinition):
     
     to = fields.related.ForeignKey(ContentType, verbose_name=_(u'to'),
                                    related_name="%(app_label)s_%(class)s_to")
     
-    to_field = PythonIdentifierField(_(u'to field'), blank=True, null=True,
-                                     help_text=to_field_help_text)
-    
     related_name = PythonIdentifierField(_(u'related name'),
                                          blank=True, null=True,
                                          help_text=related_name_help_text)
     
-    on_delete = fields.CharField(_(u'on delete'), blank=True, null=True,
-                                 choices=ON_DELETE_CHOICES, default='CASCADE',
-                                 max_length=11, help_text=on_delete_help_text)
-    
-    on_delete_set_value = fields.TextField(blank=True, null=True) # Should be a pickle field
-    
     class Meta:
         app_label = 'dynamodef'
         abstract = True
-        defined_field_options = ('to', 'to_field', 'related_name',)
+        defined_field_options = ('related_name',)
         defined_field_category = _(u'related')
     
     @property
@@ -66,31 +45,16 @@ class RelatedFieldDefinition(FieldDefinition):
         return issubclass(self.to.model_class(), ModelDefinition.DefinedModel)
     
     def clean(self):
-        errors = {}
-        
-        # Ensure on delete
-        if self.on_delete == 'SET_NULL':
-            if not self.null:
-                msg = _(u"This field can't be null")
-                errors['on_delete'] = [msg]
-        elif (self.on_delete == 'SET_DEFAULT' and
-              self.default == fields.NOT_PROVIDED):
-            msg = _(u'This field has no default value')
-            errors['on_delete'] = [msg]
-        
         if (not self.to_model_class_is_mutable and
             self.related_name is not None):
             msg = _(u'Cannot assign a related manager to non-mutable model')
-            errors['related_name'] = [msg]
-            
-        if errors:
-            raise ValidationError(errors)
+            raise ValidationError({'related_name': [msg]})
     
     def get_field_options(self):
         options = super(RelatedFieldDefinition, self).get_field_options()
-        options['on_delete'] = getattr(deletion, self.on_delete, None)
         
         if self.is_recursive_relationship:
+            # This is needed for symmetrical checks in ManyToManyField.__init__
             options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
         else:
             opts = self.to.model_class()._meta
@@ -103,22 +67,71 @@ class RelatedFieldDefinition(FieldDefinition):
     
     def _get_south_ready_defined_object(self):
         """
-        South add_column choke when passing 'self' as to argument so we
-        have to create a special version for it.
+        South add_column choke when passing 'self' or 'app.Model' to `to` kwarg,
+        so we have to create a special version for it.
         """
         options = self.get_field_options()
         options['to'] = self.to.model_class()
         return self._prepare_object_definition(options)
 
+ON_DELETE_CHOICES = (('CASCADE', _(u'CASCADE')),
+                     ('PROTECT', _(u'PROTECT')),
+                     ('SET_NULL', _(u'SET_NULL')),
+                     ('SET_DEFAULT', _(u'SET_DEFAULT')),
+                     ('SET()', _(u'SET()')),
+                     ('DO_NOTHING', _(u'DO_NOTHING')))
+
+to_field_help_text = _(u'The field on the related object that the '
+                       u'relation is to.')
+
+on_delete_help_text = _(u'Behavior when an object referenced by this field '
+                        u'is deleted')
+
 class ForeignKeyDefinition(RelatedFieldDefinition):
     
+    to_field = PythonIdentifierField(_(u'to field'), blank=True, null=True,
+                                     help_text=to_field_help_text)
+    
     one_to_one = fields.BooleanField(editable=False, default=False)
+    
+    on_delete = fields.CharField(_(u'on delete'), blank=True, null=True,
+                                 choices=ON_DELETE_CHOICES, default='CASCADE',
+                                 max_length=11, help_text=on_delete_help_text)
+    
+    on_delete_set_value = fields.TextField(blank=True, null=True) # Should be a pickle field
     
     objects = FilteredQuerysetManager(one_to_one=False)
     
     class Meta:
         app_label = 'dynamodef'
         defined_field_class = fields.related.ForeignKey
+        defined_field_options = ('to_field',)
+        
+    def clean(self):
+        try:
+            super(ForeignKeyDefinition, self).clean()
+        except ValidationError as e:
+            messages = e.message_dict
+        else:
+            messages = {}
+        
+        # Ensure on delete
+        if self.on_delete == 'SET_NULL':
+            if not self.null:
+                msg = _(u"This field can't be null")
+                messages['on_delete'] = [msg]
+        elif (self.on_delete == 'SET_DEFAULT' and
+              self.default == fields.NOT_PROVIDED):
+            msg = _(u'This field has no default value')
+            messages['on_delete'] = [msg]
+            
+        if messages:
+            raise ValidationError(messages)
+        
+    def get_field_options(self):
+        options = super(ForeignKeyDefinition, self).get_field_options()
+        options['on_delete'] = getattr(deletion, self.on_delete, None)
+        return options
 
 class OneToOneFieldDefinition(ForeignKeyDefinition):
     
@@ -140,12 +153,12 @@ db_table_help_text = _(u'The name of the table to create for storing the '
 
 class ManyToManyFieldDefinition(RelatedFieldDefinition):
     
-    symmetrical = fields.NullBooleanField(_(u'symetrical'))
+    symmetrical = fields.NullBooleanField(_(u'symmetrical'))
     
     through = fields.related.ForeignKey(ContentType, blank=True, null=True,
                                         related_name="%(app_label)s_%(class)s_through",
                                         help_text=through_help_text)
-    
+    # TODO: This should not be a SlugField
     db_table = fields.SlugField(max_length=30, blank=True, null=True,
                                 help_text=db_table_help_text)
     
@@ -163,23 +176,29 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         return options
 
     def clean(self):
-        errors = {}
+        try:
+            super(ManyToManyFieldDefinition, self).clean()
+        except ValidationError as e:
+            messages = e.message_dict
+        else:
+            messages = {}
+        
         if (self.symmetrical is not None and 
             not self.is_recursive_relationship()):
             msg = _(u"The relationship can only be symmetrical or not if it's "
                     u"recursive, i. e. it points to 'self'")
-            errors['symmetrical'] = [msg]
+            messages['symmetrical'] = [msg]
         
         if self.through:
             if self.db_table:
                 msg = _(u'Cannot specify a db_table if an intermediate '
                         u'model is used.')
-                errors['db_table'] = [msg]
+                messages['db_table'] = [msg]
         
             if self.symmetrical:
                 msg = _(u'Many-to-many fields with intermediate model cannot '
                         u'be symmetrical.')
-                errors.setdefault('symmetrical', []).append(msg)
+                messages.setdefault('symmetrical', []).append(msg)
             
             seen_from, seen_to = 0, 0
             to_model = self.to.model_class()  
@@ -197,18 +216,18 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
                             u'keys to %s, which is ambiguous and is not permitted.')
                     formated_msg = msg % (through_class._meta.object_name,
                                           from_model._meta.object_name)
-                    errors.setdefault('through', []).append(formated_msg)
+                    messages.setdefault('through', []).append(formated_msg)
             else:
                 msg = _(u'Intermediary model %s has more than one foreign key '
                         u' to %s, which is ambiguous and is not permitted.')
                 if seen_from > 1:
                     formated_msg = msg % (through_class._meta.object_name,
                                           from_model._meta.object_name)
-                    errors.setdefault('through', []).append(formated_msg)
+                    messages.setdefault('through', []).append(formated_msg)
                 if seen_to > 1:
                     formated_msg = msg % (through_class._meta.object_name,
                                           to_model._meta.object_name)
-                    errors.setdefault('through', []).append(formated_msg)
+                    messages.setdefault('through', []).append(formated_msg)
                 
-        if errors:
-            raise ValidationError(errors)
+        if messages:
+            raise ValidationError(messages)
