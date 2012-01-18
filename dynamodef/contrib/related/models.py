@@ -3,13 +3,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
+from south.db import db as south_api
 
 from dynamodef.db.fields import PythonIdentifierField
 from dynamodef.db.models import MutableModel
 from dynamodef.managers import FilteredQuerysetManager
 from dynamodef.models.field import FieldDefinition
 from dynamodef.models.model import ModelDefinition
-
 
 related_name_help_text = _(u'The name to use for the relation from the '
                            u'related object back to this one.')
@@ -238,3 +238,22 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
                 
         if messages:
             raise ValidationError(messages)
+        
+    def save(self, *args, **kwargs):
+        create = not self.pk
+        
+        save = super(ManyToManyFieldDefinition, self).save(*args, **kwargs)
+        model = self.model_def.defined_object
+        field = model._meta.get_field(str(self.name))
+        intermediary_model = field.rel.through
+        
+        # TODO: Make sure to delete the intermediary table if through is changed
+        # to an existing model
+        if create:
+            if self.through is None:
+                opts = intermediary_model._meta
+                fields = tuple((field.name, field) for field in opts.fields)
+                south_api.create_table(opts.db_table, fields)
+        else:
+            #TODO: look for db_table rename
+            pass
