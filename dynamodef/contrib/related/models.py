@@ -5,6 +5,7 @@ from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 
 from dynamodef.db.fields import PythonIdentifierField
+from dynamodef.db.models import MutableModel
 from dynamodef.managers import FilteredQuerysetManager
 from dynamodef.models.field import FieldDefinition
 from dynamodef.models.model import ModelDefinition
@@ -42,7 +43,7 @@ class RelatedFieldDefinition(FieldDefinition):
     
     @property
     def to_model_class_is_mutable(self):
-        return issubclass(self.to.model_class(), ModelDefinition.DefinedModel)
+        return issubclass(self.to.model_class(), MutableModel)
     
     def clean(self):
         if (not self.to_model_class_is_mutable and
@@ -190,7 +191,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
             messages = {}
         
         if (self.symmetrical is not None and 
-            not self.is_recursive_relationship()):
+            not self.is_recursive_relationship):
             msg = _(u"The relationship can only be symmetrical or not if it's "
                     u"recursive, i. e. it points to 'self'")
             messages['symmetrical'] = [msg]

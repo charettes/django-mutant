@@ -7,14 +7,13 @@ from django.db.models import signals
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.loading import cache as model_cache
 from django.db.models.sql.constants import LOOKUP_SEP
-from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from south.db import db as south_api
 
-from dynamodef import logger
 from dynamodef.db.fields import (LazilyTranslatedField,
     PythonIdentifierField, PythonObjectReferenceField)
+from dynamodef.db.models import MutableModel
 from dynamodef.managers import InheritedModelManager
 from dynamodef.models.definition import CachedObjectDefinition
 
@@ -37,47 +36,6 @@ class ModelDefinition(CachedObjectDefinition):
         verbose_name = _(u'model definition')
         verbose_name_plural = _(u'model definitions')
         unique_together = (('app_label', 'object_name',),)
-    
-    class DefinedModel(models.Model):
-        """
-        Abstract Model class to keep track of models created
-        from definitions
-        """
-        __definition_id = None
-        __is_obsolete = False
-        
-        class Meta:
-            abstract = True
-        
-        @classmethod
-        def __mark_as_obsolete(cls):
-            cls.__is_obsolete = True
-        
-        @classmethod 
-        def definition(cls):
-            return ModelDefinition.objects.get(id=cls.__definition_id)
-        
-        def clean(self):
-            if self.__is_obsolete:
-                raise ValidationError('Obsolete definition')
-        
-        def save(self, *args, **kwargs):
-            if self.__is_obsolete:
-                msg = _(u'Cannot save an obsolete model')
-                raise ValidationError(msg)
-            elif self.__definition_id is None:
-                msg = _(u'Cannot save a model with a transient definition')
-                raise ValidationError(msg)
-            return super(ModelDefinition.DefinedModel, self).save(*args, **kwargs)
-        
-        def delete(self, *args, **kwargs):
-            if self.__is_obsolete:
-                msg = _(u'Cannot delete an obsolete model')
-                raise ValidationError(msg)
-            elif self.__definition_id is None:
-                msg = _(u'Cannot delete a model with a transient definition')
-                raise ValidationError(msg)
-            return super(ModelDefinition.DefinedModel, self).delete(*args, **kwargs)
             
     class DefinedModelProxy(object):
         
@@ -86,13 +44,13 @@ class ModelDefinition(CachedObjectDefinition):
             self.__dict__['defined_object'] = defined_model
         
         def __defined_model_is_obsolete(self):
-            return self.defined_object._DefinedModel__is_obsolete
+            return self.defined_object._MutableModel__is_obsolete
         
         @staticmethod
         def __get_underlying_defined_model(value):
             if isinstance(value, ModelDefinition.DefinedModelProxy):
                 return value.defined_object
-            elif issubclass(value, ModelDefinition.DefinedModel):
+            elif issubclass(value, MutableModel):
                 return value
         
         def __get_defined_model(self):
@@ -159,7 +117,7 @@ class ModelDefinition(CachedObjectDefinition):
     def invalidate_definition(self):
         obsolete_model = super(ModelDefinition, self).invalidate_definition()
         if obsolete_model:
-            obsolete_model._DefinedModel__mark_as_obsolete()
+            obsolete_model._MutableModel__mark_as_obsolete()
         return obsolete_model
     
     def get_model_bases(self):
@@ -204,24 +162,23 @@ class ModelDefinition(CachedObjectDefinition):
         with model_cache.write_lock:
             app_models = model_cache.app_models.get(self.app_label, False)
             if app_models:
-                model = app_models.pop(name, None)
+                model = app_models.pop(name, False)
                 if model:
                     model_cache._get_models_cache.clear()
-        return model
+                    return model
     
     def _get_object_definition(self):
         bases = self.get_model_bases()
         # Make sure we know it's a defined model
-        if not any(issubclass(base, self.DefinedModel) for base in bases):
-            bases += (self.DefinedModel,)
+        if not any(issubclass(base, MutableModel) for base in bases):
+            bases += (MutableModel,)
             
         attrs = self.get_model_attrs()
         
         self._remove_from_model_cache()
         
         model = type(str(self.object_name), bases, attrs)
-        model._DefinedModel__definition_id = self.id
-        logger.debug("Created defined model: %s.%s", self.app_label, self.object_name)
+        model._MutableModel__definition = (self.__class__, self.pk)
         
         return model
     
