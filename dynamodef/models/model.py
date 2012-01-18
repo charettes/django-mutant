@@ -201,10 +201,11 @@ class ModelDefinition(CachedObjectDefinition):
     
     def _remove_from_model_cache(self):
         name = self.object_name.lower()
-        cached_models = model_cache.app_models.get(self.app_label, SortedDict())
         with model_cache.write_lock:
-            model = cached_models.pop(name, None)
-            model_cache._get_models_cache.clear()
+            cached_models = model_cache.app_models.get(self.app_label, False)
+            if cached_models:
+                model = cached_models.pop(name, None)
+                model_cache._get_models_cache.clear()
         return model
     
     def _get_object_definition(self):
