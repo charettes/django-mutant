@@ -285,6 +285,12 @@ class BaseDefinition(ModelDefinitionAttribute, OrderableModel):
     
     def get_base_class(self):
         raise NotImplementedError
+    
+    def clean(self):
+        cls = self.get_base_class()
+        if issubclass(cls, MutableModel):
+            msg = _(u'Base cannot be a subclass of a MutableModel')
+            raise ValidationError(msg)
 
 class ModelBaseDefinition(BaseDefinition):
     """
