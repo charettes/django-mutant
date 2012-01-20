@@ -169,9 +169,7 @@ class ModelDefinition(CachedObjectDefinition):
     
     def _get_object_definition(self):
         bases = self.get_model_bases()
-        # Make sure we know it's a defined model
-        if not any(issubclass(base, MutableModel) for base in bases):
-            bases += (MutableModel,)
+        bases += (MutableModel,)
             
         attrs = self.get_model_attrs()
         
