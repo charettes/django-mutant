@@ -46,6 +46,11 @@ class PythonIdentifierField(CharField):
         defaults = {'max_length': 255}
         defaults.update(kwargs)
         super(PythonIdentifierField, self).__init__(*args, **defaults)
+        
+    def to_python(self, value):
+        value = super(PythonIdentifierField, self).to_python(value)
+        if value is not None:
+            return str(value)
 
 class PythonObjectReferenceField(CharField):
     description = _(u'Referencable python object')
