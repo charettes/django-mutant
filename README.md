@@ -1,15 +1,15 @@
-# django-dynamodef
+# django-mutant
 
 ## Overview
 
 [Django](https://www.djangoproject.com/) provides a great ORM and with the power of [South](http://south.aeracode.org/) one can easily perform schema alteration.
 
-However, some projects may require _runtime_ schema alteration and that's what _dynamodef_ provides.
+However, some projects may require _runtime_ schema alteration and that's what _django-mutant_ provides.
 
 The main concept was inspired by those projects:
 
 - Will Hardy [dynamic-models](https://github.com/willhardy/dynamic-models) with [doc](http://dynamic-models.readthedocs.org/en/latest/index.html) and [talk](http://2011.djangocon.eu/talks/22/#talkvideo).
-- And even more by [django-dynamo](http://pypi.python.org/pypi/django-dynamo), hence the name of the project (which might change since it's a bit confusing)
+- And even more by [django-dynamo](http://pypi.python.org/pypi/django-dynamo)
 
 ## Direction of the project
 
@@ -20,7 +20,7 @@ The project is still in an early phase but a couple of complex things already wo
         auto_now_add = fields.BooleanField(_(u'auto_now_add'), default=False)
         
         class Meta:
-            app_label = 'dynamodef'
+            app_label = 'mutant'
             defined_field_class = fields.DateField
             defined_field_options = ('auto_now', 'auto_now_add',)
             defined_field_category = _(u'datetime')

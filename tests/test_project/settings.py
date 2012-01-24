@@ -114,14 +114,14 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'south',
-    'dynamodef',
-    'dynamodef.contrib.boolean',
-    'dynamodef.contrib.datetime',
-    'dynamodef.contrib.file',
-    'dynamodef.contrib.numeric',
-    'dynamodef.contrib.related',
-    'dynamodef.contrib.text',
-    'dynamodef.contrib.web',
+    'mutant',
+    'mutant.contrib.boolean',
+    'mutant.contrib.datetime',
+    'mutant.contrib.file',
+    'mutant.contrib.numeric',
+    'mutant.contrib.related',
+    'mutant.contrib.text',
+    'mutant.contrib.web',
 )
 
 # A sample logging configuration. The only tangible logging
