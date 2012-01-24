@@ -13,23 +13,24 @@ from dynamodef.tests.models.utils import BaseModelDefinitionTestCase
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
     def test_model_class_creation_cache(self):
-        Member = self.model_def.defined_object
-        self.assertEqual(Member, self.model_def.defined_object)
+        Member = self.model_def.model_class()
+        self.assertEqual(Member, self.model_def.model_class())
         
-        self.model_def.invalidate_definition()
-        self.assertNotEqual(Member, self.model_def.defined_object)
+        self.assertNotEqual(Member, self.model_def.model_class(force_create=True))
 
+    @transaction.commit_on_success
     def test_rename_model(self):
         """
         Make sure changing the app_label or object_name renames the associated
         table
         """
-        with transaction.commit_on_success():
-            self.model_def.app_label = 'myapp'
-            self.model_def.save()
-            
-            self.model_def.object_name = 'MyModel'
-            self.model_def.save()
+        self.model_def.app_label = 'myapp'
+        self.model_def.save()
+        
+        self.model_def.object_name = 'MyModel'
+        self.model_def.save()
+        
+        self.model_def.delete()
             
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
@@ -41,12 +42,12 @@ class ModelValidationTest(BaseModelDefinitionTestCase):
         self.model_def.app_label = 'dynamodef'
         self.assertRaises(ValidationError, self.model_def.clean)
 
-class DefinedModelProxyTests(BaseModelDefinitionTestCase):
+class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
     
     def test_proxy_interactions(self):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         
         sergei = Model.objects.create(name='Sergei')
         
@@ -80,7 +81,7 @@ class DefinedModelProxyTests(BaseModelDefinitionTestCase):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)
         
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         instance = Model.objects.create(name="Quebec")
         self.model_def.delete()
         
@@ -136,7 +137,7 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     
     @transaction.commit_on_success
     def test_simple_ordering(self):
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model) #app
         ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
@@ -178,7 +179,7 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         f2_ordering.delete()
     
     def test_multiple_ordering(self):
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model) #app
         ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
@@ -239,7 +240,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.f2 = CharFieldDefinition.objects.create(model_def=self.model_def,
                                                      name='f2', max_length=25)
         self.ut = UniqueTogetherDefinition.objects.create(model_def=self.model_def)
-        self.Model = self.model_def.defined_object
+        self.Model = self.model_def.model_class()
 
     @transaction.commit_on_success
     def test_clean(self):
@@ -251,7 +252,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
                                                          object_name='OtherModel')
         
         #TODO: move that somewhere else
-        assert other_model_def.defined_object != self.model_def.defined_object
+        assert other_model_def.model_class() != self.model_def.model_class()
         assert other_model_def.model_ct != self.model_def.model_ct
         
         f2 = CharFieldDefinition.objects.create(model_def=other_model_def,

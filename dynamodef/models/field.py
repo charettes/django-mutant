@@ -12,7 +12,6 @@ from dynamodef.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField
     PythonIdentifierField)
 from dynamodef.managers import InheritedModelManager
 from dynamodef.models.choice import FieldDefinitionChoice
-from dynamodef.models.definition import CachedObjectDefinition
 from dynamodef.models.model import ModelDefinitionAttribute
 
 class FieldDefinitionBase(models.base.ModelBase):
@@ -89,7 +88,7 @@ class FieldDefinitionManager(InheritedModelManager):
         qs = self.get_query_set()
         return qs.order_by('name').values_list('name', flat=True)
     
-class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
+class FieldDefinition(ModelDefinitionAttribute):
     
     __metaclass__ = FieldDefinitionBase
     
@@ -139,7 +138,7 @@ class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
     def __init__(self, *args, **kwargs):
         super(FieldDefinition, self).__init__(*args, **kwargs)
         if self.pk and self.__class__ != FieldDefinition:
-            self.__old_field = self.defined_object
+            self.__old_field = self.field_instance()
     
     def save(self, *args, **kwargs):
         created = not self.pk
@@ -154,8 +153,8 @@ class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
         # Make sure to get the field defined object first
         # in order to prevent the model defined object from caching the
         # in-db or queryset cached field state
-        field = self._get_south_ready_defined_object()
-        model = self.model_def.defined_object
+        field = self._south_ready_field_instance()
+        model = self.model_def.model_class()
         table_name = model._meta.db_table
         __, column = field.get_attname_column()
         
@@ -235,24 +234,22 @@ class FieldDefinition(CachedObjectDefinition, ModelDefinitionAttribute):
         options['choices'] = tuple(self.choices.as_choices()) or None
         return options
     
-    def _get_object_definition(self):
-        return self.get_field_options()
-    
-    def _prepare_object_definition(self, obj):
+    def field_instance(self):
         cls = self.get_field_class()
-        return cls(**obj)
+        options = self.get_field_options()
+        return cls(**options)
     
-    def _get_south_ready_defined_object(self):
+    def _south_ready_field_instance(self):
         """
         South api sometimes needs to have modified version of fields to work.
         i. e. You can't pass a ForeignKey(to='self') to add_column
         """
-        return self.defined_object
+        return self.field_instance()
     
     def clean(self):
         # Make sure we can build the field
         try:
-            field = self.defined_object
+            field = self.field_instance()
         except Exception as e:
             raise ValidationError(e)
         else:

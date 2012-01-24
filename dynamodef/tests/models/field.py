@@ -17,7 +17,7 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
         save_obj = self.model_def.fielddefinitions.select_subclasses().get()
         self.assertEqual(obj, save_obj)
         
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
 
 class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
@@ -31,7 +31,7 @@ class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
         field.name = 'first_name'
         field.save()
         
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         msg = "'name' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg,
                                  Model.objects.create, name="Simon")
@@ -48,14 +48,14 @@ class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
                           sqlite3.Connection):
             # sqlite3 doesn't enforce char length
             with transaction.commit_on_success():
-                Model = self.model_def.defined_object
+                Model = self.model_def.model_class()
                 with self.assertRaises(DatabaseError):
                     Model.objects.create(name='Simon' * 5)
         
         with transaction.commit_on_success():
             field.max_length = 25
             field.save()
-            Model = self.model_def.defined_object
+            Model = self.model_def.model_class()
             Model.objects.create(name='Simon' * 5)
         
         with transaction.commit_on_success():
@@ -63,7 +63,7 @@ class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
             field.save()
         
         with transaction.commit_on_success():
-            Model = self.model_def.defined_object
+            Model = self.model_def.model_class()
             Model.objects.create(name='Simon')
             with self.assertRaises(IntegrityError):
                 Model.objects.create(name='Simon')

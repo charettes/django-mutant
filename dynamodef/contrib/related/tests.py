@@ -15,8 +15,8 @@ class ForeignKeyDefinitionTest(BaseModelDefinitionTestCase):
         first_model_def = self.model_def
         second_model_def = ModelDefinition.objects.create(app_label='app',
                                                           object_name='SecondModel')
-        FirstModel = first_model_def.defined_object
-        SecondModel = second_model_def.defined_object
+        FirstModel = first_model_def.model_class()
+        SecondModel = second_model_def.model_class()
         ForeignKeyDefinition.objects.create(model_def=first_model_def,
                                             name='second', null=True,
                                             to=second_model_def.model_ct)
@@ -44,8 +44,8 @@ class ForeignKeyDefinitionTest(BaseModelDefinitionTestCase):
                                                  to=self.model_def.model_ct)
         self.assertTrue(fk.is_recursive_relationship)
         
-        Model = self.model_def.defined_object
-        self.assertTrue(Model._meta.get_field('f1').rel.to == Model)
+        Model = self.model_def.model_class()
+        self.assertEqual(Model._meta.get_field('f1').rel.to, Model)
 
         obj1 = Model.objects.create()
         obj2 = Model.objects.create(f1=obj1)
@@ -74,7 +74,7 @@ class ManyToManyFieldDefinitionTest(BaseModelDefinitionTestCase):
 #        m2m.clean()
 #        m2m.save()
 #        
-#        Model = self.model_def.defined_object
+#        Model = self.model_def.model_class()
 #        first_object = Model.objects.create()
 #        second_object = Model.objects.create()
 #        
@@ -86,7 +86,7 @@ class ManyToManyFieldDefinitionTest(BaseModelDefinitionTestCase):
         m2m.clean()
         m2m.save()
         
-        Model = self.model_def.defined_object
+        Model = self.model_def.model_class()
         first_object = Model.objects.create()
         second_object = Model.objects.create()
         

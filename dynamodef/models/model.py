@@ -1,4 +1,7 @@
+from inspect import isclass
+import threading
 import types
+import weakref
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
@@ -15,16 +18,99 @@ from dynamodef.db.fields import (LazilyTranslatedField,
     PythonIdentifierField, PythonObjectReferenceField)
 from dynamodef.db.models import MutableModel
 from dynamodef.managers import InheritedModelManager
-from dynamodef.models.definition import CachedObjectDefinition
 
 
-class ModelDefinition(CachedObjectDefinition):
-    
-    app_label = PythonIdentifierField(_(u'app label'))
+def _get_db_table(app_label, model):
+    return "dynamodef_%s_%s" % (app_label, model)
+
+def _remove_from_model_cache(model_class):
+    try:
+        opts = model_class._meta
+    except AttributeError:
+        return
+    app_label, model_name = opts.app_label, opts.object_name.lower()
+    with model_cache.write_lock:
+        app_models = model_cache.app_models.get(app_label, False)
+        if app_models:
+            model = app_models.pop(model_name, False)
+            if model:
+                model_cache._get_models_cache.clear()
+                model._is_obsolete = True
+                return model
+
+class _ModelClassProxy(object):
+
+    def __init__(self, model_class):
+        self.__dict__['model_class'] = model_class
+
+    @property
+    def __model_class_is_obsolete(self):
+        return self.model_class.is_obsolete()
+
+    @staticmethod
+    def __get_underlying_model_class(value):
+        if isinstance(value, _ModelClassProxy):
+            return value.model_class
+        elif isclass(value) and issubclass(value, MutableModel):
+            return value
+
+    def __get_model_class(self):
+        if self.__model_class_is_obsolete:
+            return self.__get__(None, None)
+        else:
+            return self.model_class
+
+    def __get__(self, instance, owner):
+        if self.__model_class_is_obsolete:
+            try:
+                definition = self.model_class.definition()
+            except ModelDefinition.DoesNotExist:
+                raise AttributeError('This model definition has been deleted')
+            else:
+                self.__dict__['model_class'] = definition.model_class()
+        return self.model_class
+
+    def __set__(self, instance, value):
+        model_class = self.__get_underlying_model_class(value)
+        if model_class is not None:
+            self.model_class = model_class
+        else:
+            raise AttributeError('Invalid value')
+
+    def __call__(self, *args, **kwargs):
+        model_class = self.__get_model_class()
+        return model_class(*args, **kwargs)
+
+    def __getattr__(self, name):
+        model_class = self.__get_model_class()
+        return getattr(model_class, name)
+
+    def __setattr__(self, name, value):
+        model_class = self.__get_model_class()
+        return setattr(model_class, name, value)
+
+    def __delattr__(self, name):
+        model_class = self.__get_model_class()
+        return delattr(model_class, name)
+
+    def __instancecheck__(self, instance):
+        model_class = self.__get_model_class()
+        return isinstance(instance, model_class)
+
+    def __eq__(self, other):
+        other_model_class = self.__get_underlying_model_class(other)
+        if type(self.model_class) == type(other_model_class):
+            return self.model_class == other_model_class
+        else:
+            return NotImplemented
+        
+    def __str__(self):
+        model_class = self.__get_model_class()
+        return str(model_class)
+
+class ModelDefinition(ContentType):
     
     object_name = PythonIdentifierField(_(u'object name'))
-    
-    model_ct = models.ForeignKey(ContentType, editable=False)
     
     verbose_name = LazilyTranslatedField(_(u'verbose name'),
                                          blank=True, null=True)
@@ -35,90 +121,11 @@ class ModelDefinition(CachedObjectDefinition):
         app_label = 'dynamodef'
         verbose_name = _(u'model definition')
         verbose_name_plural = _(u'model definitions')
-        unique_together = (('app_label', 'object_name',),)
-            
-    class DefinedModelProxy(object):
-        
-        def __init__(self, defined_model):
-            # Bypass setattr
-            self.__dict__['defined_object'] = defined_model
-        
-        def __defined_model_is_obsolete(self):
-            return self.defined_object._MutableModel__is_obsolete
-        
-        @staticmethod
-        def __get_underlying_defined_model(value):
-            if isinstance(value, ModelDefinition.DefinedModelProxy):
-                return value.defined_object
-            elif issubclass(value, MutableModel):
-                return value
-        
-        def __get_defined_model(self):
-            if self.__defined_model_is_obsolete():
-                return self.__get__(None, None)
-            else:
-                return self.defined_object
-        
-        def __get__(self, instance, owner):
-            if self.__defined_model_is_obsolete():
-                try:
-                    definition = self.defined_object.definition()
-                except ModelDefinition.DoesNotExist:
-                    raise AttributeError('This model definition has been deleted')
-                else:
-                    # Bypass setattr
-                    self.__dict__['defined_object'] = definition.defined_object
-            return self.defined_object
-        
-        def __set__(self, instance, value):
-            defined_model = self.__get_underlying_defined_model(value)
-            if defined_model is not None:
-                self.defined_object = defined_model
-            else:
-                raise AttributeError('Invalid value')
-        
-        def __call__(self, *args, **kwargs):
-            defined_model = self.__get_defined_model()
-            return defined_model(*args, **kwargs)
-        
-        def __getattr__(self, name):
-            defined_model = self.__get_defined_model()
-            return getattr(defined_model, name)
-        
-        def __setattr__(self, name, value):
-            defined_model = self.__get_defined_model()
-            return setattr(defined_model, name, value)
-        
-        def __delattr__(self, name):
-            defined_model = self.__get_defined_model()
-            return delattr(defined_model, name)
-        
-        def __instancecheck__(self, instance):
-            defined_model = self.__get_defined_model()
-            return isinstance(instance, defined_model)
-        
-        def __eq__(self, other):
-            other_defined_model = self.__get_underlying_defined_model(other)
-            if other_defined_model is not None:
-                return self.defined_object == other_defined_model
-            else:
-                return NotImplemented
-            
-        def __str__(self):
-            defined_model = self.__get_defined_model()
-            return str(defined_model)
-
+    
     def __init__(self, *args, **kwargs):
         super(ModelDefinition, self).__init__(*args, **kwargs)
         if self.pk:
-            self.__original_natural_key = (self.app_label, self.object_name.lower())
-            self.__original_db_table = self.defined_object._meta.db_table
-
-    def invalidate_definition(self):
-        obsolete_model = super(ModelDefinition, self).invalidate_definition()
-        if obsolete_model:
-            obsolete_model._MutableModel__mark_as_obsolete()
-        return obsolete_model
+            self.__model_class = super(ModelDefinition, self).model_class()
     
     def get_model_bases(self):
         return tuple(bd.get_base_class()
@@ -127,6 +134,7 @@ class ModelDefinition(CachedObjectDefinition):
     def get_model_opts(self):
         attrs = {
             'app_label': self.app_label,
+            'db_table': _get_db_table(*self.natural_key()),
             'verbose_name': self.verbose_name,
             'verbose_name_plural': self.verbose_name_plural,
         }
@@ -146,42 +154,51 @@ class ModelDefinition(CachedObjectDefinition):
         
         return type('Meta', (), attrs)
     
-    def get_model_attrs(self):
+    def get_model_attrs(self, existing_model_class=None):
         attrs = {
             'Meta': self.get_model_opts(),
             '__module__': "dynamodef.apps.%s.models" % self.app_label,
+            '_definition': (self.__class__, self.pk),
+            '_subscribe_lock': getattr(existing_model_class, '_subscribe_lock',
+                                       threading.RLock()),
+            '_subscribers': getattr(existing_model_class, '_subscribers',
+                                    weakref.WeakSet()),
+            '_is_obsolete': False,
         }
         
-        attrs.update(dict((str(f.name), f.defined_object)
+        attrs.update(dict((str(f.name), f.field_instance())
                             for f in self.fielddefinitions.select_subclasses()))
         
         return attrs
     
-    def _remove_from_model_cache(self):
-        name = self.object_name.lower()
-        with model_cache.write_lock:
-            app_models = model_cache.app_models.get(self.app_label, False)
-            if app_models:
-                model = app_models.pop(name, False)
-                if model:
-                    model_cache._get_models_cache.clear()
-                    return model
-    
-    def _get_object_definition(self):
+    def _create_model_class(self, existing_model_class=None):
         bases = self.get_model_bases()
         bases += (MutableModel,)
             
-        attrs = self.get_model_attrs()
+        attrs = self.get_model_attrs(existing_model_class)
         
-        self._remove_from_model_cache()
-        
+        _remove_from_model_cache(existing_model_class)
         model = type(str(self.object_name), bases, attrs)
-        model._MutableModel__definition = (self.__class__, self.pk)
         
         return model
+
+    def model_class(self, force_create=False):
+        existing_model_class = super(ModelDefinition, self).model_class()
+        if force_create:
+            model_class = self._create_model_class(existing_model_class)
+        else:
+            model_class = existing_model_class
+            if model_class is None:
+                model_class = self._create_model_class()
+        model_class.subscribe()
+        return _ModelClassProxy(model_class)
     
-    def _prepare_object_definition(self, obj):
-        return ModelDefinition.DefinedModelProxy(obj)
+    @property
+    def model_ct(self):
+        content_type = getattr(self, '_contenttype_ptr_cache', None)
+        if content_type is None:
+            content_type = ContentType.objects.get(id=self.contenttype_ptr_id)
+        return content_type
     
     def clean(self):
         """
@@ -201,50 +218,44 @@ class ModelDefinition(CachedObjectDefinition):
             msg = _(u'Cannot cloak an installed app')
             raise ValidationError({'label': [msg]})
     
-    def save(self, *args, **kwargs):
-        create = self.pk is None
-        natural_key = (self.app_label, self.object_name.lower())
-        
+    def _save_table(self, create):
+        opts = self.model_class(force_create=True)._meta
         if create:
-            model_ct = ContentType.objects.get_for_model(self.defined_object)
-            self.model_ct = model_ct
-        
-        saved = super(ModelDefinition, self).save(*args, **kwargs)
-        opts = self.defined_object._meta
-        
-        if create:
+            
             fields = tuple((field.name, field) for field in opts.fields)
             south_api.create_table(opts.db_table, fields) #@UndefinedVariable
         else:
-            if self.__original_db_table != opts.db_table:
-                # Rename the table
-                south_api.rename_table(self.__original_db_table, opts.db_table) #@UndefinedVariable
-            
-            if self.__original_natural_key != natural_key:
-                # Make sure to rename the ContentType since we want that
-                # foreign key pointing to this model to keep their reference.
-                model_ct = self.model_ct
-                model_ct.app_label, model_ct.object_name = natural_key
-                model_ct.save()
+            old_opts = self.__model_class._meta
+            if old_opts.db_table != opts.db_table:
+                south_api.rename_table(old_opts.db_table, opts.db_table) #@UndefinedVariable
+                # It means that the natural key has changed
                 ContentType.objects.clear_cache()
+    
+    def save(self, *args, **kwargs):
+        create = self.pk is None
+        self.model = self.object_name.lower()
         
-        self.__original_natural_key = natural_key
-        self.__original_db_table = opts.db_table
+        save = super(ModelDefinition, self).save(*args, **kwargs)
+        self._save_table(create)
         
-        return saved
+        self.__model_class = super(ModelDefinition, self).model_class()
+        
+        return save
     
     def delete(self, *args, **kwargs):
-        db_table = self.defined_object._meta.db_table
+        model_class = self.model_class()
+        db_table = model_class._meta.db_table
+        delete = super(ModelDefinition, self).delete(*args, **kwargs)
 
-        super(ModelDefinition, self).delete(*args, **kwargs)
-        
         south_api.delete_table(db_table) #@UndefinedVariable
         
-        # Remove ContentType since it's stall
-        self.model_ct.delete()
         ContentType.objects.clear_cache()
         
-        self._remove_from_model_cache()
+        _remove_from_model_cache(model_class)
+        
+        del self.__model_class
+        
+        return delete
         
     def __unicode__(self):
         return u'.'.join((self.app_label, self.object_name))
@@ -261,12 +272,14 @@ class ModelDefinitionAttribute(models.Model):
         abstract = True
     
     def save(self, *args, **kwargs):
-        self.model_def.invalidate_definition()
-        return super(ModelDefinitionAttribute, self).save(*args, **kwargs)
+        save = super(ModelDefinitionAttribute, self).save(*args, **kwargs)
+        self.model_def.model_class(force_create=True)
+        return save
     
     def delete(self, *args, **kwargs):
-        self.model_def.invalidate_definition()
-        return super(ModelDefinitionAttribute, self).delete(*args, **kwargs)
+        delete = super(ModelDefinitionAttribute, self).delete(*args, **kwargs)
+        self.model_def.model_class(force_create=True)
+        return delete
 
 class BaseDefinition(ModelDefinitionAttribute, OrderableModel):
     
@@ -339,7 +352,7 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
         #TODO: Support order_with_respect_to...
         else:
             lookups = self.lookup.split(LOOKUP_SEP)
-            opts = self.model_def.defined_object._meta
+            opts = self.model_def.model_class()._meta
             valid = True
             while len(lookups):
                 lookup = lookups.pop(0)
@@ -382,7 +395,7 @@ def create_unique(instance, action, model, **kwargs):
     names = list(instance.field_defs.names())
     # If there's no names and action is post_clear there's nothing to do
     if names and action != 'post_clear':
-        db_table = instance.model_def.defined_object._meta.db_table
+        db_table = instance.model_def.model_class()._meta.db_table
         if action in ('pre_add', 'pre_remove', 'pre_clear'):
             south_api.delete_unique(db_table, names) #@UndefinedVariable
         # Safe guard againts m2m_changed.action api change

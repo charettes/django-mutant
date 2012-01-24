@@ -5,13 +5,11 @@ from django.db import transaction
 from django.test.testcases import TransactionTestCase
 from south.db import db as south_api
 
-from dynamodef.models.definition import CachedObjectDefinition
 from dynamodef.models.model import ModelDefinition
 
 class BaseModelDefinitionTestCase(TransactionTestCase):
     
     def setUp(self):
-        CachedObjectDefinition.clear_cache()
         with transaction.commit_on_success():
             self.model_def = ModelDefinition.objects.create(app_label='app',
                                                             object_name='Model')
@@ -31,13 +29,15 @@ class BaseModelDefinitionTestCase(TransactionTestCase):
     def tearDown(self):
         try: # Try removing the model
             with transaction.commit_on_success():
-                self.model_def.delete()
+                for md in ModelDefinition.objects.all():
+                    md.delete()
         except Exception:
+            raise
             # If it fails we still want to remove the table in order to avoid
             # interfering with other tests
             try:
                 with transaction.commit_on_success():
-                    south_api.delete_table(self.model_def.defined_object._meta.db_table) #@UndefinedVariable
+                    south_api.delete_table(self.model_def.model_class()._meta.db_table) #@UndefinedVariable
             except Exception:
                 pass
             # After trying our best to avoid tests collisions we re-raise the

@@ -39,7 +39,7 @@ class RelatedFieldDefinition(FieldDefinition):
         except ModelDefinition.DoesNotExist:
             pass
         else:
-            return self.to == model_def.model_ct
+            return self.to_id == model_def.contenttype_ptr_id
     
     @property
     def to_model_class_is_mutable(self):
@@ -55,7 +55,6 @@ class RelatedFieldDefinition(FieldDefinition):
         options = super(RelatedFieldDefinition, self).get_field_options()
         
         if self.is_recursive_relationship:
-            # This is needed for symmetrical checks in ManyToManyField.__init__
             options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
         else:
             opts = self.to.model_class()._meta
@@ -66,14 +65,15 @@ class RelatedFieldDefinition(FieldDefinition):
         
         return options
     
-    def _get_south_ready_defined_object(self):
+    def _south_ready_field_instance(self):
         """
         South add_column choke when passing 'self' or 'app.Model' to `to` kwarg,
         so we have to create a special version for it.
         """
+        cls = self.get_field_class()
         options = self.get_field_options()
         options['to'] = self.to.model_class()
-        return self._prepare_object_definition(options)
+        return cls(**options)
 
 ON_DELETE_CHOICES = (('CASCADE', _(u'CASCADE')),
                      ('PROTECT', _(u'PROTECT')),
@@ -243,7 +243,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         create = not self.pk
         
         save = super(ManyToManyFieldDefinition, self).save(*args, **kwargs)
-        model = self.model_def.defined_object
+        model = self.model_def.model_class()
         field = model._meta.get_field(str(self.name))
         intermediary_model = field.rel.through
         
@@ -257,3 +257,6 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         else:
             #TODO: look for db_table rename
             pass
+        
+        return save
+
