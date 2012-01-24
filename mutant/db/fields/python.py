@@ -3,6 +3,7 @@ import re
 import types
 
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models.fields import CharField
 from django.utils.encoding import smart_unicode
 from django.utils.importlib import import_module
@@ -41,6 +42,7 @@ class PythonIdentifierField(CharField):
     default_validators = [validate_python_identifier]
     description = _(u'Python identifier')
     empty_strings_allowed = False
+    __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
         defaults = {'max_length': 255}

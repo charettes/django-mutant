@@ -166,7 +166,7 @@ class ModelDefinition(ContentType):
             '_is_obsolete': False,
         }
         
-        attrs.update(dict((str(f.name), f.field_instance())
+        attrs.update(dict((f.name, f.field_instance())
                             for f in self.fielddefinitions.select_subclasses()))
         
         return attrs
