@@ -44,6 +44,7 @@ class InheritedModelManager(Manager):
                 for obj in iterator:
                     yield obj.type_cast()
             else:
+                # yield from iterator
                 for obj in iterator:
                     yield obj
     
