@@ -11,11 +11,8 @@ __all__ = ('SmallIntegerFieldDefinition', 'PositiveSmallIntegerFieldDefinition',
 
 class NumericFieldDefinition(FieldDefinition):
     
-    default = 0
-    
     class Meta:
         proxy = True
-        defined_field_options = ('default',)
         defined_field_category = _(u'numeric')
 
 class SmallIntegerFieldDefinition(NumericFieldDefinition):

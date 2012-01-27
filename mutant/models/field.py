@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
+from picklefield.fields import dbsafe_encode, PickledObjectField
 from south.db import db as south_api
 
 from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
@@ -13,6 +14,9 @@ from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
 from mutant.managers import InheritedModelManager
 from mutant.models.choice import FieldDefinitionChoice
 from mutant.models.model import ModelDefinitionAttribute
+
+
+NOT_PROVIDED = default=dbsafe_encode(models.NOT_PROVIDED)
 
 class FieldDefinitionBase(models.base.ModelBase):
     
@@ -111,9 +115,9 @@ class FieldDefinition(ModelDefinitionAttribute):
                                 blank=True, null=True)
     db_index = models.BooleanField(_(u'db index'), default=False)
     
-    editable = models.BooleanField(_(u'editable'), default=False)
-    # TODO: implement default
-    #default = models.TextField(blank=True, default=None) #Pickle field : default should be pickled NOT_PROVIDED
+    editable = models.BooleanField(_(u'editable'), default=True)
+    default = PickledObjectField(_(u'default'), null=True,
+                                 default=NOT_PROVIDED)
     help_text = LazilyTranslatedField(_(u'help text'), blank=True, null=True)
     
     primary_key = models.BooleanField(_(u'primary key'), default=False)
@@ -131,8 +135,8 @@ class FieldDefinition(ModelDefinitionAttribute):
         unique_together = (('model_def', 'name'),)
         defined_field_options = ('name', 'verbose_name', 'null', 'blank',
                                  'max_length', 'db_column', 'db_index',
-                                 'editable',  'help_text', 'primary_key',
-                                 'unique', 'unique_for_date',
+                                 'editable', 'default', 'help_text',
+                                 'primary_key', 'unique', 'unique_for_date',
                                  'unique_for_month', 'unique_for_year')
     
     def __init__(self, *args, **kwargs):
@@ -255,7 +259,7 @@ class FieldDefinition(ModelDefinitionAttribute):
         else:
             # Test the specified default value
             try:
-                field.validate(self.default, None)
-            except ValidationError:
+                field.clean(field.get_default(), None)
+            except Exception:
                 msg = _(u"%s is not a valid default value") % self.default
                 raise ValidationError({'default':[msg]})

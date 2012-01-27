@@ -42,6 +42,7 @@ class MutableModel(models.Model):
     def clean(self):
         if self.is_obsolete():
             raise ValidationError('Obsolete definition')
+        return super(MutableModel, self).clean()
     
     def save(self, *args, **kwargs):
         if self.is_obsolete():

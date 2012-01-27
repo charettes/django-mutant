@@ -1,11 +1,15 @@
 import sqlite3
 
+from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 from django.db.utils import DatabaseError, IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
+from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
+from mutant.models.field import NOT_PROVIDED
 from mutant.tests.models.utils import BaseModelDefinitionTestCase
+
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
     
@@ -20,7 +24,7 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
         Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
 
-class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
+class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
     @transaction.autocommit
     def test_field_renaming(self):
@@ -71,3 +75,33 @@ class FieldDefinitionManipulation(BaseModelDefinitionTestCase):
     def test_field_description(self):
         self.assertEqual(CharFieldDefinition.get_field_description(),
                          _('Char field'))
+
+_incr = 0
+def module_level_pickable_default():
+    global _incr
+    _incr += 1
+    return _incr
+
+class FieldDefaultTest(BaseModelDefinitionTestCase):
+    
+    def test_clean(self):
+        field = IntegerFieldDefinition(name='field', model_def=self.model_def)
+        
+        with self.assertRaises(ValidationError):
+            field.default = 'invalid'
+            field.clean()
+        
+        field.default = module_level_pickable_default
+        field.clean()
+        field.save()
+        
+        Model = self.model_def.model_class()
+        self.assertEqual(Model.objects.create().field, _incr)
+        
+        field.default = NOT_PROVIDED
+        field.save()
+        
+        with self.assertRaises(ValidationError):
+            obj = Model()
+            obj.field
+            obj.full_clean()
