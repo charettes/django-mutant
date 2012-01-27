@@ -10,9 +10,9 @@ from picklefield.fields import dbsafe_encode, PickledObjectField
 from south.db import db as south_api
 
 from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    PythonIdentifierField)
+    ProxyAwareGenericForeignKey, PythonIdentifierField)
 from mutant.managers import InheritedModelManager
-from mutant.models.choice import FieldDefinitionChoice
+from mutant.models.choice import ChoiceDefinition
 from mutant.models.model import ModelDefinitionAttribute
 
 
@@ -107,7 +107,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     blank = models.BooleanField(_(u'blank'), default=False)
     max_length = models.PositiveSmallIntegerField(_(u'max length'),
                                                   blank=True, null=True)
-    choices = GenericRelation(FieldDefinitionChoice,
+    choices = GenericRelation('FieldDefinitionChoice',
                               content_type_field='field_def_type',
                               object_id_field='field_def_id')
     
@@ -263,3 +263,39 @@ class FieldDefinition(ModelDefinitionAttribute):
             except Exception:
                 msg = _(u"%s is not a valid default value") % self.default
                 raise ValidationError({'default':[msg]})
+
+class FieldDefinitionChoice(ChoiceDefinition):
+    """
+    A Model to allow specifying choices for a field definition instance
+    """
+    
+    field_def_id = models.IntegerField(_(u'field_def def id'), db_index=True)
+    field_def = ProxyAwareGenericForeignKey(ct_field='field_def_type',
+                                            fk_field='field_def_id')
+    
+    class Meta:
+        app_label = 'mutant'
+        verbose_name = _(u'field_def choice')
+        verbose_name_plural = _(u'field_def choices')
+        unique_together = (('field_def_type', 'field_def_id', 'order'),
+                           ('field_def_type', 'field_def_id', 'group', 'value'))
+    
+    def clean(self):
+        try:
+            self.field_def.field_instance().clean(self.value, None)
+        except ValidationError as e:
+            messages = {'value': e.messages}
+        else:
+            messages = {}
+            
+        if not isinstance(self.field_def, FieldDefinition):
+            msg = _(u'This must be an instance of a `FieldDefinition`')
+            messages['field_def'] = [msg]
+        
+        if messages:
+            raise ValidationError(messages)
+    
+    def save(self, *args, **kwargs):
+        save = super(FieldDefinitionChoice, self).save(*args, **kwargs)
+        self.field_def.model_def.model_class(force_create=True)
+        return save
