@@ -1,13 +1,16 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.db.models.deletion import ProtectedError
 
 from mutant.contrib.related.models import (ForeignKeyDefinition,
     ManyToManyFieldDefinition)
 from mutant.models.model import ModelDefinition
 from mutant.tests.models.utils import BaseModelDefinitionTestCase
 
-__all__ = ('ForeignKeyDefinitionTest', 'ManyToManyFieldDefinitionTest')
+__all__ = ('ForeignKeyDefinitionTest', 'ForeignKeyDefinitionOnDeleteTest',
+           'ManyToManyFieldDefinitionTest')
+
 
 class ForeignKeyDefinitionTest(BaseModelDefinitionTestCase):
     
@@ -51,6 +54,74 @@ class ForeignKeyDefinitionTest(BaseModelDefinitionTestCase):
         obj2 = Model.objects.create(f1=obj1)
         obj1.f1 = obj2
         obj1.save()
+        
+class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
+    
+    def test_protect(self):
+        ForeignKeyDefinition.objects.create(model_def=self.model_def,
+                                            name='f1', null=True,
+                                            to=self.model_def.model_ct,
+                                            on_delete='PROTECT')
+        
+        Model = self.model_def.model_class()
+        obj1 = Model.objects.create()
+        Model.objects.create(f1=obj1)
+        
+        self.assertRaises(ProtectedError, obj1.delete)
+        
+    def test_set_null(self):
+        fk = ForeignKeyDefinition(model_def=self.model_def,
+                                  name='f1',
+                                  to=self.model_def.model_ct,
+                                  on_delete='SET_NULL')
+        
+        self.assertRaises(ValidationError, fk.clean)
+        
+        fk.null = True
+        fk.save()
+        Model = self.model_def.model_class()
+        obj1 = Model.objects.create()
+        obj2 = Model.objects.create(f1=obj1)
+        obj1.delete()
+        
+        self.assertIsNone(Model.objects.get(pk=obj2.pk).f1)
+        
+    def test_set_default(self):
+        Model = self.model_def.model_class()
+        default = Model.objects.create()
+        
+        fk = ForeignKeyDefinition.objects.create(model_def=self.model_def,
+                                                 name='f1', null=True,
+                                                 to=self.model_def.model_ct,
+                                                 on_delete='SET_DEFAULT')
+        
+        self.assertRaises(ValidationError, fk.clean)
+        fk.default = default
+        fk.save()
+        
+        obj1 = Model.objects.create()
+        obj2 = Model.objects.create(f1=obj1)
+        obj1.delete()
+        
+        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default.pk)
+        
+    def test_set_value(self):
+        Model = self.model_def.model_class()
+        default = Model.objects.create()
+        
+        fk = ForeignKeyDefinition.objects.create(model_def=self.model_def,
+                                                 name='f1', null=True,
+                                                 to=self.model_def.model_ct,
+                                                 on_delete='SET_VALUE')
+        
+        fk.on_delete_set_value = default
+        fk.save()
+        
+        obj1 = Model.objects.create()
+        obj2 = Model.objects.create(f1=obj1)
+        obj1.delete()
+        
+        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default.pk)
         
 class ManyToManyFieldDefinitionTest(BaseModelDefinitionTestCase):
     

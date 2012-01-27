@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
+from picklefield.fields import PickledObjectField
 from south.db import db as south_api
 
 from mutant.db.fields import PythonIdentifierField
@@ -10,6 +11,7 @@ from mutant.db.models import MutableModel
 from mutant.managers import FilteredQuerysetManager
 from mutant.models.field import FieldDefinition
 from mutant.models.model import ModelDefinition
+
 
 related_name_help_text = _(u'The name to use for the relation from the '
                            u'related object back to this one.')
@@ -79,7 +81,7 @@ ON_DELETE_CHOICES = (('CASCADE', _(u'CASCADE')),
                      ('PROTECT', _(u'PROTECT')),
                      ('SET_NULL', _(u'SET_NULL')),
                      ('SET_DEFAULT', _(u'SET_DEFAULT')),
-                     ('SET()', _(u'SET()')),
+                     ('SET_VALUE', _(u'SET(VALUE)')),
                      ('DO_NOTHING', _(u'DO_NOTHING')))
 
 to_field_help_text = _(u'The field on the related object that the '
@@ -99,7 +101,7 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
                                  choices=ON_DELETE_CHOICES, default='CASCADE',
                                  max_length=11, help_text=on_delete_help_text)
     
-    on_delete_set_value = fields.TextField(blank=True, null=True) # Should be a pickle field
+    on_delete_set_value = PickledObjectField(_(u'on delete set value'), null=True)
     
     objects = FilteredQuerysetManager(one_to_one=False)
     
@@ -118,7 +120,6 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
         else:
             messages = {}
         
-        # Ensure on delete
         if self.on_delete == 'SET_NULL':
             if not self.null:
                 msg = _(u"This field can't be null")
@@ -133,7 +134,11 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
         
     def get_field_options(self):
         options = super(ForeignKeyDefinition, self).get_field_options()
-        options['on_delete'] = getattr(deletion, self.on_delete, None)
+        if self.on_delete == 'SET_VALUE':
+            on_delete = deletion.SET(self.on_delete_set_value)
+        else:
+            on_delete = getattr(deletion, self.on_delete, None)
+        options['on_delete'] = on_delete
         return options
 
 class OneToOneFieldDefinition(ForeignKeyDefinition):
