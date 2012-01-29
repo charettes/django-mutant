@@ -191,7 +191,8 @@ class ModelDefinition(ContentType):
         content_type = getattr(self, '_contenttype_ptr_cache', None)
         if content_type is None:
             content_type = ContentType.objects.get(id=self.contenttype_ptr_id)
-        return content_type
+            self._contenttype_ptr_cache = content_type
+        return self._contenttype_ptr_cache
     
     def clean(self):
         """
