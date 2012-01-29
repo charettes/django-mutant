@@ -1,7 +1,5 @@
 from inspect import isclass
-import threading
 import types
-import weakref
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
@@ -159,10 +157,6 @@ class ModelDefinition(ContentType):
             'Meta': self.get_model_opts(),
             '__module__': "mutant.apps.%s.models" % self.app_label,
             '_definition': (self.__class__, self.pk),
-            '_subscribe_lock': getattr(existing_model_class, '_subscribe_lock',
-                                       threading.RLock()),
-            '_subscribers': getattr(existing_model_class, '_subscribers',
-                                    weakref.WeakSet()),
             '_is_obsolete': False,
         }
         
@@ -190,7 +184,6 @@ class ModelDefinition(ContentType):
             model_class = existing_model_class
             if model_class is None:
                 model_class = self._create_model_class()
-        model_class.subscribe()
         return _ModelClassProxy(model_class)
     
     @property

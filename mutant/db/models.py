@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-import threading
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -16,24 +14,6 @@ class MutableModel(models.Model):
     def definition(cls):
         definition_cls, definition_pk = cls._definition
         return definition_cls.objects.get(pk=definition_pk)
-    
-    @classmethod
-    def prevent_subscribtions(cls):
-        @contextmanager
-        def lock():
-            current_thread = threading.current_thread()
-            with cls._subscribe_lock:
-                for subscriber in cls._subscribers:
-                    if subscriber is not current_thread:
-                        subscriber.join()
-                yield
-                cls._subscribers.clear()
-        return lock
-    
-    @classmethod
-    def subscribe(cls):
-        with cls._subscribe_lock:
-            cls._subscribers.add(threading.current_thread())
             
     @classmethod
     def is_obsolete(cls):
