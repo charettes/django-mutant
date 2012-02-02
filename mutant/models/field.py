@@ -6,11 +6,11 @@ from django.db import models
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
-from picklefield.fields import dbsafe_encode, PickledObjectField
+from picklefield.fields import dbsafe_encode
 from south.db import db as south_api
 
 from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    ProxyAwareGenericForeignKey, PythonIdentifierField)
+    PickledObjectField, ProxyAwareGenericForeignKey, PythonIdentifierField)
 from mutant.managers import InheritedModelManager
 from mutant.models.choice import ChoiceDefinition
 from mutant.models.model import ModelDefinitionAttribute

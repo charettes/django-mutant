@@ -88,7 +88,7 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
         
     def test_set_default(self):
         Model = self.model_def.model_class()
-        default = Model.objects.create()
+        default = Model.objects.create().pk
         
         fk = ForeignKeyDefinition.objects.create(model_def=self.model_def,
                                                  name='f1', null=True,
@@ -103,11 +103,11 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
         obj2 = Model.objects.create(f1=obj1)
         obj1.delete()
         
-        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default.pk)
+        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default)
         
     def test_set_value(self):
         Model = self.model_def.model_class()
-        default = Model.objects.create()
+        default = Model.objects.create().pk
         
         fk = ForeignKeyDefinition.objects.create(model_def=self.model_def,
                                                  name='f1', null=True,
@@ -121,7 +121,7 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
         obj2 = Model.objects.create(f1=obj1)
         obj1.delete()
         
-        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default.pk)
+        self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default)
         
 class ManyToManyFieldDefinitionTest(BaseModelDefinitionTestCase):
     

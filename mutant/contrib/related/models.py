@@ -3,10 +3,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
-from picklefield.fields import PickledObjectField
 from south.db import db as south_api
 
-from mutant.db.fields import PythonIdentifierField
+from mutant.db.fields import PickledObjectField, PythonIdentifierField
 from mutant.db.models import MutableModel
 from mutant.managers import FilteredQuerysetManager
 from mutant.models.field import FieldDefinition

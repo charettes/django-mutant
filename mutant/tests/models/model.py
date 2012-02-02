@@ -5,10 +5,12 @@ from django.db import models, transaction
 from django.db.utils import IntegrityError
 
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
-    UniqueTogetherDefinition)
+    UniqueTogetherDefinition, BaseDefinition)
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
+from mutant.db.models import MutableModel
 from mutant.tests.models.utils import BaseModelDefinitionTestCase
+
 
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
@@ -305,5 +307,70 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.field_defs.add(self.f1, self.f2)
         self.ut.field_defs.clear()
         self.Model.objects.create(f1='a', f2='b')
+    
+class Mixin(object):
+    
+    def method(self):
+        return 'Mixin'
 
+class ModelSubclass(models.Model):
+    
+    class Meta:
+        abstract = True
+    
+    def method(self):
+        return 'ModelSubclass'
+
+class MutableModelSubclass(MutableModel):
+    pass
+        
+class BaseDefinitionTest(BaseModelDefinitionTestCase):
+    
+    def test_clean(self):
+        bd = BaseDefinition()
+        
+        # Base must be a class
+        bd.base = BaseDefinitionTest.test_clean
+        self.assertRaises(ValidationError, bd.clean)
+        
+        # Subclasses of MutableModel are not valid bases
+        bd.base = MutableModelSubclass
+        self.assertRaises(ValidationError, bd.clean)
+        
+        # Mixin objets are valid bases
+        bd.base = Mixin
+        bd.clean()
+
+        # Model subclasses are valid bases
+        bd.base = ModelSubclass
+        bd.clean()
+    
+    def test_base_inheritance(self):
+        Model = self.model_def.model_class()
+        
+        BaseDefinition.objects.create(model_def=self.model_def,
+                                      base=Mixin)
+        self.assertTrue(issubclass(Model, Mixin))
+        
+        BaseDefinition.objects.create(model_def=self.model_def,
+                                      base=ModelSubclass)
+        self.assertTrue(issubclass(Model, Mixin) and
+                        issubclass(Model, ModelSubclass))
+    
+    def test_base_ordering(self):
+        Model = self.model_def.model_class()
+        
+        BaseDefinition.objects.create(model_def=self.model_def,
+                                      base=Mixin, order=2)
+        model_subclass_def = BaseDefinition.objects.create(model_def=self.model_def,
+                                                           base=ModelSubclass,
+                                                           order=1)
+        
+        instance = Model()
+        self.assertEqual('ModelSubclass', instance.method())
+        
+        model_subclass_def.order = 3
+        model_subclass_def.save()
+        instance = Model()
+        self.assertEqual('Mixin', instance.method())
         

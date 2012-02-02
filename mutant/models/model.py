@@ -1,5 +1,4 @@
 from inspect import isclass
-import types
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
@@ -13,9 +12,8 @@ from orderable.models import OrderableModel
 from south.db import db as south_api
 
 from mutant.db.fields import (LazilyTranslatedField,
-    PythonIdentifierField, PythonObjectReferenceField)
+    PickledObjectField, PythonIdentifierField)
 from mutant.db.models import MutableModel
-from mutant.managers import InheritedModelManager
 
 
 def _get_db_table(app_label, model):
@@ -126,8 +124,7 @@ class ModelDefinition(ContentType):
             self.__model_class = super(ModelDefinition, self).model_class()
     
     def get_model_bases(self):
-        return tuple(bd.get_base_class()
-                        for bd in self.basedefinitions.select_subclasses())
+        return tuple(bd.base for bd in self.basedefinitions.all())
     
     def get_model_opts(self):
         attrs = {
@@ -172,6 +169,7 @@ class ModelDefinition(ContentType):
         attrs = self.get_model_attrs(existing_model_class)
         
         _remove_from_model_cache(existing_model_class)
+        
         model = type(str(self.object_name), bases, attrs)
         
         return model
@@ -275,56 +273,27 @@ class ModelDefinitionAttribute(models.Model):
         self.model_def.model_class(force_create=True)
         return delete
 
-class BaseDefinition(ModelDefinitionAttribute, OrderableModel):
+class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
+    """
+    Model used to represent bases of a ModelDefinition
+    """
     
-    objects = InheritedModelManager()
+    base = PickledObjectField(_(u'base'))
     
     class Meta:
         app_label = 'mutant'
         ordering = ('order',)
         unique_together = (('model_def', 'order'),)
     
-    @classmethod
-    def subclasses(cls):
-        return ('modelbasedefinition', 'mixindefinition')
-    
-    def get_base_class(self):
-        raise NotImplementedError
-    
     def clean(self):
-        cls = self.get_base_class()
-        if issubclass(cls, MutableModel):
-            msg = _(u'Base cannot be a subclass of a MutableModel')
-            raise ValidationError(msg)
-
-class ModelBaseDefinition(BaseDefinition):
-    """
-    Allows a ModelDefinition to inherit from a specific model
-    """
-    
-    content_type = models.ForeignKey(ContentType)
-    
-    class Meta:
-        app_label = 'mutant'
-    
-    def get_base_class(self):
-        return self.content_type.model_class()
-
-class MixinDefinition(BaseDefinition):
-    """
-    Allows a ModelDefinition to inherit from defined mixins
-    and abstract model classes which are not tracked by
-    the ContentType framework.
-    """
-    
-    reference = PythonObjectReferenceField(_(u'reference'),
-                                           allowed_types=(types.TypeType, models.base.ModelBase))
-    
-    class Meta:
-        app_label = 'mutant'
-    
-    def get_base_class(self):
-        return self.reference.obj
+        if isclass(self.base):
+            if issubclass(self.base, MutableModel):
+                msg = _(u'Base cannot be a subclass of MutableModel')
+                raise ValidationError({'base': [msg]})
+        else:
+            msg = _(u'Base must be a class')
+            raise ValidationError({'base': [msg]})
+        return super(BaseDefinition, self).clean()
 
 class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
     
