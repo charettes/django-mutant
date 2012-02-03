@@ -6,3 +6,5 @@ syntax:glob
 .pydevproject
 .settings/*
 .DS_Store
+dist/
+django_mutant.egg-info/*
