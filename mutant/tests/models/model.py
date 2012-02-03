@@ -313,13 +313,28 @@ class Mixin(object):
     def method(self):
         return 'Mixin'
 
+class ModelProxy(CharFieldDefinition):
+    
+    class Meta:
+        proxy = True
+
 class ModelSubclass(models.Model):
+    
+    field = models.CharField(max_length=5)
     
     class Meta:
         abstract = True
     
     def method(self):
         return 'ModelSubclass'
+    
+class ModelSubclassWithTextField(models.Model):
+    
+    field = models.TextField()
+    second_field = models.NullBooleanField()
+    
+    class Meta:
+        abstract = True
 
 class MutableModelSubclass(MutableModel):
     pass
@@ -341,9 +356,15 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         bd.base = Mixin
         bd.clean()
 
-        # Model subclasses are valid bases
+        # Model subclasses are valid bases if they are abstract
         bd.base = ModelSubclass
         bd.clean()
+        
+        # Model subclasses that are not abstract are invalid
+        bd.base = CharFieldDefinition
+        self.assertRaises(ValidationError, bd.clean)
+        bd.base = ModelProxy
+        self.assertRaises(ValidationError, bd.clean)
     
     def test_base_inheritance(self):
         Model = self.model_def.model_class()
@@ -373,4 +394,28 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         model_subclass_def.save()
         instance = Model()
         self.assertEqual('Mixin', instance.method())
+        
+    def test_abstract_field_inherited(self):
+        bd = BaseDefinition.objects.create(model_def=self.model_def,
+                                           base=ModelSubclass)
+        
+        Model = self.model_def.model_class()
+        
+        Model.objects.create(field='value')
+        
+        # Test column alteration and addition by replacing the base with
+        # a new one with a field with the same name and a second field.
+        bd.base = ModelSubclassWithTextField
+        bd.save()
+        Model.objects.get(field='value')
+        # The original CharField should be replaced by a TextField with no
+        # max_length and a second field should be added
+        Model.objects.create(field='another one bites the dust',
+                             second_field=True)
+        
+        # Test column deletion by deleting the base
+        # This should cause the model to loose all it's fields and the table
+        # to loose all it's columns
+        bd.delete()
+        self.assertEqual(list(Model.objects.values_list()), [(1,), (2,)])
         

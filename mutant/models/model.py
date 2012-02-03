@@ -286,14 +286,61 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         unique_together = (('model_def', 'order'),)
     
     def clean(self):
-        if isclass(self.base):
-            if issubclass(self.base, MutableModel):
-                msg = _(u'Base cannot be a subclass of MutableModel')
-                raise ValidationError({'base': [msg]})
+        # TODO: Validate the whole inheritance field clashes
+        base = self.base
+        msg = None
+        if isclass(base):
+            if issubclass(base, models.Model):
+                opts = base._meta
+                if not opts.abstract:
+                    msg = _(u'Model base must be abstract')
+                elif issubclass(base, MutableModel):
+                    msg = _(u'Base cannot be a subclass of MutableModel')
         else:
             msg = _(u'Base must be a class')
+        if msg:
             raise ValidationError({'base': [msg]})
         return super(BaseDefinition, self).clean()
+    
+    def save(self, *args, **kwargs):
+        base = self.base
+        create = not self.pk
+        model = self.model_def.model_class()
+        model_opts = model._meta
+        table_name = model_opts.db_table
+        
+        save = super(BaseDefinition, self).save(*args, **kwargs)
+        
+        if issubclass(base, models.Model):
+            if create:
+                for field in base._meta.fields:
+                    south_api.add_column(table_name, field.name,
+                                         field, keep_default=False)
+            else:
+                for field in base._meta.fields:
+                    try:
+                        old_field = model_opts.get_field(field.name)
+                    except FieldDoesNotExist:
+                        south_api.add_column(table_name, field.name,
+                                             field, keep_default=False)
+                    else:
+                        column = old_field.get_attname_column()[1]
+                        south_api.alter_column(table_name, column, field)
+        
+        return save
+    
+    def delete(self, *args, **kwargs):
+        base = self.base
+        
+        delete = super(BaseDefinition, self).delete(*args, **kwargs)
+        
+        if issubclass(base, models.Model):
+            model = self.model_def.model_class()
+            table_name = model._meta.db_table
+            for field in base._meta.fields:
+                south_api.delete_column(table_name, field.name)
+                
+        return delete
 
 class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
     
