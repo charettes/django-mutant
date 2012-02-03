@@ -1,7 +1,7 @@
 import re
 
 import django
-from django.db import transaction
+from django.db import connection, transaction
 from django.test.testcases import TransactionTestCase
 from south.db import db as south_api
 
@@ -25,6 +25,37 @@ class BaseModelDefinitionTestCase(TransactionTestCase):
             if not ordered:
                 return self.assertEqual(set(map(transform, qs)), set(values))
             return self.assertEqual(map(transform, qs), values)
+    
+    def _table_list(self):
+        cursor = connection.cursor()
+        return connection.introspection.get_table_list(cursor)
+    
+    def assertTableExists(self, table_name):
+        tables = self._table_list()
+        self.assertTrue(table_name in tables,
+                        "Table '%s' doesn't exist, existing tables are %s" % (table_name,
+                                                                              tables))
+        
+    def assertTableDoesntExists(self, table_name):
+        self.assertRaises(AssertionError, self.assertTableExists, table_name)
+        
+    def _table_fields_iterator(self, table_name):
+        cursor = connection.cursor()
+        description = connection.introspection.get_table_description(cursor, 
+                                                                     table_name)
+        return (row[0] for row in description)
+    
+    def assertFieldExists(self, table_name, field_name):
+        fields = self._table_fields_iterator(table_name)
+        self.assertTrue(field_name in fields,
+                        "Field '%(table)s.%(field)s' doesn't exist, '%(table)s'"
+                        "'s fields are %(fields)s" % {'table': table_name,
+                                                      'field': field_name,
+                                                      'fields': fields})
+        
+    def assertFieldDoesntExists(self, table_name, field_name):
+        self.assertRaises(AssertionError, self.assertFieldExists,
+                          table_name, field_name)
     
     def tearDown(self):
         try: # Try removing the model

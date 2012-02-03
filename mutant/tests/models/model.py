@@ -26,13 +26,24 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         Make sure changing the app_label or object_name renames the associated
         table
         """
+        def get_table_name():
+            return self.model_def.model_class()._meta.db_table
+        
+        table_name = get_table_name()
         self.model_def.app_label = 'myapp'
         self.model_def.save()
+        self.assertTableDoesntExists(table_name)
+        table_name = get_table_name()
+        self.assertTableExists(table_name)
         
         self.model_def.object_name = 'MyModel'
         self.model_def.save()
+        self.assertTableDoesntExists(table_name)
+        table_name = get_table_name()
+        self.assertTableExists(table_name)
         
         self.model_def.delete()
+        self.assertTableDoesntExists(table_name)
             
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
@@ -85,7 +96,9 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
         
         Model = self.model_def.model_class()
         instance = Model.objects.create(name="Quebec")
+        table_name = Model._meta.db_table
         self.model_def.delete()
+        self.assertTableDoesntExists(table_name)
         
         with self.assertRaises(AttributeError):
             Model(name="name")
@@ -418,4 +431,5 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         # to loose all it's columns
         bd.delete()
         self.assertEqual(list(Model.objects.values_list()), [(1,), (2,)])
+        self.assertFieldDoesntExists(Model._meta.db_table, 'field')
         
