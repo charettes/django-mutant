@@ -187,7 +187,7 @@ class FieldDefinition(ModelDefinitionAttribute):
         return saved
     
     def delete(self, *args, **kwargs):
-        model = self.model_def.defined_object
+        model = self.model_def.model_class()
         table_name = model._meta.db_table
         
         super(FieldDefinition, self).delete(*args, **kwargs)

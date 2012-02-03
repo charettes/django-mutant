@@ -72,6 +72,12 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
             with self.assertRaises(IntegrityError):
                 Model.objects.create(name='Simon')
                 
+        with transaction.commit_on_success():
+            field.delete()
+            msg = "'name' is an invalid keyword argument for this function"
+            self.assertRaisesMessage(TypeError, msg,
+                                     Model.objects.create, name="Simon")
+                
     def test_field_description(self):
         self.assertEqual(CharFieldDefinition.get_field_description(),
                          _('Char field'))
