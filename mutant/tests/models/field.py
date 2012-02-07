@@ -1,8 +1,6 @@
-import sqlite3
 
 from django.core.exceptions import ValidationError
-from django.db import connection, transaction
-from django.db.utils import DatabaseError, IntegrityError
+from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
@@ -13,7 +11,6 @@ from mutant.tests.models.utils import BaseModelDefinitionTestCase
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
     
-    @transaction.autocommit
     def test_proxy_inheritance(self):
         obj = CharFieldDefinition.objects.create(name='caca',
                                                   max_length=25,
@@ -26,14 +23,15 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
 
 class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
-    @transaction.autocommit
+    def setUp(self):
+        super(FieldDefinitionManipulationTest, self).setUp()
+        self.field = CharFieldDefinition.objects.create(name='name',
+                                                       max_length=20,
+                                                       model_def=self.model_def)
+    
     def test_field_renaming(self):
-        field = CharFieldDefinition.objects.create(name='name',
-                                                   max_length=25,
-                                                   model_def=self.model_def)
-        
-        field.name = 'first_name'
-        field.save()
+        self.field.name = 'first_name'
+        self.field.save()
         
         Model = self.model_def.model_class()
         msg = "'name' is an invalid keyword argument for this function"
@@ -42,41 +40,20 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
         
         Model.objects.create(first_name="Julien")
     
-    def test_field_alteration(self):
-        with transaction.commit_on_success():
-            field = CharFieldDefinition.objects.create(name='name',
-                                                       max_length=24,
-                                                       model_def=self.model_def)
-            
-        if not isinstance(connection.connection,
-                          sqlite3.Connection):
-            # sqlite3 doesn't enforce char length
-            with transaction.commit_on_success():
-                Model = self.model_def.model_class()
-                with self.assertRaises(DatabaseError):
-                    Model.objects.create(name='Simon' * 5)
-        
-        with transaction.commit_on_success():
-            field.max_length = 25
-            field.save()
-            Model = self.model_def.model_class()
-            Model.objects.create(name='Simon' * 5)
-        
-        with transaction.commit_on_success():
-            field.unique = True
-            field.save()
-        
-        with transaction.commit_on_success():
-            Model = self.model_def.model_class()
+    def test_field_removal(self):
+        Model = self.model_def.model_class()
+        self.field.delete()
+        msg = "'name' is an invalid keyword argument for this function"
+        self.assertRaisesMessage(TypeError, msg,
+                                 Model.objects.create, name="Simon")
+    
+    def test_unique(self):
+        self.field.unique = True
+        self.field.save()
+        Model = self.model_def.model_class()
+        Model.objects.create(name='Simon')
+        with self.assertRaises(IntegrityError):
             Model.objects.create(name='Simon')
-            with self.assertRaises(IntegrityError):
-                Model.objects.create(name='Simon')
-                
-        with transaction.commit_on_success():
-            field.delete()
-            msg = "'name' is an invalid keyword argument for this function"
-            self.assertRaisesMessage(TypeError, msg,
-                                     Model.objects.create, name="Simon")
                 
     def test_field_description(self):
         self.assertEqual(CharFieldDefinition.get_field_description(),

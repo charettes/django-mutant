@@ -1,7 +1,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.db.utils import IntegrityError
 
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
@@ -20,7 +20,6 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         
         self.assertNotEqual(Member, self.model_def.model_class(force_create=True))
 
-    @transaction.commit_on_success
     def test_rename_model(self):
         """
         Make sure changing the app_label or object_name renames the associated
@@ -88,8 +87,7 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
         a.model = Model # Assign a proxy
         a.model = a.model # Assign a Model
         a.model = 4
-        
-    @transaction.commit_on_success
+
     def test_definition_deletion(self):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)
@@ -119,7 +117,6 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
 
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     
-    @transaction.commit_on_success
     def setUp(self):
         super(OrderingDefinitionTest, self).setUp()
         self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
@@ -128,8 +125,7 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         self.f2 = ForeignKeyDefinition.objects.create(model_def=self.model_def,
                                                       null=True,
                                                       name='f2', to=ct_ct)
-    
-    @transaction.commit_on_success
+
     def test_clean(self):
         ordering = OrderingFieldDefinition(model_def=self.model_def)
         
@@ -149,14 +145,14 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         with self.assertRaises(ValidationError):
             ordering.lookup = 'f2__higgs_boson'
             ordering.clean()
-    
-    @transaction.commit_on_success
+
     def test_simple_ordering(self):
         Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model) #app
         ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=model_ct)
+        
         
         # Instances should be sorted by id
         self.assertQuerysetEqual(Model.objects.values('f1'),
@@ -247,7 +243,6 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
 
 class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
     
-    @transaction.commit_on_success
     def setUp(self):
         super(UniqueTogetherDefinitionTest, self).setUp()
         self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
@@ -257,7 +252,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut = UniqueTogetherDefinition.objects.create(model_def=self.model_def)
         self.Model = self.model_def.model_class()
 
-    @transaction.commit_on_success
     def test_clean(self):
         """
         Make sure we can't create a unique key with two fields of two
@@ -277,7 +271,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
             self.ut.clean()
         other_model_def.delete()
 
-    @transaction.commit_on_success
     def test_cannot_create_unique(self):
         """
         Creating a unique key on a table with duplicate 
@@ -288,7 +281,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         with self.assertRaises(IntegrityError):
             self.ut.field_defs.add(self.f1, self.f2)
     
-    @transaction.commit_on_success
     def test_cannot_insert_duplicate_row(self):
         """
         Inserting a duplicate rows shouldn't work
@@ -298,7 +290,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         with self.assertRaises(IntegrityError):
             self.Model.objects.create(f1='a', f2='b')
     
-    @transaction.commit_on_success
     def test_cannot_remove_unique(self):
         """
         Removing a unique constraint that cause 
@@ -309,8 +300,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.Model.objects.create(f1='a', f2='c')
         with self.assertRaises(IntegrityError):
             self.ut.field_defs.remove(self.f2)
-    
-    @transaction.commit_on_success
+
     def test_clear_removes_unique(self):
         """
         Removing a unique constraint should relax duplicate row
