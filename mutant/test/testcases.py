@@ -9,33 +9,26 @@ from django.test.testcases import TestCase
 from mutant.models.model import ModelDefinition
 
 _connection_support_dll_transactions_cache = {}
-def connection_support_dll_transactions(conn):
-    alias = conn.alias
+def connection_support_dll_transactions(connection):
+    alias = connection.alias
     if alias in _connection_support_dll_transactions_cache:
         return _connection_support_dll_transactions_cache[alias]
     support = False
-    if conn.features.supports_transactions:
+    if connection.features.supports_transactions:
         transaction.enter_transaction_management(using=alias)
         transaction.managed(True, using=alias)
-        cursor = conn.cursor()
-        cursor.execute('CREATE TABLE DDL_ROLLBACK_TEST (X INT)')
-        cursor.execute('CREATE TABLE DDL_ROLLBACK_TEST2 (X INT)')
+        cursor = connection.cursor()
+        cursor.execute('CREATE TABLE DDL_TRANSACTION_TEST (X INT)')
         transaction.rollback(using=alias)
         transaction.leave_transaction_management(using=alias)
         try:
-            cursor.execute('CREATE TABLE DDL_ROLLBACK_TEST (X INT)')
+            cursor.execute('CREATE TABLE DDL_TRANSACTION_TEST (X INT)')
         except DatabaseError:
-            # The first DDL statement was not rolled back, however it's also
-            # possible that the second one wasn't too. We try to drop the table
-            # if it exists.
-            try:
-                cursor.execute('DROP TABLE DDL_ROLLBACK_TEST2')
-            except DatabaseError:
-                pass
+            pass
         else:
             support = True
         finally:
-            cursor.execute('DROP TABLE DDL_ROLLBACK_TEST')
+            cursor.execute('DROP TABLE DDL_TRANSACTION_TEST')
     _connection_support_dll_transactions_cache[alias] = support
     return support
 
@@ -43,8 +36,8 @@ def connections_support_ddl_transactions():
     """
     Returns True if all connections support ddl transactions
     """
-    return all(connection_support_dll_transactions(conn)
-               for conn in connections.all())
+    return all(connection_support_dll_transactions(connection)
+               for connection in connections.all())
 
 class DDLTestCase(TestCase):
     """
