@@ -9,6 +9,9 @@ from mutant.models import (ModelDefinition, BaseDefinition, FieldDefinition,
 from django.db.models.fields import FieldDoesNotExist
 
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
+    if raw:
+        ct = ContentType.objects.get(pk=instance.pk)
+        instance.app_label, instance.model = ct.app_label, ct.model
     opts = instance.model_class(force_create=True)._meta
     if created:
         fields = tuple((field.name, field) for field in opts.fields)

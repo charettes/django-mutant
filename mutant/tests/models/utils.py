@@ -1,5 +1,5 @@
 
-from django.db import connection, transaction
+from django.db import connection
 
 from mutant.models.model import ModelDefinition
 from mutant.test.testcases import (ModelDefinitionDDLTestCase,
@@ -10,9 +10,8 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                                   VersionCompatMixinTestCase):
     
     def setUp(self):
-        with transaction.commit_on_success():
-            self.model_def = ModelDefinition.objects.create(app_label='app',
-                                                            object_name='Model')
+        self.model_def = ModelDefinition.objects.create(app_label='app',
+                                                        object_name='Model')
     
     def _table_list(self):
         cursor = connection.cursor()

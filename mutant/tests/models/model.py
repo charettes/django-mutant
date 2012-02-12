@@ -1,6 +1,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import models
 from django.db.utils import IntegrityError
 
@@ -43,6 +44,13 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         
         self.model_def.delete()
         self.assertTableDoesntExists(table_name)
+        
+    def test_fixture_loading(self):
+        call_command('loaddata', 'fixture_loading_test', verbosity=0, commit=False)
+        model_def = ModelDefinition.objects.get(app_label='myfixtureapp',
+                                                object_name='MyFixtureModel')
+        Model = model_def.model_class()
+        Model.objects.create()
             
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
@@ -422,4 +430,3 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         bd.delete()
         self.assertEqual(list(Model.objects.values_list()), [(1,), (2,)])
         self.assertFieldDoesntExists(Model._meta.db_table, 'field')
-        
