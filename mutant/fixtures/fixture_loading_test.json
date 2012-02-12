@@ -1,0 +1,20 @@
+[
+    {
+        "pk": 9999, 
+        "model": "contenttypes.contenttype", 
+        "fields": {
+            "model": "myfixturemodel", 
+            "name": "my fixture model", 
+            "app_label": "myfixtureapp"
+        }
+    },
+    {
+        "pk": 9999, 
+        "model": "mutant.modeldefinition", 
+        "fields": {
+            "object_name": "MyFixtureModel", 
+            "verbose_name": null, 
+            "verbose_name_plural": null
+        }
+    }
+]
