@@ -11,6 +11,7 @@ path_help_text = _(u'The absolute filesystem path to a directory from which '
 match_help_text = _(u'A regular expression used to filter filenames.')
 recursive_help_text = _(u'Specifies whether all subdirectories of '
                         u'path should be included')
+
 class FilePathFieldDefinition(CharFieldDefinition):
     
     path = DirectoryPathField(_(u'path'), max_length=100,
@@ -27,24 +28,3 @@ class FilePathFieldDefinition(CharFieldDefinition):
         defined_field_class = fields.FilePathField
         defined_field_options = ('path', 'match', 'recursive')
         defined_field_category = _(u'file')
-
-#class FileFieldDefinition(FieldDefinition):
-#    
-#    upload_to = fields.CharField(_())
-
-#FileFieldDefinition = f(fields.files.FileField, options={
-#    'upload_to': None,
-#    'storage': None,
-#})
-#
-#ImageDefinition = f(fields.files.ImageField, options={
-#    'height_field': PythonIdentifierField(_(u'height field'),
-#                                          blank=True, null=True),
-#    'width_field': PythonIdentifierField(_(u'width field'),
-#                                          blank=True, null=True)
-#})
-#
-#FilePathFieldDefinition = f(fields.FilePathField, options={
-#    'match': fields.CharField(_(u'match'), blank=True, null=True),
-#    'recursive': fields.BooleanField(_(u'recursive'), default=False)               
-#})

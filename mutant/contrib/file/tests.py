@@ -23,7 +23,7 @@ class FilePathFieldDefinitionTest(BaseModelDefinitionTestCase):
         Model.objects.create(file_path=MODULE_PATH)
         
     def test_formfield(self):
-        self.field.match = r'\.py$'
+        self.field.match = r'\.pyc?$'
         self.field.save()
         formfield = self.field.field_instance().formfield()
         self.assertTrue(formfield.valid_value(MODULE_PATH))

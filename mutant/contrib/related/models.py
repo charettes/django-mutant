@@ -178,14 +178,6 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         defined_field_class = fields.related.ManyToManyField
         defined_field_options = ('symmetrical', 'through', 'db_table')
 
-    def get_field_options(self):
-        options = super(ManyToManyFieldDefinition, self).get_field_options()
-        if self.symmetrical is None:
-            # Passing None wont do it.
-            # See fields.related.ManyToManyField.__init__
-            del options['symmetrical']
-        return options
-
     def clean(self):
         try:
             super(ManyToManyFieldDefinition, self).clean()
