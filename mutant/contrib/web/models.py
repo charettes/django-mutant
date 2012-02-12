@@ -2,10 +2,10 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models.field import FieldDefinition
+from mutant.contrib.text.models import CharFieldDefinition
 from django.core.exceptions import ValidationError
 
-class EmailFieldDefinition(FieldDefinition):
+class EmailFieldDefinition(CharFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
@@ -15,7 +15,7 @@ class EmailFieldDefinition(FieldDefinition):
         defined_field_class = fields.EmailField
         defined_field_category = _(u'web')
         
-class URLFieldDefinition(FieldDefinition):
+class URLFieldDefinition(CharFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
@@ -25,7 +25,7 @@ class URLFieldDefinition(FieldDefinition):
         defined_field_class = fields.URLField
         defined_field_category = _(u'web')
         
-class SlugFieldDefinition(FieldDefinition):
+class SlugFieldDefinition(CharFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
@@ -35,7 +35,7 @@ class SlugFieldDefinition(FieldDefinition):
         defined_field_class = fields.SlugField
         defined_field_category = _(u'web')
         
-class IPAddressFieldDefinition(FieldDefinition):
+class IPAddressFieldDefinition(CharFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
@@ -63,7 +63,7 @@ else:
     unpack_ipv4_help_text = _(u'Unpacks IPv4 mapped addresses like '
                               u'``::ffff::192.0.2.1`` to ``192.0.2.1``')
     
-    class GenericIPAddressFieldDefinition(FieldDefinition):
+    class GenericIPAddressFieldDefinition(CharFieldDefinition):
         
         protocol = fields.CharField(_(u'protocol'), max_length=4,
                                     choices=PROTOCOL_CHOICES, default='both')

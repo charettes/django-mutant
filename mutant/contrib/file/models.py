@@ -2,15 +2,16 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
+from mutant.contrib.text.models import CharFieldDefinition
 from mutant.db.fields.python import DirectoryPathField, RegExpStringField
-from mutant.models.field import FieldDefinition
+
 
 path_help_text = _(u'The absolute filesystem path to a directory from which '
                    u'this field should get its choices.')
 match_help_text = _(u'A regular expression used to filter filenames.')
 recursive_help_text = _(u'Specifies whether all subdirectories of '
                         u'path should be included')
-class FilePathFieldDefinition(FieldDefinition):
+class FilePathFieldDefinition(CharFieldDefinition):
     
     path = DirectoryPathField(_(u'path'), max_length=100,
                               help_text=path_help_text)

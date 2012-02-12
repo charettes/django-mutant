@@ -1,3 +1,4 @@
+import operator
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
@@ -24,8 +25,9 @@ class FieldDefinitionBase(models.base.ModelBase):
     _field_classes = {}
     _subclasses_lookups = []
     _proxies = {}
+    _lookups = {}
     
-    def __new__(cls, name, bases, attrs):
+    def __new__(cls, name, parents, attrs):
         if 'Meta' in attrs:
             Meta = attrs['Meta']
             field_class = getattr(Meta, 'defined_field_class', None)
@@ -49,34 +51,38 @@ class FieldDefinitionBase(models.base.ModelBase):
             field_options = ()
             field_category = None
         
-        definition = super(FieldDefinitionBase, cls).__new__(cls, name, bases, attrs)
+        definition = super(FieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
         
         # Store the FieldDefinition cls
         if cls._base_definition is None:
             cls._base_definition = definition
         else:
-            meta = definition._meta
-            object_name = meta.object_name.lower()
-            lookup = [object_name]
+            opts = definition._meta
+            object_name = opts.object_name.lower()
+            lookup = []
             base_definition = cls._base_definition
-            bases = list(definition.__bases__)
-            while bases:
-                base = bases.pop(0)
-                if issubclass(base, base_definition):
-                    base_meta = base._meta
-                    if field_class is None:
-                        field_class = base_meta.defined_field_class
-                    if field_category is None:
-                        field_category = base_meta.defined_field_category
-                    field_options += base_meta.defined_field_options
-                    if not base == FieldDefinition:
-                        if not (base_meta.abstract or base_meta.proxy):
-                            lookup.insert(0, base_meta.object_name.lower())
-                        bases = list(base.__bases__) + bases # mimic mro
-            if meta.proxy:
-                cls._proxies[object_name] = (lookup[0:-1], definition)
-            elif not meta.abstract:
-                cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
+            parents = [definition]
+            while parents:
+                parent = parents.pop(0)
+                if issubclass(parent, base_definition):
+                    parent_opts = parent._meta
+                    field_class = getattr(parent_opts, 'field_class', field_class)
+                    field_category = getattr(parent_opts, 'field_category', field_category)
+                    field_options += getattr(parent_opts, 'defined_field_options', ())
+                    if parent is not base_definition:
+                        if not (parent_opts.abstract or parent_opts.proxy):
+                            lookup.insert(0, parent_opts.object_name.lower())
+                        parents = list(parent._meta.parents) + parents # mimic mro
+            cls._lookups[object_name] = lookup
+            if opts.proxy:
+                cls._proxies[object_name] = definition
+            elif not opts.abstract:
+                if len(lookup) == 1:
+                    # TODO: #16572
+                    # We can't do `select_related` on multiple one-to-one
+                    # relationships...
+                    # see https://code.djangoproject.com/ticket/16572
+                    cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
             if field_class:
                 cls._field_classes[field_class] = definition
         
@@ -100,28 +106,24 @@ class FieldDefinition(ModelDefinitionAttribute):
     field_type = FieldDefinitionTypeField()
     
     name = PythonIdentifierField(_(u'name'))
-    verbose_name = LazilyTranslatedField(_(u'verbose name'),
-                                         blank=True, null=True)
+    verbose_name = LazilyTranslatedField(_(u'verbose name'), blank=True, null=True)
+    help_text = LazilyTranslatedField(_(u'help text'), blank=True, null=True)
     
     null = models.BooleanField(_(u'null'), default=False)
     blank = models.BooleanField(_(u'blank'), default=False)
-    max_length = models.PositiveSmallIntegerField(_(u'max length'),
-                                                  blank=True, null=True)
     choices = GenericRelation('FieldDefinitionChoice',
                               content_type_field='field_def_type',
                               object_id_field='field_def_id')
     
-    db_column = models.SlugField(_(u'db column'), max_length=30,
-                                blank=True, null=True)
+    db_column = models.SlugField(_(u'db column'), max_length=30, blank=True, null=True)
     db_index = models.BooleanField(_(u'db index'), default=False)
     
     editable = models.BooleanField(_(u'editable'), default=True)
-    default = PickledObjectField(_(u'default'), null=True,
-                                 default=NOT_PROVIDED)
-    help_text = LazilyTranslatedField(_(u'help text'), blank=True, null=True)
+    default = PickledObjectField(_(u'default'), null=True, default=NOT_PROVIDED)
     
     primary_key = models.BooleanField(_(u'primary key'), default=False)
     unique = models.BooleanField(_(u'unique'), default=False)
+    
     unique_for_date = PythonIdentifierField(_(u'unique for date'), blank=True, null=True)
     unique_for_month = PythonIdentifierField(_(u'unique for month'), blank=True, null=True)
     unique_for_year = PythonIdentifierField(_(u'unique for year'), blank=True, null=True)
@@ -133,11 +135,10 @@ class FieldDefinition(ModelDefinitionAttribute):
         verbose_name = _(u'field')
         verbose_name_plural = _(u'fields')
         unique_together = (('model_def', 'name'),)
-        defined_field_options = ('name', 'verbose_name', 'null', 'blank',
-                                 'max_length', 'db_column', 'db_index',
-                                 'editable', 'default', 'help_text',
-                                 'primary_key', 'unique', 'unique_for_date',
-                                 'unique_for_month', 'unique_for_year')
+        defined_field_options = ('name', 'verbose_name', 'help_text',
+                                 'null', 'blank', 'db_column', 'db_index',
+                                 'editable', 'default', 'primary_key', 'unique',
+                                 'unique_for_date', 'unique_for_month', 'unique_for_year')
     
     def __init__(self, *args, **kwargs):
         super(FieldDefinition, self).__init__(*args, **kwargs)
@@ -202,24 +203,28 @@ class FieldDefinition(ModelDefinitionAttribute):
     def type_cast(self):
         field_type_model = self.field_type.model
         
-        # Tries to reverse a SingleRelatedObjectDescriptor
-        type_casted = getattr(self, field_type_model, None)
+        # Cast to the right concrete model by the going up in the 
+        # SingleRelatedObjectDescriptor chain
+        type_casted = self
+        for subclass in FieldDefinitionBase._lookups[field_type_model]:
+            type_casted = getattr(type_casted, subclass)
         
-        # Maybe it's just a proxy
-        # TODO: Maybe we could cache that somehow, it's kinda a bottleneck
-        if type_casted is None:
-            proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
-            if proxy:
-                attr_path, proxy_type = proxy
-                proxy_for = self
-                for attr in attr_path:
-                    proxy_for = getattr(proxy_for, attr)
-                assert proxy_for.__class__ == proxy_type._meta.proxy_for_model
-                data = dict((f.attname, getattr(self, f.attname))
-                                for f in self._meta.fields)
-                type_casted = proxy_type(**data)
+        # If it's a proxy model we make to type cast it
+        proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
+        if proxy:
+            proxy_for_model = proxy._meta.proxy_for_model
+            if not isinstance(type_casted, proxy_for_model):
+                msg = ("Concrete type casted model %s is not an instance of %s "
+                       "which is the model proxied by %s" % (type_casted, proxy_for_model, proxy))
+                raise AssertionError(msg)
+            data = dict((f.attname, getattr(self, f.attname))
+                            for f in self._meta.fields)
+            type_casted = proxy(**data)
         
-        return type_casted or self
+        if type_casted._meta.object_name.lower() != field_type_model:
+            raise AssertionError("Failed to type cast %s to %s" % (self, field_type_model))
+        
+        return type_casted
     
     @classmethod
     def get_field_class(cls):
@@ -233,9 +238,15 @@ class FieldDefinition(ModelDefinitionAttribute):
         return capfirst(cls._meta.verbose_name)
     
     def get_field_options(self):
-        options = dict((opt, getattr(self, opt))
-                            for opt in self._meta.defined_field_options)
-        options['choices'] = tuple(self.choices.as_choices()) or None
+        opts = self._meta
+        options = {}
+        for name in opts.defined_field_options:
+            value = getattr(self, name)
+            if value != opts.get_field(name).get_default():
+                options[name] = value
+        choices = tuple(self.choices.as_choices())
+        if choices:
+            options['choices'] = choices
         return options
     
     def field_instance(self):

@@ -3,10 +3,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 
-from mutant.contrib.related.models import (ForeignKeyDefinition,
-    ManyToManyFieldDefinition)
 from mutant.models.model import ModelDefinition
 from mutant.tests.models.utils import BaseModelDefinitionTestCase
+
+from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 __all__ = ('ForeignKeyDefinitionTest', 'ForeignKeyDefinitionOnDeleteTest',
            'ManyToManyFieldDefinitionTest')

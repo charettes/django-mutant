@@ -1,10 +1,11 @@
 
 from django.db import connection
 from django.db.utils import DatabaseError
-
-from mutant.contrib.text.models import CharFieldDefinition
-from mutant.tests.models.utils import BaseModelDefinitionTestCase
 from django.utils.unittest.case import skipUnless
+
+from mutant.tests.models.utils import BaseModelDefinitionTestCase
+
+from .models import CharFieldDefinition
 
 
 class CharFieldDefinitionTest(BaseModelDefinitionTestCase):
