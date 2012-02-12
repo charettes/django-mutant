@@ -3,13 +3,11 @@ from inspect import isclass
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import models
-from django.db.models import signals
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.loading import cache as model_cache
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
-from south.db import db as south_api
 
 from mutant.db.fields import (LazilyTranslatedField,
     PickledObjectField, PythonIdentifierField)
@@ -121,7 +119,7 @@ class ModelDefinition(ContentType):
     def __init__(self, *args, **kwargs):
         super(ModelDefinition, self).__init__(*args, **kwargs)
         if self.pk:
-            self.__model_class = super(ModelDefinition, self).model_class()
+            self._model_class = super(ModelDefinition, self).model_class()
     
     def get_model_bases(self):
         return tuple(bd.base for bd in self.basedefinitions.all())
@@ -210,42 +208,25 @@ class ModelDefinition(ContentType):
             msg = _(u'Cannot cloak an installed app')
             raise ValidationError({'label': [msg]})
     
-    def _save_table(self, create):
-        opts = self.model_class(force_create=True)._meta
-        if create:
-            
-            fields = tuple((field.name, field) for field in opts.fields)
-            south_api.create_table(opts.db_table, fields) #@UndefinedVariable
-        else:
-            old_opts = self.__model_class._meta
-            if old_opts.db_table != opts.db_table:
-                south_api.rename_table(old_opts.db_table, opts.db_table) #@UndefinedVariable
-                # It means that the natural key has changed
-                ContentType.objects.clear_cache()
-    
     def save(self, *args, **kwargs):
-        create = self.pk is None
         self.model = self.object_name.lower()
         
         save = super(ModelDefinition, self).save(*args, **kwargs)
-        self._save_table(create)
         
-        self.__model_class = super(ModelDefinition, self).model_class()
+        self._model_class = super(ModelDefinition, self).model_class()
         
         return save
     
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
-        db_table = model_class._meta.db_table
+        
         delete = super(ModelDefinition, self).delete(*args, **kwargs)
-
-        south_api.delete_table(db_table) #@UndefinedVariable
         
         ContentType.objects.clear_cache()
         
         _remove_from_model_cache(model_class)
         
-        del self.__model_class
+        del self._model_class
         
         return delete
         
@@ -301,46 +282,6 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         if msg:
             raise ValidationError({'base': [msg]})
         return super(BaseDefinition, self).clean()
-    
-    def save(self, *args, **kwargs):
-        base = self.base
-        create = not self.pk
-        model = self.model_def.model_class()
-        model_opts = model._meta
-        table_name = model_opts.db_table
-        
-        save = super(BaseDefinition, self).save(*args, **kwargs)
-        
-        if issubclass(base, models.Model):
-            if create:
-                for field in base._meta.fields:
-                    south_api.add_column(table_name, field.name,
-                                         field, keep_default=False)
-            else:
-                for field in base._meta.fields:
-                    try:
-                        old_field = model_opts.get_field(field.name)
-                    except FieldDoesNotExist:
-                        south_api.add_column(table_name, field.name,
-                                             field, keep_default=False)
-                    else:
-                        column = old_field.get_attname_column()[1]
-                        south_api.alter_column(table_name, column, field)
-        
-        return save
-    
-    def delete(self, *args, **kwargs):
-        base = self.base
-        
-        delete = super(BaseDefinition, self).delete(*args, **kwargs)
-        
-        if issubclass(base, models.Model):
-            model = self.model_def.model_class()
-            table_name = model._meta.db_table
-            for field in base._meta.fields:
-                south_api.delete_column(table_name, field.name)
-                
-        return delete
 
 class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
     
@@ -400,17 +341,3 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
             if field_def.model_def != self.model_def:
                 msg = _(u'All fields must be of the same model')
                 raise ValidationError({'field_defs': [msg]})
-            
-def create_unique(instance, action, model, **kwargs):
-    names = list(instance.field_defs.names())
-    # If there's no names and action is post_clear there's nothing to do
-    if names and action != 'post_clear':
-        db_table = instance.model_def.model_class()._meta.db_table
-        if action in ('pre_add', 'pre_remove', 'pre_clear'):
-            south_api.delete_unique(db_table, names) #@UndefinedVariable
-        # Safe guard againts m2m_changed.action api change
-        elif action in ('post_add', 'post_remove'):
-            south_api.create_unique(db_table, names) #@UndefinedVariable
-            
-signals.m2m_changed.connect(create_unique,
-                            UniqueTogetherDefinition.field_defs.through)

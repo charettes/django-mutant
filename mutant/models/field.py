@@ -1,14 +1,13 @@
-import operator
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models.signals import post_delete, pre_delete, post_save
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import dbsafe_encode
-from south.db import db as south_api
 
 from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PickledObjectField, ProxyAwareGenericForeignKey, PythonIdentifierField)
@@ -22,7 +21,6 @@ NOT_PROVIDED = default=dbsafe_encode(models.NOT_PROVIDED)
 class FieldDefinitionBase(models.base.ModelBase):
     
     _base_definition = None
-    _field_classes = {}
     _subclasses_lookups = []
     _proxies = {}
     _lookups = {}
@@ -58,7 +56,7 @@ class FieldDefinitionBase(models.base.ModelBase):
             cls._base_definition = definition
         else:
             opts = definition._meta
-            object_name = opts.object_name.lower()
+            model = opts.object_name.lower()
             lookup = []
             base_definition = cls._base_definition
             parents = [definition]
@@ -73,9 +71,9 @@ class FieldDefinitionBase(models.base.ModelBase):
                         if not (parent_opts.abstract or parent_opts.proxy):
                             lookup.insert(0, parent_opts.object_name.lower())
                         parents = list(parent._meta.parents) + parents # mimic mro
-            cls._lookups[object_name] = lookup
+            cls._lookups[model] = lookup
             if opts.proxy:
-                cls._proxies[object_name] = definition
+                cls._proxies[model] = definition
             elif not opts.abstract:
                 if len(lookup) == 1:
                     # TODO: #16572
@@ -83,8 +81,11 @@ class FieldDefinitionBase(models.base.ModelBase):
                     # relationships...
                     # see https://code.djangoproject.com/ticket/16572
                     cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
-            if field_class:
-                cls._field_classes[field_class] = definition
+            
+            # Dynamically connection signals to avoid connecting the signal
+            # with no sender and checking if it's a subclass of FieldDefinition
+            from mutant.management import connect_field_definition
+            connect_field_definition(definition)
         
         definition._meta.defined_field_class = field_class
         definition._meta.defined_field_options = tuple(set(field_options))
@@ -143,57 +144,19 @@ class FieldDefinition(ModelDefinitionAttribute):
     def __init__(self, *args, **kwargs):
         super(FieldDefinition, self).__init__(*args, **kwargs)
         if self.pk and self.__class__ != FieldDefinition:
-            self.__old_field = self.field_instance()
+            self._old_field = self.field_instance()
     
     def save(self, *args, **kwargs):
-        created = not self.pk
-        
-        if created:
+        if not self.pk:
             app_label = self._meta.app_label
             model = self._meta.object_name.lower()
             self.field_type = ContentType.objects.get_by_natural_key(app_label, model)
             
         saved = super(FieldDefinition, self).save(*args, **kwargs)
         
-        # Make sure to get the field defined object first
-        # in order to prevent the model defined object from caching the
-        # in-db or queryset cached field state
-        field = self._south_ready_field_instance()
-        model = self.model_def.model_class()
-        table_name = model._meta.db_table
-        __, column = field.get_attname_column()
-        
-        if created:
-            south_api.add_column(table_name, self.name, #@UndefinedVariable
-                                 field, keep_default=False)
-        else:
-            old_field = self.__old_field
-            
-            # Field renaming
-            old_column = old_field.get_attname_column()[1]
-            if column != old_column:
-                south_api.rename_column(table_name, old_column, column) #@UndefinedVariable
-            
-            for opt in ('primary_key', 'unique'):
-                value = getattr(field, opt)
-                if value != getattr(old_field, opt):
-                    method_format = ('create' if value else 'delete', opt)
-                    method = getattr(south_api, "%s_%s" % method_format)
-                    method(table_name, (column,))
-            
-            south_api.alter_column(table_name, column, field) #@UndefinedVariable
-        
-        self.__old_field = field
+        self._old_field = self._south_ready_field_instance()
         
         return saved
-    
-    def delete(self, *args, **kwargs):
-        model = self.model_def.model_class()
-        table_name = model._meta.db_table
-        
-        super(FieldDefinition, self).delete(*args, **kwargs)
-        
-        south_api.delete_column(table_name, self.name) #@UndefinedVariable
     
     @classmethod
     def subclasses(cls):
