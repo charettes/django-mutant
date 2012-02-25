@@ -4,6 +4,7 @@ from django.utils.encoding import smart_unicode
 from django.utils.functional import Promise
 from django.utils.translation import ugettext, ugettext_lazy as _
 
+
 class LazilyTranslatedField(TextField):
     
     def to_python(self, value):

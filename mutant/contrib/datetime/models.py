@@ -2,7 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models import FieldDefinition
+from ...models import FieldDefinition
 
 auto_now_help_text = _(u'Automatically set the field to now every time the '
                        u'object is saved.')

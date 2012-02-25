@@ -5,11 +5,11 @@ from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 from south.db import db as south_api
 
-from mutant.db.fields import PickledObjectField, PythonIdentifierField
-from mutant.db.models import MutableModel
-from mutant.managers import FilteredQuerysetManager
-from mutant.models.field import FieldDefinition
-from mutant.models.model import ModelDefinition
+from ...db.fields import PickledObjectField, PythonIdentifierField
+from ...db.models import MutableModel
+from ...managers import FilteredQuerysetManager
+from ...models.field import FieldDefinition
+from ...models.model import ModelDefinition
 
 
 related_name_help_text = _(u'The name to use for the relation from the '

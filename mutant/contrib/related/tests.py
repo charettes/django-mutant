@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 
-from mutant.models.model import ModelDefinition
-from mutant.tests.models.utils import BaseModelDefinitionTestCase
+from ...models.model import ModelDefinition
+from ...tests.models.utils import BaseModelDefinitionTestCase
 
 from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 

@@ -1,9 +1,10 @@
 
+from django.core.exceptions import ValidationError
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.contrib.text.models import CharFieldDefinition
-from django.core.exceptions import ValidationError
+from ..text.models import CharFieldDefinition
+
 
 class EmailFieldDefinition(CharFieldDefinition):
     

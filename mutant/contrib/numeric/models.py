@@ -2,7 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models.field import FieldDefinition
+from ...models.field import FieldDefinition
 
 __all__ = ('SmallIntegerFieldDefinition', 'PositiveSmallIntegerFieldDefinition',
            'IntegerFieldDefinition', 'PositiveIntegerFieldDefinition',

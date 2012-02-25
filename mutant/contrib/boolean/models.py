@@ -2,7 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models import FieldDefinition
+from ...models import FieldDefinition
 
 class BooleanFieldDefinition(FieldDefinition):
     

@@ -2,8 +2,8 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.contrib.text.models import CharFieldDefinition
-from mutant.db.fields.python import DirectoryPathField, RegExpStringField
+from ..text.models import CharFieldDefinition
+from ...db.fields.python import DirectoryPathField, RegExpStringField
 
 
 path_help_text = _(u'The absolute filesystem path to a directory from which '

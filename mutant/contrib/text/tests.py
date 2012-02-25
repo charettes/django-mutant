@@ -3,7 +3,7 @@ from django.db import connection
 from django.db.utils import DatabaseError
 from django.utils.unittest.case import skipUnless
 
-from mutant.tests.models.utils import BaseModelDefinitionTestCase
+from ...tests.models.utils import BaseModelDefinitionTestCase
 
 from .models import CharFieldDefinition
 

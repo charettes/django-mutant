@@ -9,9 +9,9 @@ from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 
-from mutant.db.fields import (LazilyTranslatedField,
+from ..db.fields import (LazilyTranslatedField,
     PickledObjectField, PythonIdentifierField)
-from mutant.db.models import MutableModel
+from ..db.models import MutableModel
 
 
 def _get_db_table(app_label, model):

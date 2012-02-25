@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+
 class MutableModel(models.Model):
     """
     Abstract class used to identify models that we're created by a definition

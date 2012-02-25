@@ -6,7 +6,7 @@ from django.db import connections, transaction
 from django.db.utils import DatabaseError
 from django.test.testcases import TestCase
 
-from mutant.models.model import ModelDefinition
+from ..models.model import ModelDefinition
 
 _connection_support_dll_transactions_cache = {}
 def connection_support_dll_transactions(connection):

@@ -5,9 +5,9 @@ from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 
-from mutant.db.fields import (FieldDefinitionTypeField, PythonIdentifierField,
+from ..db.fields import (FieldDefinitionTypeField, PythonIdentifierField,
     LazilyTranslatedField)
-from mutant.managers import ChoiceDefinitionManager
+from ..managers import ChoiceDefinitionManager
             
 class ChoiceDefinition(OrderableModel):
     """

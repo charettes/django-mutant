@@ -3,17 +3,16 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models.signals import post_delete, pre_delete, post_save
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import dbsafe_encode
 
-from mutant.db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
+from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PickledObjectField, ProxyAwareGenericForeignKey, PythonIdentifierField)
-from mutant.managers import InheritedModelManager
-from mutant.models.choice import ChoiceDefinition
-from mutant.models.model import ModelDefinitionAttribute
+from ..managers import InheritedModelManager
+from .choice import ChoiceDefinition
+from .model import ModelDefinitionAttribute
 
 
 NOT_PROVIDED = default=dbsafe_encode(models.NOT_PROVIDED)

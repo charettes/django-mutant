@@ -1,6 +1,7 @@
 
 from picklefield.fields import PickledObjectField as _PickledObjectField
 
+
 class _ObjectWrapper(object):
     __slots__ = ('_obj',)
     

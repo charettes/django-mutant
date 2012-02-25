@@ -2,7 +2,7 @@
 from django.db.models import Manager
 from django.db.models.query import QuerySet
 
-from mutant.common import choices_from_dict
+from .common import choices_from_dict
 
 class FilteredQuerysetManager(Manager):
     
