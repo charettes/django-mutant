@@ -174,10 +174,15 @@ class FieldDefinition(ModelDefinitionAttribute):
         # If it's a proxy model we make to type cast it
         proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
         if proxy:
-            proxy_for_model = proxy._meta.proxy_for_model
-            if not isinstance(type_casted, proxy_for_model):
+            # Prior to django r17573, `proxy_for_model` returned the actual
+            # concrete model of a proxy and there was no `concrete_model`
+            # property so we try to fetch the `concrete_model` from the opts
+            # and fallback to `proxy_for_model` if it's not defined.
+            concrete_model = getattr(proxy._meta, 'concrete_model',
+                                     proxy._meta.proxy_for_model)
+            if not isinstance(type_casted, concrete_model):
                 msg = ("Concrete type casted model %s is not an instance of %s "
-                       "which is the model proxied by %s" % (type_casted, proxy_for_model, proxy))
+                       "which is the model proxied by %s" % (type_casted, concrete_model, proxy))
                 raise AssertionError(msg)
             data = dict((f.attname, getattr(self, f.attname))
                             for f in self._meta.fields)
