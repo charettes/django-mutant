@@ -10,6 +10,8 @@ postgres:
   adapter: postgresql
   database: mutant
   username: postgres
+before_script:
+  - "psql -c 'create database mutant;' -U postgres"
 script:
   - cd tests
   - python manage.py test mutant
