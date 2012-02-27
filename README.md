@@ -32,3 +32,5 @@ As a paranoid (see [Will Hardy DjangoCon2011](http://blip.tv/djangocon-europe-20
 ## Get in touch and contribute
 
 From now on I think the best way to contribute and get in touch is using github messaging system (issues and push request). If more discussions needs to take place I might consider opening a google group and/or IRC.
+
+[![Build Status](https://secure.travis-ci.org/charettes/django-mutant.png)](http://travis-ci.org/charettes/django-mutant)
