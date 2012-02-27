@@ -1,5 +1,6 @@
 language: python
 python:
+  - 2.5
   - 2.6
   - 2.7
 install:
@@ -12,9 +13,5 @@ postgres:
   username: postgres
 script:
   - cd tests
-  - echo "Testing sqlite with stable django"
   - python manage.py test mutant
-  - echo ""
-  - echo "Testing postgres with stable django"
-  - python manage.py test mutant --setings=travis_postgres_settings
-  - echo ""
+  - python manage.py test mutant --settings=travis_postgres_settings
