@@ -16,6 +16,6 @@ script:
   - cd tests
   - python manage.py test mutant
   - python manage.py test mutant --settings=travis_postgres_settings
-  - pip uninstall django && pip install -e git+https://github.com/django/django#egg=django
+  - pip uninstall django -y && pip install -e git+https://github.com/django/django#egg=django
   - python manage.py test mutant
   - python manage.py test mutant --settings=travis_postgres_settings
