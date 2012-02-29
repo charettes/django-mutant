@@ -33,4 +33,4 @@ From now on I think the best way to contribute and get in touch is using github 
 
 [![Build Status](https://secure.travis-ci.org/charettes/django-mutant.png)](http://travis-ci.org/charettes/django-mutant)
 
-[Development version](https://github.com/charettes/django-mutant/tarball/master#egg=mutant-dev) can be installed from pip: `pip install django-mutant==dev`.
+[Development version](https://github.com/charettes/django-mutant/tarball/master#egg=django-mutant-dev) can be installed from pip: `pip install django-mutant==dev`.
