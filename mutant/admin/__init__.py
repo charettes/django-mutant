@@ -36,4 +36,4 @@ class ModelDefinitionAdmin(admin.ModelAdmin):
             kwargs['widget'] = TextInput
         return super(ModelDefinitionAdmin, self).formfield_for_dbfield(db_field, **kwargs)
     
-admin.site.register(ModelDefinition, ModelDefinitionAdmin)
+#admin.site.register(ModelDefinition, ModelDefinitionAdmin)
