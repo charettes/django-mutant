@@ -21,4 +21,4 @@ script:
   - python manage.py test mutant boolean datetime file numeric related text web --settings=travis.postgres_settings
   - pip uninstall django -y && pip install https://github.com/django-nonrel/django-nonrel/tarball/develop
   - pip install https://github.com/charettes/mongodb-engine/tarball/fix-south-adapter
-  - python manage.py test mutant boolean datetime file numeric text web --settings=travis.mongodb_settings
+  - python manage.py test mutant boolean datetime file numeric text web --settings=mongodb_settings
