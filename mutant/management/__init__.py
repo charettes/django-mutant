@@ -71,7 +71,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     """
     if issubclass(instance.base, models.Model):
         model_class = instance.model_def.model_class()
-        instance._deletion = (
+        instance._state._deletion = (
             router.db_for_write(model_class),
             model_class._meta.db_table,
         )
@@ -81,10 +81,10 @@ pre_delete.connect(base_definition_pre_delete, BaseDefinition,
 
 def base_definition_post_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
-        db, table_name = instance._deletion
+        db, table_name = instance._state._deletion
         for field in instance.base._meta.fields:
             dbs[db].delete_column(table_name, field.name)
-        del instance._deletion
+        del instance._state._deletion
 
 post_delete.connect(base_definition_post_delete, BaseDefinition,
                     dispatch_uid='mutant.management.base_definition_post_delete')
@@ -115,11 +115,17 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     db = router.db_for_write(model_class)
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
-    __, column = field.get_attname_column()
     
     if created:
-        dbs[db].add_column(table_name, instance.name, field, keep_default=False)
+        if hasattr(instance._state, '_creation_default_value'):
+            field.default = instance._state._creation_default_value
+            delattr(instance._state, '_creation_default_value')
+            keep_default = False
+        else:
+            keep_default = True
+        dbs[db].add_column(table_name, instance.name, field, keep_default=keep_default)
     else:
+        __, column = field.get_attname_column()
         old_field = instance._old_field
         
         # Field renaming
@@ -143,7 +149,7 @@ def field_definition_pre_delete(sender, instance, **kwargs):
     """
     model_class = instance.model_def.model_class()
     opts = model_class._meta
-    instance._deletion = (
+    instance._state._deletion = (
         router.db_for_write(model_class),
         opts.db_table,
         opts.get_field(instance.name).column
@@ -154,9 +160,9 @@ def field_definition_post_delete(sender, instance, **kwargs):
     This signal is connected by all FieldDefinition subclasses
     see comment in FieldDefinitionBase for more details
     """
-    db, table_name, name = instance._deletion
+    db, table_name, name = instance._state._deletion
     dbs[db].delete_column(table_name, name)
-    del instance._deletion
+    del instance._state._deletion
     
 def connect_field_definition(definition):
     model = definition._meta.object_name.lower()

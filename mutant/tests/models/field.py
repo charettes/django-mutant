@@ -30,10 +30,16 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
                                                         model_def=self.model_def)
     
     def test_field_renaming(self):
+        Model = self.model_def.model_class()
+        
+        Model.objects.create(name='Pepe')
+        
         self.field.name = 'first_name'
         self.field.save()
         
-        Model = self.model_def.model_class()
+        instance = Model.objects.get()
+        self.assertEqual(instance.first_name, 'Pepe')
+        
         msg = "'name' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg,
                                  Model.objects.create, name="Simon")
@@ -42,6 +48,7 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
     def test_field_removal(self):
         Model = self.model_def.model_class()
+        Model.objects.create(name='Popo')
         self.field.delete()
         msg = "'name' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg,
@@ -60,11 +67,10 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
         self.assertEqual(CharFieldDefinition.get_field_description(),
                          _('Char field'))
 
-_incr = 0
 def module_level_pickable_default():
-    global _incr
-    _incr += 1
-    return _incr
+    module_level_pickable_default.incr += 1
+    return module_level_pickable_default.incr
+module_level_pickable_default.incr = 0
 
 class FieldDefaultTest(BaseModelDefinitionTestCase):
     
@@ -80,7 +86,8 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
         field.save()
         
         Model = self.model_def.model_class()
-        self.assertEqual(Model.objects.create().field, _incr)
+        self.assertEqual(Model.objects.create().field,
+                         module_level_pickable_default.incr)
         
         field.default = NOT_PROVIDED
         field.save()
@@ -89,6 +96,36 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
             obj = Model()
             obj.field
             obj.full_clean()
+            
+    def test_default_value_set(self):
+        Model = self.model_def.model_class()
+        
+        Model.objects.create()
+        IntegerFieldDefinition.objects.create(name='field',
+                                              default=module_level_pickable_default,
+                                              model_def=self.model_def)
+        
+        # Call after field creation so we can identify if the default value
+        # was set when creating the field or when fetching the instance.
+        incr = module_level_pickable_default.incr
+        module_level_pickable_default()
+        
+        before = Model.objects.get()
+        self.assertEqual(before.field, incr)
+        
+        after = Model.objects.create()
+        self.assertEqual(after.field, incr + 2)
+        
+    def test_create_with_default(self):
+        Model = self.model_def.model_class()
+        
+        Model.objects.create()
+        IntegerFieldDefinition.objects.create_with_default(1337, name='field',
+                                                           model_def=self.model_def)
+        
+        before = Model.objects.get()
+        self.assertEqual(before.field, 1337)
+        self.assertFalse(Model().field)
             
 class FieldDefinitionChoiceTest(BaseModelDefinitionTestCase):
     

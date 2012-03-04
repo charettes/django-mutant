@@ -94,9 +94,25 @@ class FieldDefinitionBase(models.base.ModelBase):
 
 class FieldDefinitionManager(InheritedModelManager):
     
+    class FieldDefinitionQuerySet(InheritedModelManager.InheritanceQuerySet):
+        
+        def create_with_default(self, default, **kwargs):
+            obj = self.model(**kwargs)
+            obj._state._creation_default_value = default
+            self._for_write = True
+            obj.save(force_insert=True, using=self.db)
+            return obj
+    
+    def get_query_set(self):
+        return self.FieldDefinitionQuerySet(self.model, using=self._db)
+    
     def names(self):
         qs = self.get_query_set()
         return qs.order_by('name').values_list('name', flat=True)
+    
+    def create_with_default(self, default, **kwargs):
+        qs = self.get_query_set()
+        return qs.create_with_default(default, **kwargs)
     
 class FieldDefinition(ModelDefinitionAttribute):
     
