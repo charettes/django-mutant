@@ -26,8 +26,8 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
     def setUp(self):
         super(FieldDefinitionManipulationTest, self).setUp()
         self.field = CharFieldDefinition.objects.create(name='name',
-                                                       max_length=20,
-                                                       model_def=self.model_def)
+                                                        max_length=20,
+                                                        model_def=self.model_def)
     
     def test_field_renaming(self):
         self.field.name = 'first_name'
@@ -51,6 +51,7 @@ class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
         self.field.unique = True
         self.field.save()
         Model = self.model_def.model_class()
+        
         Model.objects.create(name='Simon')
         with self.assertRaises(IntegrityError):
             Model.objects.create(name='Simon')

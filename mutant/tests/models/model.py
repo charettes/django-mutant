@@ -2,7 +2,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.db import models
+from django.db import models, router
 from django.db.utils import IntegrityError
 
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
@@ -10,7 +10,8 @@ from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.db.models import MutableModel
-from mutant.tests.models.utils import BaseModelDefinitionTestCase
+from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
+    skipUnlessMutantModelDBFeature)
 
 
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
@@ -29,21 +30,23 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         def get_table_name():
             return self.model_def.model_class()._meta.db_table
         
+        db = router.db_for_read(self.model_def.model_class())
+        
         table_name = get_table_name()
         self.model_def.app_label = 'myapp'
         self.model_def.save()
-        self.assertTableDoesntExists(table_name)
+        self.assertTableDoesntExists(db, table_name)
         table_name = get_table_name()
-        self.assertTableExists(table_name)
+        self.assertTableExists(db, table_name)
         
         self.model_def.object_name = 'MyModel'
         self.model_def.save()
-        self.assertTableDoesntExists(table_name)
+        self.assertTableDoesntExists(db, table_name)
         table_name = get_table_name()
-        self.assertTableExists(table_name)
+        self.assertTableExists(db, table_name)
         
         self.model_def.delete()
-        self.assertTableDoesntExists(table_name)
+        self.assertTableDoesntExists(db, table_name)
         
     def test_fixture_loading(self):
         call_command('loaddata', 'fixture_loading_test', verbosity=0, commit=False)
@@ -101,10 +104,11 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
                                            name="name", max_length=10)
         
         Model = self.model_def.model_class()
+        db = router.db_for_write(Model)
         instance = Model.objects.create(name="Quebec")
         table_name = Model._meta.db_table
         self.model_def.delete()
-        self.assertTableDoesntExists(table_name)
+        self.assertTableDoesntExists(db, table_name)
         
         with self.assertRaises(AttributeError):
             Model(name="name")
@@ -154,6 +158,7 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
             ordering.lookup = 'f2__higgs_boson'
             ordering.clean()
 
+    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_simple_ordering(self):
         Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model) #app
@@ -197,6 +202,7 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
                                  transform=lambda x: x['f1'], ordered=True)
         f2_ordering.delete()
     
+    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_multiple_ordering(self):
         Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model) #app
@@ -428,5 +434,6 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         # This should cause the model to loose all it's fields and the table
         # to loose all it's columns
         bd.delete()
-        self.assertEqual(list(Model.objects.values_list()), [(1,), (2,)])
+        self.assertEqual(list(Model.objects.values_list()),
+                         [(instance.id,) for instance in Model.objects.all()])
         self.assertFieldDoesntExists(Model._meta.db_table, 'field')

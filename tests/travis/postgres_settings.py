@@ -1,5 +1,5 @@
 
-from test_project.settings import *
+from ..test_project.settings import *
 
 DATABASES = {
     'default': {
