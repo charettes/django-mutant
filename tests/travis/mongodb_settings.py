@@ -1,2 +1,2 @@
 
-from ..mongodb_settings import *
+from mongodb_settings import *
