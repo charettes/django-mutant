@@ -128,9 +128,13 @@ class ModelDefinition(ContentType):
         attrs = {
             'app_label': self.app_label,
             'db_table': _get_db_table(*self.natural_key()),
-            'verbose_name': self.verbose_name,
-            'verbose_name_plural': self.verbose_name_plural,
         }
+        
+        if self.verbose_name is not None:
+            attrs['verbose_name'] = self.verbose_name
+            
+        if self.verbose_name_plural is not None:
+            attrs['verbose_name_plural'] = self.verbose_name_plural
         
         unique_together = tuple(tuple(utd.field_defs.names())
                                     for utd in self.uniquetogetherdefinitions.all())

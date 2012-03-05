@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import models, router
 from django.db.utils import IntegrityError
+from django.utils.translation import ugettext
 
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
@@ -17,10 +18,10 @@ from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
     def test_model_class_creation_cache(self):
-        Member = self.model_def.model_class()
-        self.assertEqual(Member, self.model_def.model_class())
+        Model = self.model_def.model_class()
+        self.assertEqual(Model, self.model_def.model_class())
         
-        self.assertNotEqual(Member, self.model_def.model_class(force_create=True))
+        self.assertNotEqual(Model, self.model_def.model_class(force_create=True))
 
     def test_rename_model(self):
         """
@@ -54,6 +55,19 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
                                                 object_name='MyFixtureModel')
         Model = model_def.model_class()
         Model.objects.create()
+        
+    def test_verbose_name(self):
+        Model = self.model_def.model_class()
+        
+        self.assertEqual(Model._meta.verbose_name, self.model_def.model)
+        self.assertEqual(Model._meta.verbose_name_plural, "%ss" % self.model_def.model)
+        
+        self.model_def.verbose_name = u'MyMoDeL'
+        self.model_def.verbose_name_plural = u'MyMoDeLZ0Rs'
+        self.model_def.save()
+        
+        self.assertEqual(Model._meta.verbose_name, ugettext(u'MyMoDeL'))
+        self.assertEqual(Model._meta.verbose_name_plural, ugettext(u'MyMoDeLZ0Rs'))
             
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
