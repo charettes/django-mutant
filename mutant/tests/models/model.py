@@ -5,11 +5,11 @@ from django.core.management import call_command
 from django.db import models, router
 from django.db.utils import IntegrityError
 
-from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
-    UniqueTogetherDefinition, BaseDefinition)
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.db.models import MutableModel
+from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
+    UniqueTogetherDefinition, BaseDefinition)
 from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
     skipUnlessMutantModelDBFeature)
 
@@ -78,6 +78,8 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
         halak.save()
         
         assert issubclass(Model, models.Model)
+        
+        assert issubclass(Model, MutableModel)
         
         assert unicode(Model) == u"<class 'mutant.apps.app.models.Model'>"
         
