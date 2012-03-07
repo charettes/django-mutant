@@ -25,8 +25,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         
     def _table_fields_iterator(self, table_name):
         cursor = connection.cursor()
-        description = connection.introspection.get_table_description(cursor, 
-                                                                     table_name)
+        description = connection.introspection.get_table_description(cursor, table_name)
         return (row[0] for row in description)
     
     def assertFieldExists(self, table_name, field_name):
@@ -42,6 +41,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                           table_name, field_name)
 
 def _get_mutant_model_db():
+    # TODO: This should rely on syncdb instead
     return router.db_for_write(MutableModel)
 
 def skipIfMutantModelDBFeature(feature, default=False):
