@@ -18,6 +18,8 @@ INSTALLED_APPS.extend(['django_mongodb_engine', 'djangotoolbox'])
 # FK and M2M are not supported for nonrel db so we make sure to avoid
 # loading mutant.contrib.related
 INSTALLED_APPS.remove('mutant.contrib.related')
+# But we can test the non rel fields
+INSTALLED_APPS.append('mutant.contrib.nonrel')
 
 DATABASE_ROUTERS = (
     'mongodb_router.MongoRouter',
