@@ -9,7 +9,10 @@ class _ObjectWrapper(object):
         self._obj = obj
 
 class PickledObjectField(_PickledObjectField):
-    
+    """
+    A subclass that make sure to wrap objects with a `prepare_database_save`
+    method in a special wrapper in order to avoid chaos in django's internal.
+    """
     def to_python(self, value):
         value = super(PickledObjectField, self).to_python(value)
         if isinstance(value, _ObjectWrapper):
