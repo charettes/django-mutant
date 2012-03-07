@@ -54,7 +54,7 @@ class InheritedModelManager(Manager):
     def get_query_set(self):
         return self.InheritanceQuerySet(self.model, using=self._db)
 
-class ChoiceDefinitionManager(Manager):
+class FieldDefinitionChoiceManager(Manager):
     use_for_related_fields = True
     
     class ChoiceDefinitionQuerySet(QuerySet):

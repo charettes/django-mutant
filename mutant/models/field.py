@@ -6,12 +6,12 @@ from django.db import models
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
+import orderable
 from picklefield.fields import dbsafe_encode
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PickledObjectField, ProxyAwareGenericForeignKey, PythonIdentifierField)
-from ..managers import InheritedModelManager
-from .choice import ChoiceDefinition
+from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
 from .model import ModelDefinitionAttribute
 
 
@@ -220,6 +220,9 @@ class FieldDefinition(ModelDefinitionAttribute):
     def get_field_description(cls):
         return capfirst(cls._meta.verbose_name)
     
+    def get_field_choices(self):
+        return tuple(self.choices.as_choices())
+    
     def get_field_options(self):
         opts = self._meta
         options = {}
@@ -227,7 +230,7 @@ class FieldDefinition(ModelDefinitionAttribute):
             value = getattr(self, name)
             if value != opts.get_field(name).get_default():
                 options[name] = value
-        choices = tuple(self.choices.as_choices())
+        choices = self.get_field_choices()
         if choices:
             options['choices'] = choices
         return options
@@ -258,14 +261,20 @@ class FieldDefinition(ModelDefinitionAttribute):
                 msg = _(u"%s is not a valid default value") % self.default
                 raise ValidationError({'default':[msg]})
 
-class FieldDefinitionChoice(ChoiceDefinition):
+class FieldDefinitionChoice(orderable.models.OrderableModel):
     """
     A Model to allow specifying choices for a field definition instance
     """
-    
+    field_def_type = FieldDefinitionTypeField(verbose_name=_(u'field_def type'))
     field_def_id = models.IntegerField(_(u'field_def def id'), db_index=True)
     field_def = ProxyAwareGenericForeignKey(ct_field='field_def_type',
                                             fk_field='field_def_id')
+    
+    group = LazilyTranslatedField(_(u'group'), blank=True, null=True)
+    value = models.CharField(_(u'value'), max_length=255)
+    label = LazilyTranslatedField(_(u'label'))
+    
+    objects = FieldDefinitionChoiceManager()
     
     class Meta:
         app_label = 'mutant'
