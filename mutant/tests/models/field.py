@@ -77,6 +77,9 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
     def test_clean(self):
         field = IntegerFieldDefinition(name='field', model_def=self.model_def)
         
+        # Field cleaning should work when a default value isn't provided
+        field.clean()
+        
         with self.assertRaises(ValidationError):
             field.default = 'invalid'
             field.clean()

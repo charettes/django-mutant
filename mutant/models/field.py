@@ -15,7 +15,7 @@ from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
 from .model import ModelDefinitionAttribute
 
 
-NOT_PROVIDED = default=dbsafe_encode(models.NOT_PROVIDED)
+NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
 
 class FieldDefinitionBase(models.base.ModelBase):
     
@@ -255,11 +255,13 @@ class FieldDefinition(ModelDefinitionAttribute):
             raise ValidationError(e)
         else:
             # Test the specified default value
-            try:
-                field.clean(field.get_default(), None)
-            except Exception:
-                msg = _(u"%s is not a valid default value") % self.default
-                raise ValidationError({'default':[msg]})
+            if field.has_default():
+                default_value = field.get_default()
+                try:
+                    field.clean(field.get_default(), None)
+                except Exception:
+                    msg = _(u"%s is not a valid default value") % repr(default_value)
+                    raise ValidationError({'default': [msg]})
 
 class FieldDefinitionChoice(orderable.models.OrderableModel):
     """
