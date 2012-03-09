@@ -256,11 +256,11 @@ class FieldDefinition(ModelDefinitionAttribute):
         else:
             # Test the specified default value
             if field.has_default():
-                default_value = field.get_default()
+                default = field.get_default()
                 try:
-                    field.clean(field.get_default(), None)
+                    field.clean(default, None)
                 except Exception:
-                    msg = _(u"%s is not a valid default value") % repr(default_value)
+                    msg = _(u"%r is not a valid default value") % default
                     raise ValidationError({'default': [msg]})
 
 class FieldDefinitionChoice(orderable.models.OrderableModel):
