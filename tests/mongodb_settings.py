@@ -11,7 +11,7 @@ DATABASES['mongo'] = {
   }
 }
 
-SOUTH_DATABASE_ADAPTERS = {'mongo': 'django_mongodb_engine.south'}
+SOUTH_DATABASE_ADAPTERS = {'mongo': 'django_mongodb_engine.south_adapter'}
 
 INSTALLED_APPS.extend(['django_mongodb_engine', 'djangotoolbox'])
 
