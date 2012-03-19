@@ -72,7 +72,7 @@ class IterableFieldDefinitionTest(BaseModelDefinitionTestCase):
         self.assertEqual(instance.field, value)
         
     def test_set_field(self):
-        default = {'Y', 'M', 'C', 'A'}
+        default = set(['Y', 'M', 'C', 'A'])
         field = SetFieldDefinition.objects.create(model_def=self.model_def,
                                                   name='field', default=default)
         field.full_clean()
@@ -81,7 +81,7 @@ class IterableFieldDefinitionTest(BaseModelDefinitionTestCase):
         instance = Model.objects.create()
         self.assertEqual(instance.field, default)
         
-        value = {'A', 'B', 'C', 1, 2, 3}
+        value = set(['A', 'B', 'C', 1, 2, 3])
         instance.field = value
         instance.save()
         
