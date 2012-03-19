@@ -1,9 +1,10 @@
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from .models import (DictFieldDefinition, ListFieldDefinition,
-    SetFieldDefinition)
+from .models import (DictFieldDefinition, EmbeddedModelFieldDefinition,
+    ListFieldDefinition, SetFieldDefinition)
 from ...tests.models import BaseModelDefinitionTestCase
 
 
@@ -91,4 +92,26 @@ class IterableFieldDefinitionTest(BaseModelDefinitionTestCase):
         
         instance = Model.objects.get()
         self.assertEqual(instance.field, value)
+
+def default_embedded():
+    return ContentType(app_label='abc', model='DoTheDance')
+
+class EmbeddedModelFieldTest(BaseModelDefinitionTestCase):
+    
+    def test_interactions(self):
+        field = EmbeddedModelFieldDefinition.objects.create(model_def=self.model_def,
+                                                            name='field',
+                                                            default=default_embedded)
+        field.full_clean()
         
+        
+        Model = self.model_def.model_class()
+        instance = Model.objects.create()
+        self.assertEqual(instance.field, default_embedded())
+        
+        value = ContentType(app_label='pyt', model='The way you move is a mistery')
+        instance.field = value
+        instance.save()
+        
+        instance = Model.objects.get()
+        self.assertEqual(instance.field, value)

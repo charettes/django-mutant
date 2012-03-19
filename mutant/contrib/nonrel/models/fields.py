@@ -65,8 +65,7 @@ class BlobFieldDefinition(FieldDefinition):
 class EmbeddedModelFieldDefinition(FieldDefinition):
     
     model = models.ForeignKey(ContentType, verbose_name=_(u'model'),
-                              related_name='+', blank=True, null=True,
-                              default=None)
+                              related_name='+', blank=True, null=True)
     
     class Meta:
         app_label = 'mutant'
