@@ -13,8 +13,8 @@ postgres:
   database: mutant
   username: postgres
 install:
-  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
   - python setup.py install
+  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors -I
 before_script:
   - "psql -c 'create database mutant;' -U postgres"
 script:
