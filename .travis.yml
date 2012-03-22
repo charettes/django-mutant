@@ -8,13 +8,13 @@ env:
   - REQUIREMENTS=trunk TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
   - REQUIREMENTS=trunk-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings
   - REQUIREMENTS=mongo TESTS="mutant boolean datetime file numeric nonrel text web" SETTINGS=mongodb_settings
-install:
-  - pip install -r requirements/$REQUIREMENTS.txt
-  - python setup.py install
 postgres:
   adapter: postgresql
   database: mutant
   username: postgres
+install:
+  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
+  - python setup.py install
 before_script:
   - "psql -c 'create database mutant;' -U postgres"
 script:

@@ -1,4 +1,4 @@
-Django>=1.3.1
+Django==1.3.1
 South==0.7.3
-https://github.com/tkaemming/django-orderable/tarball/master
+https://github.com/tkaemming/django-orderable/tarball/master#egg=django-orderable
 django-picklefield==0.1.9
