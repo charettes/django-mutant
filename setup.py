@@ -33,7 +33,7 @@ EDITABLE_REQUIREMENT = re.compile(r'^-e (?P<link>(?P<vcs>git|svn|hg|bzr).+#egg=(
 install_requires = []
 dependency_links = []
 
-for requirement in (l.strip() for l in open('requirements')):
+for requirement in (l.strip() for l in open('requirements/stable.txt')):
     match = EDITABLE_REQUIREMENT.match(requirement)
     if match:
         assert which(match.group('vcs')) is not None, \

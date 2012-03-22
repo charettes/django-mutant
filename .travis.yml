@@ -2,9 +2,14 @@ language: python
 python:
   - 2.6
   - 2.7
+env:
+  - REQUIREMENTS=stable TESTS="test mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
+  - REQUIREMENTS=stable-postgres TESTS="test mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings
+  - REQUIREMENTS=trunk TESTS="test mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
+  - REQUIREMENTS=trunk-postgres TESTS="test mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings
+  - REQUIREMENTS=mongo TESTS="test mutant boolean datetime file numeric nonrel text web" SETTINGS=mongodb_settings
 install:
-  - pip install -r requirements
-  - pip install psycopg2==2.4.1
+  - pip install -r requirements/$REQUIREMENTS.txt
   - python setup.py install
 postgres:
   adapter: postgresql
@@ -14,12 +19,4 @@ before_script:
   - "psql -c 'create database mutant;' -U postgres"
 script:
   - cd tests
-  - python manage.py test mutant boolean datetime file numeric related text web
-  - python manage.py test mutant boolean datetime file numeric related text web --settings=travis.postgres_settings
-  - pip uninstall django -y && pip install https://github.com/django/django/tarball/master
-  - python manage.py test mutant boolean datetime file numeric related text web
-  - python manage.py test mutant boolean datetime file numeric related text web --settings=travis.postgres_settings
-  - pip install https://github.com/django-nonrel/django-nonrel/tarball/develop -I
-  - pip install https://github.com/django-nonrel/djangotoolbox/tarball/develop
-  - pip install https://github.com/charettes/mongodb-engine/tarball/fix-south-adapter
-  - python manage.py test mutant boolean datetime file numeric nonrel text web --settings=mongodb_settings
+  - python manage.py test $TESTS --settings=$SETTINGS
