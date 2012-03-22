@@ -4,11 +4,10 @@ from setuptools import setup, find_packages
 
 from mutant import __version__
 
-
 github_url = 'https://github.com/charettes/django-mutant'
 long_desc = open('README.md').read()
 
-LINK_REQUIREMENT = re.compile(r'^(?P<link>https?://.+)#egg=(?P<package>.+)$')
+LINK_REQUIREMENT = re.compile(r'^(?P<link>https://.+#egg=(?P<package>.+)-(?P<version>\d(?:\.\d)*))$')
 
 install_requires = []
 dependency_links = []
@@ -16,7 +15,7 @@ dependency_links = []
 for requirement in (l.strip() for l in open('requirements/stable.txt')):
     match = LINK_REQUIREMENT.match(requirement)
     if match:
-        install_requires.append(match.group('package'))
+        install_requires.append("%(package)s==%(version)s" % match.groupdict())
         dependency_links.append(match.group('link'))
     else:
         install_requires.append(requirement)
