@@ -1,4 +1,4 @@
 Django>=1.3.1
 South==0.7.3
--e git+https://github.com/tkaemming/django-orderable#egg=django-orderable-1.2.1
+https://github.com/tkaemming/django-orderable/tarball/master
 django-picklefield==0.1.9
