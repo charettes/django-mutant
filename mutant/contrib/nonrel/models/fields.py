@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from djangotoolbox import fields
+from picklefield.fields import PickledObjectField
 
-from ....db.fields import PickledObjectField
 from ....hacks import patch_db_field_compare
 from ....models import FieldDefinition
 

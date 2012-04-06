@@ -8,9 +8,10 @@ from django.db.models.loading import cache as model_cache
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
+from picklefield.fields import PickledObjectField
 
 from ..db.fields import (LazilyTranslatedField,
-    PickledObjectField, PythonIdentifierField)
+    PythonIdentifierField)
 from ..db.models import MutableModel
 
 

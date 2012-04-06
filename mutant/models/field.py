@@ -7,10 +7,10 @@ from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
 import orderable
-from picklefield.fields import dbsafe_encode
+from picklefield.fields import dbsafe_encode, PickledObjectField
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    PickledObjectField, ProxyAwareGenericForeignKey, PythonIdentifierField)
+    ProxyAwareGenericForeignKey, PythonIdentifierField)
 from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
 from .model import ModelDefinitionAttribute
 
