@@ -1,6 +1,7 @@
 
 from test_project.settings import *
 
+
 DATABASES['mongo'] = {
   'ENGINE' : 'django_mongodb_engine',
   'NAME' : 'mutant',
