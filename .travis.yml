@@ -10,11 +10,11 @@ python:
 
 env:
   - REQUIREMENTS=1.3.X TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
-  - REQUIREMENTS=1.3.X-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
+  - REQUIREMENTS=1.3.X-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings TEMPLATE=template0
   - REQUIREMENTS=stable TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
-  - REQUIREMENTS=stable-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings
+  - REQUIREMENTS=stable-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings TEMPLATE=template0
   - REQUIREMENTS=trunk TESTS="mutant boolean datetime file numeric related text web" SETTINGS=test_project.settings
-  - REQUIREMENTS=trunk-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings
+  - REQUIREMENTS=trunk-postgres TESTS="mutant boolean datetime file numeric related text web" SETTINGS=travis.postgres_settings TEMPLATE=template0
   - REQUIREMENTS=mongo TESTS="mutant boolean datetime file numeric nonrel text web" SETTINGS=mongodb_settings
 
 postgres:
@@ -27,9 +27,8 @@ install:
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors -I
 
 before_script:
-  - "psql -c 'create database mutant;' -U postgres"
+  - "echo $REQUIREMENTS | grep 'postgres' && psql -c 'CREATE DATABASE mutant TEMPLATE $TEMPLATE;' -U postgres"
 
 script:
   - cd tests
   - python manage.py test $TESTS --settings=$SETTINGS
-
