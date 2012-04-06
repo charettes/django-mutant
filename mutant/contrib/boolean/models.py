@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ...models import FieldDefinition
 
+
 class BooleanFieldDefinition(FieldDefinition):
     
     class Meta:
