@@ -11,4 +11,4 @@ class GeoModel(models.Model):
     objects = models.GeoManager()
     
     class Meta:
-        proxy = True
+        abstract = True

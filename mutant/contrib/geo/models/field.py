@@ -2,7 +2,7 @@
 from django.contrib.gis.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from ...models import FieldDefinition
+from ....models import FieldDefinition
 
 
 DIM_CHOICES = (
