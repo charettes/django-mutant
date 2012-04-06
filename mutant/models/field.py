@@ -81,8 +81,8 @@ class FieldDefinitionBase(models.base.ModelBase):
                     # see https://code.djangoproject.com/ticket/16572
                     cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
             
-            # Dynamically connection signals to avoid connecting the signal
-            # with no sender and checking if it's a subclass of FieldDefinition
+            # Dynamically connecting signals instead of defining a catch all
+            # and testing if it's a subclass of FieldDefinition
             from mutant.management import connect_field_definition
             connect_field_definition(definition)
         
@@ -181,7 +181,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     def type_cast(self):
         field_type_model = self.field_type.model
         
-        # Cast to the right concrete model by the going up in the 
+        # Cast to the right concrete model by going up in the 
         # SingleRelatedObjectDescriptor chain
         type_casted = self
         for subclass in FieldDefinitionBase._lookups[field_type_model]:
@@ -286,12 +286,12 @@ class FieldDefinitionChoice(orderable.models.OrderableModel):
                            ('field_def_type', 'field_def_id', 'group', 'value'))
     
     def clean(self):
+        messages = {}
+        
         try:
             self.field_def.field_instance().clean(self.value, None)
         except ValidationError as e:
-            messages = {'value': e.messages}
-        else:
-            messages = {}
+            messages['value'] = e.messages
             
         if not isinstance(self.field_def, FieldDefinition):
             msg = _(u'This must be an instance of a `FieldDefinition`')
