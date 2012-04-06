@@ -27,7 +27,7 @@ install:
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors -I
 
 before_script:
-  - "if echo $REQUIREMENTS | grep 'postgres'; then psql -c 'CREATE DATABASE mutant TEMPLATE $TEMPLATE;' -U postgres; fi"
+  - "if echo $REQUIREMENTS | grep 'postgres'; then psql -c \"CREATE DATABASE mutant TEMPLATE ${TEMPLATE};\" -U postgres; fi"
 
 script:
   - cd tests
