@@ -9,9 +9,10 @@ def patch_db_field_compare():
     try:
         assert Field() != None
     except AttributeError:
-        def _Field__cmp__(self, other):
+        del Field.__cmp__
+        def _Field__lt__(self, other):
             if isinstance(other, Field):
-                return cmp(self.creation_counter, other.creation_counter)
+                return self.creation_counter < other.creation_counter
             return NotImplemented
-        Field.__cmp__ = _Field__cmp__
+        Field.__lt__ = _Field__lt__
         assert Field() != None
