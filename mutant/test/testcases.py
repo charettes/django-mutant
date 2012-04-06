@@ -2,47 +2,23 @@ import re
 
 import django
 from django.contrib.contenttypes.models import ContentType
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import connections
 from django.test.testcases import TestCase
+from south.db import dbs as south_dbs
 
 from ..models.model import ModelDefinition
 
-_connection_support_dll_transactions_cache = {}
-def connection_support_dll_transactions(connection):
-    alias = connection.alias
-    if alias in _connection_support_dll_transactions_cache:
-        return _connection_support_dll_transactions_cache[alias]
-    support = False
-    if connection.features.supports_transactions:
-        transaction.enter_transaction_management(using=alias)
-        transaction.managed(True, using=alias)
-        cursor = connection.cursor()
-        cursor.execute('CREATE TABLE DDL_TRANSACTION_TEST (X INT)')
-        transaction.rollback(using=alias)
-        transaction.leave_transaction_management(using=alias)
-        try:
-            cursor.execute('CREATE TABLE DDL_TRANSACTION_TEST (X INT)')
-        except DatabaseError:
-            pass
-        else:
-            support = True
-        finally:
-            cursor.execute('DROP TABLE DDL_TRANSACTION_TEST')
-    _connection_support_dll_transactions_cache[alias] = support
-    return support
 
 def connections_support_ddl_transactions():
     """
     Returns True if all connections support ddl transactions
     """
-    return all(connection_support_dll_transactions(connection)
-               for connection in connections.all())
+    return all(south_dbs[name].has_ddl_transactions for name in connections)
 
 class DDLTestCase(TestCase):
     """
-    A class that behaves like TestCase if connections support ddl transactions
-    or else like TransactionTestCase.
+    A class that behaves like TestCase if all connections support ddl
+    transactions or like TransactionTestCase if it's not the case.
     """
     
     def _fixture_setup(self):
