@@ -257,3 +257,12 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         
         return save
 
+    def delete(self, *args, **kwargs):
+        # TODO: This should be hooked to signals somehow
+        model = self.model_def.model_class()
+        field = model._meta.get_field(str(self.name))
+        intermediary_model_table = field.rel.through._meta.db_table
+        south_api.delete_table(intermediary_model_table)
+        return super(ManyToManyFieldDefinition, self).delete(*args, **kwargs)
+        
+        

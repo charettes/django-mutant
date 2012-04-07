@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+from StringIO import StringIO
+import sys
 
 from django.db import connection, connections, router
 from django.test.testcases import _deferredSkip
@@ -15,6 +18,21 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
     
+    @contextmanager
+    def captureStds(self):
+        stdin = sys.stdin
+        stdout = sys.stdout
+        stderr = sys.stderr
+        try:
+            sys.stdin = StringIO()
+            sys.stdout = StringIO()
+            sys.stderr = StringIO()
+            yield sys.stdin, sys.stdout, sys.stderr
+        finally:
+            sys.stdin = stdin
+            sys.stdout = stdout
+            sys.stderr = stderr
+        
     def assertTableExists(self, db, table_name):
         tables = connections[db].introspection.table_names()
         msg = "Table '%s.%s' doesn't exist, existing tables are %s"
@@ -23,21 +41,21 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
     def assertTableDoesntExists(self, db, table_name):
         self.assertRaises(AssertionError, self.assertTableExists, db, table_name)
         
-    def _table_fields_iterator(self, table_name):
+    def _table_columns_iterator(self, table_name):
         cursor = connection.cursor()
         description = connection.introspection.get_table_description(cursor, table_name)
         return (row[0] for row in description)
     
-    def assertFieldExists(self, table_name, field_name):
-        fields = self._table_fields_iterator(table_name)
+    def assertColumnExists(self, table_name, field_name):
+        fields = self._table_columns_iterator(table_name)
         self.assertTrue(field_name in fields,
                         "Field '%(table)s.%(field)s' doesn't exist, '%(table)s'"
                         "'s fields are %(fields)s" % {'table': table_name,
                                                       'field': field_name,
                                                       'fields': fields})
         
-    def assertFieldDoesntExists(self, table_name, field_name):
-        self.assertRaises(AssertionError, self.assertFieldExists,
+    def assertColumnDoesntExists(self, table_name, field_name):
+        self.assertRaises(AssertionError, self.assertColumnExists,
                           table_name, field_name)
 
 def _get_mutant_model_db():

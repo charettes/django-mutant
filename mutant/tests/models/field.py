@@ -1,7 +1,5 @@
 
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
@@ -20,52 +18,6 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
         
         Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
-
-class FieldDefinitionManipulationTest(BaseModelDefinitionTestCase):
-    
-    def setUp(self):
-        super(FieldDefinitionManipulationTest, self).setUp()
-        self.field = CharFieldDefinition.objects.create(name='name',
-                                                        max_length=20,
-                                                        model_def=self.model_def)
-    
-    def test_field_renaming(self):
-        Model = self.model_def.model_class()
-        
-        Model.objects.create(name='Pepe')
-        
-        self.field.name = 'first_name'
-        self.field.save()
-        
-        instance = Model.objects.get()
-        self.assertEqual(instance.first_name, 'Pepe')
-        
-        msg = "'name' is an invalid keyword argument for this function"
-        self.assertRaisesMessage(TypeError, msg,
-                                 Model.objects.create, name="Simon")
-        
-        Model.objects.create(first_name="Julien")
-    
-    def test_field_removal(self):
-        Model = self.model_def.model_class()
-        Model.objects.create(name='Popo')
-        self.field.delete()
-        msg = "'name' is an invalid keyword argument for this function"
-        self.assertRaisesMessage(TypeError, msg,
-                                 Model.objects.create, name="Simon")
-    
-    def test_unique(self):
-        self.field.unique = True
-        self.field.save()
-        Model = self.model_def.model_class()
-        
-        Model.objects.create(name='Simon')
-        with self.assertRaises(IntegrityError):
-            Model.objects.create(name='Simon')
-                
-    def test_field_description(self):
-        self.assertEqual(CharFieldDefinition.get_field_description(),
-                         _('Char field'))
 
 def module_level_pickable_default():
     module_level_pickable_default.incr += 1

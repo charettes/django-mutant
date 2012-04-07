@@ -85,12 +85,3 @@ class DecimalFieldDefinition(_NumericFieldDefinition):
         verbose_name_plural = _(u'decimal fields')
         defined_field_class = fields.DecimalField
         defined_field_options = ('max_digits', 'decimal_places',)
-        
-class CommaSeparatedIntegerFieldDefinition(_NumericFieldDefinition):
-    
-    class Meta:
-        app_label = 'mutant'
-        proxy = True
-        verbose_name = _(u'comma separated integer field')
-        verbose_name_plural = _(u'comma separated integer fields')
-        defined_field_class = fields.CommaSeparatedIntegerField
