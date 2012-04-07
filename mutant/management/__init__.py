@@ -17,7 +17,6 @@ def allow_syncdbs(model):
 def perform_ddl(model, action, *args, **kwargs):
     for db in allow_syncdbs(model):
         getattr(db, action)(*args, **kwargs)
-        db.execute_deferred_sql()
 
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
     if raw:
@@ -93,7 +92,6 @@ def base_definition_post_delete(sender, instance, **kwargs):
         for field in instance.base._meta.fields:
             for db in syncdbs:
                 db.delete_column(table_name, field.name)
-                db.execute_deferred_sql()
         del instance._state._deletion
 
 post_delete.connect(base_definition_post_delete, BaseDefinition,
@@ -133,6 +131,8 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
             keep_default = True
         perform_ddl(model_class, 'add_column', table_name,
                     instance.name, field, keep_default=keep_default)
+        # This is needed for gis fields
+        perform_ddl(model_class, 'execute_deferred_sql')
     else:
         __, column = field.get_attname_column()
         old_field = instance._old_field
@@ -173,7 +173,6 @@ def field_definition_post_delete(sender, instance, **kwargs):
     syncdbs, table_name, name = instance._state._deletion
     for db in syncdbs:
         db.delete_column(table_name, name)
-        db.execute_deferred_sql()
     del instance._state._deletion
     
 def connect_field_definition(definition):
