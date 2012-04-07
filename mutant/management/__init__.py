@@ -17,6 +17,7 @@ def allow_syncdbs(model):
 def perform_ddl(model, action, *args, **kwargs):
     for db in allow_syncdbs(model):
         getattr(db, action)(*args, **kwargs)
+        db.execute_deferred_sql()
 
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
     if raw:
@@ -90,8 +91,9 @@ def base_definition_post_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
         syncdbs, table_name = instance._state._deletion
         for field in instance.base._meta.fields:
-            for db in syncdbs:  
+            for db in syncdbs:
                 db.delete_column(table_name, field.name)
+                db.execute_deferred_sql()
         del instance._state._deletion
 
 post_delete.connect(base_definition_post_delete, BaseDefinition,
@@ -169,8 +171,9 @@ def field_definition_post_delete(sender, instance, **kwargs):
     see comment in FieldDefinitionBase for more details
     """
     syncdbs, table_name, name = instance._state._deletion
-    for db in syncdbs:   
+    for db in syncdbs:
         db.delete_column(table_name, name)
+        db.execute_deferred_sql()
     del instance._state._deletion
     
 def connect_field_definition(definition):
