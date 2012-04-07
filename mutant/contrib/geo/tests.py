@@ -1,88 +1,16 @@
 
 from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)
-from django.db.utils import IntegrityError
+
+from ...models import BaseDefinition
+from ...test.testcases import FieldDefinitionTestMixin
+from ...tests.models import BaseModelDefinitionTestCase
 
 from .models import (GeoModel, GeometryCollectionFieldDefinition,
     LineStringFieldDefinition, PointFieldDefinition, PolygonFieldDefinition,
     MultiLineStringFieldDefinition, MultiPointFieldDefinition,
     MultiPolygonFieldDefinition)
-from ...models import BaseDefinition
-from ...tests.models import BaseModelDefinitionTestCase
 
-
-class FieldDefinitionTestMixin(object):
-    
-    field_defintion_init_kwargs = {}
-    field_values = ()
-    
-    def setUp(self):
-        super(GeometryFieldDefinitionBaseTest, self).setUp()
-        self.field = self.field_definition_cls.objects.create(model_def=self.model_def,
-                                                              name='field',
-                                                              **self.field_defintion_init_kwargs)
-        
-    def test_field_default(self):
-        default, field = self.field_values[0], self.field
-        
-        field.default = default
-        field.full_clean()
-        field.save()
-        
-        Model = self.model_def.model_class()
-        instance = Model.objects.create()
-        self.assertEqual(instance.field, default)
-        
-    def test_model_save(self):
-        first_value, second_value = self.field_values
-        
-        Model = self.model_def.model_class()
-        instance = Model.objects.create(field=first_value)
-        self.assertEqual(instance.field, first_value)
-        
-        instance.field = second_value
-        instance.save()
-        instance = Model.objects.get()
-        self.assertEqual(instance.field, second_value)
-        
-    def test_field_renaming(self):
-        value = self.field_values[0]
-        Model = self.model_def.model_class()
-        
-        Model.objects.create(field=value)
-        
-        self.field.name = 'renamed_field'
-        self.field.save()
-        
-        instance = Model.objects.get()
-        self.assertEqual(instance.renamed_field, value)
-        
-        msg = "'field' is an invalid keyword argument for this function"
-        self.assertRaisesMessage(TypeError, msg, Model, field=value)
-        
-        Model.objects.create(renamed_field=value)
-        
-    def test_field_deletion(self):
-        value = self.field_values[0]
-        Model = self.model_def.model_class()
-        
-        Model.objects.create(field=value)
-
-        self.field.delete()
-        
-        msg = "'field' is an invalid keyword argument for this function"
-        self.assertRaisesMessage(TypeError, msg, Model, field=value)
-        
-    def test_field_unique(self):
-        value = self.field_values[0]
-        Model = self.model_def.model_class()
-        
-        self.field.unique = True
-        self.field.save()
-        
-        Model.objects.create(field=value)
-        with self.assertRaises(IntegrityError):
-            Model.objects.create(field=value)
 
 class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
     
