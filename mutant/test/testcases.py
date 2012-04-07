@@ -3,6 +3,7 @@ import re
 import django
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections
+from django.db.utils import IntegrityError
 from django.test.testcases import TestCase
 from south.db import dbs as south_dbs
 
@@ -42,7 +43,7 @@ class ModelDefinitionDDLTestCase(DDLTestCase):
             for md in ModelDefinition.objects.all():
                 md.delete()
         ContentType.objects.clear_cache()
-        
+
 class VersionCompatMixinTestCase(TestCase):
     
     # Django < 1.4 doesn't have assertIsIntance and `ordered` kwarg for assertQuerysetEqual
@@ -56,4 +57,78 @@ class VersionCompatMixinTestCase(TestCase):
             if not ordered:
                 return self.assertEqual(set(map(transform, qs)), set(values))
             return self.assertEqual(map(transform, qs), values)
+        
+class FieldDefinitionTestMixin(object):
+    
+    field_defintion_init_kwargs = {}
+    field_values = ()
+    
+    def setUp(self):
+        super(FieldDefinitionTestMixin, self).setUp()
+        self.field = self.field_definition_cls.objects.create(model_def=self.model_def,
+                                                              name='field',
+                                                              **self.field_defintion_init_kwargs)
+        
+    def test_field_default(self):
+        default, field = self.field_values[0], self.field
+        
+        field.default = default
+        field.full_clean()
+        field.save()
+        
+        Model = self.model_def.model_class()
+        instance = Model.objects.create()
+        self.assertEqual(instance.field, default)
+        
+    def test_model_save(self):
+        first_value, second_value = self.field_values
+        
+        Model = self.model_def.model_class()
+        instance = Model.objects.create(field=first_value)
+        self.assertEqual(instance.field, first_value)
+        
+        instance.field = second_value
+        instance.save()
+        instance = Model.objects.get()
+        self.assertEqual(instance.field, second_value)
+        
+    def test_field_renaming(self):
+        value = self.field_values[0]
+        Model = self.model_def.model_class()
+        
+        Model.objects.create(field=value)
+        
+        self.field.name = 'renamed_field'
+        self.field.save()
+        
+        instance = Model.objects.get()
+        self.assertEqual(instance.renamed_field, value)
+        
+        msg = "'field' is an invalid keyword argument for this function"
+        self.assertRaisesMessage(TypeError, msg, Model, field=value)
+        
+        Model.objects.create(renamed_field=value)
+        
+    def test_field_deletion(self):
+        value = self.field_values[0]
+        Model = self.model_def.model_class()
+        
+        Model.objects.create(field=value)
+
+        self.field.delete()
+        
+        msg = "'field' is an invalid keyword argument for this function"
+        self.assertRaisesMessage(TypeError, msg, Model, field=value)
+        
+    def test_field_unique(self):
+        value = self.field_values[0]
+        Model = self.model_def.model_class()
+        
+        self.field.unique = True
+        self.field.save()
+        
+        Model.objects.create(field=value)
+        with self.assertRaises(IntegrityError):
+            Model.objects.create(field=value)
+
         
