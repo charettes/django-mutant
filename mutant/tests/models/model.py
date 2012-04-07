@@ -455,4 +455,4 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         bd.delete()
         self.assertEqual(list(Model.objects.values_list()),
                          [(instance.id,) for instance in Model.objects.all()])
-        self.assertFieldDoesntExists(Model._meta.db_table, 'field')
+        self.assertColumnDoesntExists(Model._meta.db_table, 'field')

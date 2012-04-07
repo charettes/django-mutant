@@ -41,21 +41,21 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
     def assertTableDoesntExists(self, db, table_name):
         self.assertRaises(AssertionError, self.assertTableExists, db, table_name)
         
-    def _table_fields_iterator(self, table_name):
+    def _table_columns_iterator(self, table_name):
         cursor = connection.cursor()
         description = connection.introspection.get_table_description(cursor, table_name)
         return (row[0] for row in description)
     
-    def assertFieldExists(self, table_name, field_name):
-        fields = self._table_fields_iterator(table_name)
+    def assertColumnExists(self, table_name, field_name):
+        fields = self._table_columns_iterator(table_name)
         self.assertTrue(field_name in fields,
                         "Field '%(table)s.%(field)s' doesn't exist, '%(table)s'"
                         "'s fields are %(fields)s" % {'table': table_name,
                                                       'field': field_name,
                                                       'fields': fields})
         
-    def assertFieldDoesntExists(self, table_name, field_name):
-        self.assertRaises(AssertionError, self.assertFieldExists,
+    def assertColumnDoesntExists(self, table_name, field_name):
+        self.assertRaises(AssertionError, self.assertColumnExists,
                           table_name, field_name)
 
 def _get_mutant_model_db():
