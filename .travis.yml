@@ -31,8 +31,8 @@ install:
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors -I
 
 before_script:
-  - "if echo $SETTINGS | grep 'postgis'; then apt-get update && apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis postgresql-server-dev-9.1; fi"
-  - "if echo $SETTINGS | grep 'postgis'; then su postgres -c './tests/travis/create_template_postgis-debian.sh'; fi"
+  - "if echo $SETTINGS | grep 'postgis'; then sudo apt-get update && sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis postgresql-server-dev-9.1; fi"
+  - "if echo $SETTINGS | grep 'postgis'; then sudo su postgres -c './tests/travis/create_template_postgis-debian.sh'; fi"
   - "if echo $SETTINGS | grep -E '(postgres|postgis)'; then psql -c \"CREATE DATABASE mutant TEMPLATE ${TEMPLATE};\" -U postgres; fi"
 
 script:
