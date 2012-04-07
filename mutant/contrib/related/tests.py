@@ -11,10 +11,13 @@ from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_defintion_init_kwargs = {
-        'to': ContentType.objects.get_for_model(ContentType),
-        'null': True
-    }
+    
+    def setUp(self):
+        self.field_defintion_init_kwargs = {
+            'to': ContentType.objects.get_for_model(ContentType),
+            'null': True
+        }
+        super(RelatedFieldDefinitionTestMixin, self).setUp()
     
     def test_field_renaming(self):
         # TODO: Investigate why this fails
@@ -35,10 +38,13 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
 class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
     field_definition_cls = ForeignKeyDefinition
-    field_values = (
-        ContentType.objects.get_for_model(ContentType),
-        ContentType.objects.get_for_model(ModelDefinition),
-    )
+    
+    def setUp(self):
+        self.field_values = (
+            ContentType.objects.get_for_model(ContentType),
+            ContentType.objects.get_for_model(ModelDefinition),
+        )
+        super(ForeignKeyDefinitionTest, self).setUp()
     
     def test_simple_foreign_key_between_mutable_models(self):
         first_model_def = self.model_def
@@ -152,13 +158,14 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
 class ManyToManyFieldDefinitionTest(RelatedFieldDefinitionTestMixin,
                                     BaseModelDefinitionTestCase):
     field_definition_cls = ManyToManyFieldDefinition
-    field_values = (
-        [ContentType.objects.get_for_model(ContentType)],
-        [
-         ContentType.objects.get_for_model(ModelDefinition),
-         ContentType.objects.get_for_model(ContentType)
-        ]
-    )
+    
+    def setUp(self):
+        self.field_values = (
+            [ContentType.objects.get_for_model(ContentType)],
+            [ContentType.objects.get_for_model(ModelDefinition),
+             ContentType.objects.get_for_model(ContentType)]
+        )
+        super(ManyToManyFieldDefinitionTest, self).setUp()
     
     def get_field_value(self, instance, name='field'):
         value = super(RelatedFieldDefinitionTestMixin, self).get_field_value(instance, name)
