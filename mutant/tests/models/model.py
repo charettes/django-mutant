@@ -308,8 +308,9 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         """
         self.Model.objects.create(f1='a', f2='b')
         self.Model.objects.create(f1='a', f2='b')
-        with self.assertRaises(IntegrityError):
-            self.ut.field_defs.add(self.f1, self.f2)
+        with self.captureStds():
+            with self.assertRaises(IntegrityError):
+                self.ut.field_defs.add(self.f1, self.f2)
     
     def test_cannot_insert_duplicate_row(self):
         """
@@ -317,8 +318,9 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         """
         self.Model.objects.create(f1='a', f2='b')
         self.ut.field_defs.add(self.f1, self.f2)
-        with self.assertRaises(IntegrityError):
-            self.Model.objects.create(f1='a', f2='b')
+        with self.captureStds():
+            with self.assertRaises(IntegrityError):
+                self.Model.objects.create(f1='a', f2='b')
     
     def test_cannot_remove_unique(self):
         """
@@ -328,8 +330,9 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.field_defs.add(self.f1, self.f2)
         self.Model.objects.create(f1='a', f2='b')
         self.Model.objects.create(f1='a', f2='c')
-        with self.assertRaises(IntegrityError):
-            self.ut.field_defs.remove(self.f2)
+        with self.captureStds():
+            with self.assertRaises(IntegrityError):
+                self.ut.field_defs.remove(self.f2)
 
     def test_clear_removes_unique(self):
         """
