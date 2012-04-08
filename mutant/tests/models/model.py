@@ -1,3 +1,4 @@
+from test.test_support import captured_stderr
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -308,7 +309,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         """
         self.Model.objects.create(f1='a', f2='b')
         self.Model.objects.create(f1='a', f2='b')
-        with self.captureStds():
+        with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.ut.field_defs.add(self.f1, self.f2)
     
@@ -318,7 +319,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         """
         self.Model.objects.create(f1='a', f2='b')
         self.ut.field_defs.add(self.f1, self.f2)
-        with self.captureStds():
+        with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.Model.objects.create(f1='a', f2='b')
     
@@ -330,7 +331,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.field_defs.add(self.f1, self.f2)
         self.Model.objects.create(f1='a', f2='b')
         self.Model.objects.create(f1='a', f2='c')
-        with self.captureStds():
+        with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.ut.field_defs.remove(self.f2)
 

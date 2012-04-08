@@ -1,6 +1,3 @@
-from contextlib import contextmanager
-from StringIO import StringIO
-import sys
 
 from django.db import connection, connections, router
 from django.test.testcases import _deferredSkip
@@ -17,21 +14,6 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
-    
-    @contextmanager
-    def captureStds(self):
-        stdin = sys.stdin
-        stdout = sys.stdout
-        stderr = sys.stderr
-        try:
-            sys.stdin = StringIO()
-            sys.stdout = StringIO()
-            sys.stderr = StringIO()
-            yield sys.stdin, sys.stdout, sys.stderr
-        finally:
-            sys.stdin = stdin
-            sys.stdout = stdout
-            sys.stderr = stderr
         
     def assertTableExists(self, db, table_name):
         tables = connections[db].introspection.table_names()
