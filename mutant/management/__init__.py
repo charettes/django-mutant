@@ -131,8 +131,6 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
             keep_default = True
         perform_ddl(model_class, 'add_column', table_name,
                     instance.name, field, keep_default=keep_default)
-        # This is needed for gis fields
-        perform_ddl(model_class, 'execute_deferred_sql')
     else:
         __, column = field.get_attname_column()
         old_field = instance._old_field
@@ -142,7 +140,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         if column != old_column:
             perform_ddl(model_class, 'rename_column', table_name, old_column, column)
         
-        # Create/Drop unique and primarykey
+        # Create/Drop unique and primary key
         for opt in ('primary_key', 'unique'):
             value = getattr(field, opt)
             if value != getattr(old_field, opt):
