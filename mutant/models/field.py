@@ -1,3 +1,4 @@
+import warnings
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
@@ -12,6 +13,7 @@ from picklefield.fields import dbsafe_encode, PickledObjectField
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     ProxyAwareGenericForeignKey, PythonIdentifierField)
 from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
+
 from .model import ModelDefinitionAttribute
 
 
@@ -85,6 +87,18 @@ class FieldDefinitionBase(models.base.ModelBase):
             # and testing if it's a subclass of FieldDefinition
             from mutant.management import connect_field_definition
             connect_field_definition(definition)
+            
+            # Warn the user that they should rely on signals instead of
+            # overriding the delete methods since it might not be called
+            # when deleting the associated model definition.
+            if definition.delete != cls._base_definition.delete:
+                def_name = definition.__name__
+                warnings.warn("Avoid overriding the `delete` method on "
+                              "`FieldDefinition` subclass `%s` since it won't "
+                              "be called when the associated `ModelDefinition` "
+                              "is deleted. If you want to perform actions on "
+                              "deletion, add hooks to the `pre_delete` and "
+                              "`post_delete` signals." % def_name, UserWarning)
         
         definition._meta.defined_field_class = field_class
         definition._meta.defined_field_options = tuple(set(field_options))

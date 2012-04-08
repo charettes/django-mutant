@@ -3,6 +3,7 @@ from django.contrib.gis.db import models
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 
+from ....management import FIELD_DEFINITION_POST_SAVE_UID
 from ....models import FieldDefinition, FieldDefinitionBase
 
 from ..management import geometry_field_definition_post_save
@@ -17,7 +18,7 @@ class GeometryFieldDefinitionBase(FieldDefinitionBase):
         definition = super(GeometryFieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
         model = definition._meta.object_name.lower()
         post_save.disconnect(sender=definition,
-                             dispatch_uid="mutant.management.%s_post_save" % model)
+                             dispatch_uid=FIELD_DEFINITION_POST_SAVE_UID % model)
         post_save.connect(geometry_field_definition_post_save, definition)
         return definition
 

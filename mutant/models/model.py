@@ -223,15 +223,6 @@ class ModelDefinition(ContentType):
         return save
     
     def delete(self, *args, **kwargs):
-        # XXX: This is needed in order to call the correct FieldDefinition
-        # subclass delete method. ManyToManyFieldDefinition needs this to delete
-        # it's intermediary table.
-        for fd in self.fielddefinitions.select_subclasses():
-            # XXX: I don't know if that's because they are cached but
-            # some of them are already deleted...
-            if fd.pk is not None:
-                fd.delete()
-        
         model_class = self.model_class()
         
         delete = super(ModelDefinition, self).delete(*args, **kwargs)

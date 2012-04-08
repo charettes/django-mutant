@@ -79,7 +79,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
         model_class = instance.model_def.model_class()
         instance._state._deletion = (
-            allow_syncdbs(model_class),
+            tuple(allow_syncdbs(model_class)),
             model_class._meta.db_table,
         )
 
@@ -158,7 +158,7 @@ def field_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_def.model_class()
     opts = model_class._meta
     instance._state._deletion = (
-        allow_syncdbs(model_class),
+        tuple(allow_syncdbs(model_class)),
         opts.db_table,
         opts.get_field(instance.name).column
     )
@@ -173,12 +173,16 @@ def field_definition_post_delete(sender, instance, **kwargs):
         db.delete_column(table_name, name)
     del instance._state._deletion
     
+FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
+FIELD_DEFINITION_PRE_DELETE_UID = "mutant.management.%s_pre_delete"
+FIELD_DEFINITION_POST_DELETE_UID = "mutant.management.%s_post_delete"
+    
 def connect_field_definition(definition):
     model = definition._meta.object_name.lower()
     post_save.connect(field_definition_post_save, sender=definition,
-                      dispatch_uid="mutant.management.%s_post_save" % model)
+                      dispatch_uid=FIELD_DEFINITION_POST_SAVE_UID % model)
     pre_delete.connect(field_definition_pre_delete, sender=definition,
-                       dispatch_uid="mutant.management.%s_pre_delete" % model)
+                       dispatch_uid=FIELD_DEFINITION_PRE_DELETE_UID % model)
     post_delete.connect(field_definition_post_delete, sender=definition,
-                        dispatch_uid="mutant.management.%s_post_delete" % model)
+                        dispatch_uid=FIELD_DEFINITION_POST_DELETE_UID % model)
     

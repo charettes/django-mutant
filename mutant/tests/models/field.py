@@ -1,9 +1,12 @@
+import warnings
 
 from django.core.exceptions import ValidationError
+from django.utils.unittest.case import TestCase
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
-from mutant.models.field import FieldDefinitionChoice, NOT_PROVIDED
+from mutant.models.field import (FieldDefinition, FieldDefinitionChoice,
+    NOT_PROVIDED)
 from mutant.tests.models.utils import BaseModelDefinitionTestCase
 
 
@@ -18,6 +21,21 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
         
         Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
+
+class FieldDefinitionWarningsTest(TestCase):
+    
+    def test_delete_override_warning(self):
+        """
+        Make sure a warning is raised when declaring a `FieldDefinition`
+        subclass that override the `delete` method.
+        """
+        with warnings.catch_warnings(record=True) as w:
+            class CustomFieldDefinition(FieldDefinition):
+                def delete(self, *args, **kwargs):
+                    pass
+        self.assertIn('Avoid overriding the `delete` method on '
+                      '`FieldDefinition` subclass `CustomFieldDefinition`',
+                      w[0].message.message)
 
 def module_level_pickable_default():
     module_level_pickable_default.incr += 1
