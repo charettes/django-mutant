@@ -36,8 +36,8 @@ def _copy_fields(src, to_cls):
     the other way around.
     """
     fields = src._meta.fields
-    data = dict((f.attname, getattr(src, f.attname)) for f in fields)
-    return to_cls(**data)
+    data = tuple(getattr(src, field.attname) for field in fields)
+    return to_cls(*data)
 
 class FieldDefinitionBase(models.base.ModelBase):
     
