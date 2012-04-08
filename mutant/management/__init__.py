@@ -79,7 +79,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
         model_class = instance.model_def.model_class()
         instance._state._deletion = (
-            tuple(allow_syncdbs(model_class)),
+            allow_syncdbs(model_class),
             model_class._meta.db_table,
         )
 
@@ -105,7 +105,7 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
         table_name = model_class._meta.db_table
         if action in ('pre_add', 'pre_remove', 'pre_clear'):
             perform_ddl(model_class, 'delete_unique', table_name, columns)
-        # Safe guard againts m2m_changed.action api change
+        # Safe guard against m2m_changed.action API change
         elif action in ('post_add', 'post_remove'):
             perform_ddl(model_class, 'create_unique', table_name, columns)
             
@@ -150,39 +150,25 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
 
         perform_ddl(model_class, 'alter_column', table_name, column, field)
 
+FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
+
 def field_definition_pre_delete(sender, instance, **kwargs):
-    """
-    This signal is connected by all FieldDefinition subclasses
-    see comment in FieldDefinitionBase for more details
-    """
     model_class = instance.model_def.model_class()
     opts = model_class._meta
     instance._state._deletion = (
-        tuple(allow_syncdbs(model_class)),
+        allow_syncdbs(model_class),
         opts.db_table,
         opts.get_field(instance.name).column
     )
 
+pre_delete.connect(field_definition_pre_delete, sender=FieldDefinition,
+                   dispatch_uid='mutant.management.field_definition_pre_delete')
+
 def field_definition_post_delete(sender, instance, **kwargs):
-    """
-    This signal is connected by all FieldDefinition subclasses
-    see comment in FieldDefinitionBase for more details
-    """
     syncdbs, table_name, name = instance._state._deletion
     for db in syncdbs:
         db.delete_column(table_name, name)
     del instance._state._deletion
-    
-FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
-FIELD_DEFINITION_PRE_DELETE_UID = "mutant.management.%s_pre_delete"
-FIELD_DEFINITION_POST_DELETE_UID = "mutant.management.%s_post_delete"
-    
-def connect_field_definition(definition):
-    model = definition._meta.object_name.lower()
-    post_save.connect(field_definition_post_save, sender=definition,
-                      dispatch_uid=FIELD_DEFINITION_POST_SAVE_UID % model)
-    pre_delete.connect(field_definition_pre_delete, sender=definition,
-                       dispatch_uid=FIELD_DEFINITION_PRE_DELETE_UID % model)
-    post_delete.connect(field_definition_post_delete, sender=definition,
-                        dispatch_uid=FIELD_DEFINITION_POST_DELETE_UID % model)
-    
+
+post_delete.connect(field_definition_post_delete, sender=FieldDefinition,
+                    dispatch_uid='mutant.management.field_definition_post_delete')

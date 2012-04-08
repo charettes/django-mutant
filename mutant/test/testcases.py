@@ -113,8 +113,6 @@ class FieldDefinitionTestMixin(object):
         Model.objects.create(renamed_field=value)
         
     def test_field_deletion(self):
-        # TODO: Investigate why this fails with some subclasses...
-        return
         value = self.field_values[0]
         Model = self.model_def.model_class()
         

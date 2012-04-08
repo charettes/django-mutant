@@ -4,6 +4,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import signals
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
@@ -18,6 +19,25 @@ from .model import ModelDefinitionAttribute
 
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
+
+def _get_concrete_model(model):
+    """
+    Prior to django r17573 (django 1.4), `proxy_for_model` returned the
+    actual concrete model of a proxy and there was no `concrete_model`
+    property so we try to fetch the `concrete_model` from the opts
+    and fallback to `proxy_for_model` if it's not defined.
+    """
+    return getattr(model._meta, 'concrete_model', model._meta.proxy_for_model)
+
+def _copy_fields(src, to_cls):
+    """
+    Returns a new instance of `to_cls` with fields data fetched from `src`.
+    Useful for getting a model proxy instance from concrete model instance or
+    the other way around.
+    """
+    fields = src._meta.fields
+    data = dict((f.attname, getattr(src, f.attname)) for f in fields)
+    return to_cls(**data)
 
 class FieldDefinitionBase(models.base.ModelBase):
     
@@ -83,10 +103,12 @@ class FieldDefinitionBase(models.base.ModelBase):
                     # see https://code.djangoproject.com/ticket/16572
                     cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
             
-            # Dynamically connecting signals instead of defining a catch all
-            # and testing if it's a subclass of FieldDefinition
-            from mutant.management import connect_field_definition
-            connect_field_definition(definition)
+            from ..management import (field_definition_post_save,
+                FIELD_DEFINITION_POST_SAVE_UID)
+            object_name = definition._meta.object_name.lower()
+            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % object_name
+            signals.post_save.connect(field_definition_post_save, definition,
+                                      dispatch_uid=post_save_dispatch_uid)
             
             # Warn the user that they should rely on signals instead of
             # overriding the delete methods since it might not be called
@@ -182,10 +204,36 @@ class FieldDefinition(ModelDefinitionAttribute):
             self.field_type = ContentType.objects.get_by_natural_key(app_label, model)
             
         saved = super(FieldDefinition, self).save(*args, **kwargs)
-        
+
         self._old_field = self._south_ready_field_instance()
         
         return saved
+    
+    def delete(self, *args, **kwargs):
+        if self._meta.proxy:
+            # TODO: #18083
+            # Ok so this is a big issue: proxy model deletion is completely
+            # broken. When you delete a inherited model proxy only the proxied
+            # model is deleted, plus deletion signals are not sent for the
+            # proxied model and it's subclasses. Here we attempt to fix this by
+            # getting the concrete model instance of the proxy and deleting it
+            # while sending proxy model signals.
+            concrete_model = _get_concrete_model(self)
+            concrete_model_instance = _copy_fields(self, concrete_model)
+            
+            # Send proxy pre_delete
+            signals.pre_delete.send(self.__class__, instance=self)
+            
+            # Delete the concrete model
+            delete = concrete_model_instance.delete(*args, **kwargs)
+            
+            # This should be sent before the subclasses post_delete but we
+            # cannot venture into deletion.Collector to much. Better wait until
+            # #18083 is fixed.
+            signals.post_delete.send(self.__class__, instance=self)
+            
+            return delete
+        return super(FieldDefinition, self).delete(*args, **kwargs)
     
     @classmethod
     def subclasses(cls):
@@ -204,19 +252,12 @@ class FieldDefinition(ModelDefinitionAttribute):
         # If it's a proxy model we make to type cast it
         proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
         if proxy:
-            # Prior to django r17573, `proxy_for_model` returned the actual
-            # concrete model of a proxy and there was no `concrete_model`
-            # property so we try to fetch the `concrete_model` from the opts
-            # and fallback to `proxy_for_model` if it's not defined.
-            concrete_model = getattr(proxy._meta, 'concrete_model',
-                                     proxy._meta.proxy_for_model)
+            concrete_model = _get_concrete_model(proxy)
             if not isinstance(type_casted, concrete_model):
                 msg = ("Concrete type casted model %s is not an instance of %s "
                        "which is the model proxied by %s" % (type_casted, concrete_model, proxy))
                 raise AssertionError(msg)
-            data = dict((f.attname, getattr(self, f.attname))
-                            for f in self._meta.fields)
-            type_casted = proxy(**data)
+            type_casted = _copy_fields(self, proxy)
         
         if type_casted._meta.object_name.lower() != field_type_model:
             raise AssertionError("Failed to type cast %s to %s" % (self, field_type_model))
