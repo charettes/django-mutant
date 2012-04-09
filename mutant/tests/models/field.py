@@ -22,17 +22,25 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
         Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
 
-class FieldDefinitionWarningsTest(TestCase):
+class FieldDefinitionDeclarationTest(TestCase):
     
-    def test_delete_override_warning(self):
+    def test_delete_override(self):
         """
         Make sure a warning is raised when declaring a `FieldDefinition`
         subclass that override the `delete` method.
         """
-        with warnings.catch_warnings(record=True) as w:
-            class CustomFieldDefinition(FieldDefinition):
-                def delete(self, *args, **kwargs):
-                    pass
+        with self.assertRaises(TypeError):
+            with warnings.catch_warnings(record=True) as w:
+                class CustomFieldDefinition(FieldDefinition):
+                    def delete(self, *args, **kwargs):
+                        pass
+                    
+                class CustomFieldDefinitionProxy(CustomFieldDefinition):
+                    class Meta:
+                        proxy = True
+                    def delete(self, *args, **kwargs):
+                        pass
+
         self.assertIn('Avoid overriding the `delete` method on '
                       '`FieldDefinition` subclass `CustomFieldDefinition`',
                       w[0].message.message)
