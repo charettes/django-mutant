@@ -1,4 +1,3 @@
-from test.test_support import captured_stderr
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -15,6 +14,24 @@ from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
 from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
     skipUnlessMutantModelDBFeature)
 
+
+try:
+    raise ImportError()
+    from test.test_support import captured_stderr
+except ImportError:
+    # python 2.6 doesn't provide this helper
+    from contextlib import contextmanager
+    import StringIO
+    import sys
+
+    @contextmanager
+    def captured_stderr():
+        stderr = sys.stderr
+        try:
+            sys.stderr = StringIO.StringIO()
+            yield sys.stderr
+        finally:
+            sys.stderr = stderr
 
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
