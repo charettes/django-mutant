@@ -129,7 +129,7 @@ class FieldDefinitionBase(models.base.ModelBase):
                            "you are proxying, in this case `%(concrete_cls)s`. "
                            "However, this can trigger a double execution of "
                            "`%(concrete_cls)s.delete`, thus it is prohibited.")
-                    raise TypeError(msg % {'concrete_cls'} % concrete_model.__name__)
+                    raise TypeError(msg % {'concrete_cls': concrete_model.__name__})
                 def_name = definition.__name__
                 warnings.warn("Avoid overriding the `delete` method on "
                               "`FieldDefinition` subclass `%s` since it won't "
