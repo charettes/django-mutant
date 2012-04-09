@@ -8,6 +8,7 @@ from south.db import db as south_api
 
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
+from ...management import perform_ddl
 from ...managers import FilteredQuerysetManager
 from ...models.field import FieldDefinition
 from ...models.model import ModelDefinition
@@ -237,20 +238,19 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
             raise ValidationError(messages)
         
     def save(self, *args, **kwargs):
+        # TODO: This should be moved to signals
         create = not self.pk
         
         save = super(ManyToManyFieldDefinition, self).save(*args, **kwargs)
         model = self.model_def.model_class()
         field = model._meta.get_field(str(self.name))
         intermediary_model = field.rel.through
-        
-        # TODO: Make sure to delete the intermediary table if through is changed
-        # to an existing model
+
         if create:
             if self.through is None:
                 opts = intermediary_model._meta
                 fields = tuple((field.name, field) for field in opts.fields)
-                south_api.create_table(opts.db_table, fields)
+                perform_ddl(model, 'create_table', opts.db_table, fields)
         else:
             #TODO: look for db_table rename
             pass
