@@ -19,10 +19,6 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
         }
         super(RelatedFieldDefinitionTestMixin, self).setUp()
     
-    def test_field_renaming(self):
-        # TODO: Investigate why this fails
-        pass
-    
     def test_field_default(self):
         # TODO: Investigate why this fails
         pass
@@ -170,6 +166,26 @@ class ManyToManyFieldDefinitionTest(RelatedFieldDefinitionTestMixin,
     def get_field_value(self, instance, name='field'):
         value = super(RelatedFieldDefinitionTestMixin, self).get_field_value(instance, name)
         return list(value.all())
+    
+    def test_field_renaming(self):
+        # TODO: investigate why this fails
+        return
+        value = self.field_values[0]
+        Model = self.model_def.model_class()
+        
+        instance = Model.objects.create()
+        instance.field = value
+        
+        self.field.name = 'renamed_field'
+        self.field.save()
+        
+        instance = Model.objects.get()
+        self.assertEqual(instance.renamed_field.all(), value)
+        
+        self.assertFalse(hasattr(Model, 'field'))
+        
+        instance = Model.objects.create()
+        instance.renamed_field = value
     
     def test_field_deletion(self):
         # TODO: Investigate why this fails
