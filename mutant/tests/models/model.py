@@ -86,6 +86,18 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         
         self.assertEqual(Model._meta.verbose_name, ugettext(u'MyMoDeL'))
         self.assertEqual(Model._meta.verbose_name_plural, ugettext(u'MyMoDeLZ0Rs'))
+        
+    def test_multiple_model_definition(self):
+        """
+        Make sure multiple model definition can coexists
+        """
+        other_model_def = ModelDefinition.objects.create(app_label='app',
+                                                         object_name='OtherModel')
+        
+        self.assertNotEqual(other_model_def.model_class(),
+                            self.model_def.model_class())
+        
+        self.assertNotEqual(other_model_def.model_ct, self.model_def.model_ct)
             
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
@@ -307,10 +319,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         """
         other_model_def = ModelDefinition.objects.create(app_label='app',
                                                          object_name='OtherModel')
-        
-        #TODO: move that somewhere else
-        assert other_model_def.model_class() != self.model_def.model_class()
-        assert other_model_def.model_ct != self.model_def.model_ct
         
         f2 = CharFieldDefinition.objects.create(model_def=other_model_def,
                                                 name='f2', max_length=25)
