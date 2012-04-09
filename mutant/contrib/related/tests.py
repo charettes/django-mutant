@@ -18,18 +18,6 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
             'null': True
         }
         super(RelatedFieldDefinitionTestMixin, self).setUp()
-    
-    def test_field_default(self):
-        # TODO: Investigate why this fails
-        pass
-    
-    def test_model_save(self):
-        # TODO: Investigate why this fails
-        pass
-    
-    def test_field_unique(self):
-        # TODO: Investigate why this fails
-        pass
 
 class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
@@ -41,6 +29,9 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
             ContentType.objects.get_for_model(ModelDefinition),
         )
         super(ForeignKeyDefinitionTest, self).setUp()
+    
+    def prepare_default_value(self, value):
+        return value.pk
     
     def test_simple_foreign_key_between_mutable_models(self):
         first_model_def = self.model_def
@@ -186,6 +177,18 @@ class ManyToManyFieldDefinitionTest(RelatedFieldDefinitionTestMixin,
         
         instance = Model.objects.create()
         instance.renamed_field = value
+    
+    def test_field_default(self):
+        # TODO: Investigate why this fails
+        pass
+    
+    def test_model_save(self):
+        # TODO: Investigate why this fails
+        pass
+    
+    def test_field_unique(self):
+        # TODO: Investigate why this fails
+        pass
     
     def test_field_deletion(self):
         # TODO: Investigate why this fails

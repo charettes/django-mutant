@@ -72,8 +72,12 @@ class FieldDefinitionTestMixin(object):
     def get_field_value(self, instance, name='field'):
         return getattr(instance, name)
     
+    def prepare_default_value(self, value):
+        return value
+    
     def test_field_default(self):
-        default, field = self.field_values[0], self.field
+        default = self.prepare_default_value(self.field_values[0])
+        field = self.field
         
         field.default = default
         field.full_clean()
@@ -81,7 +85,8 @@ class FieldDefinitionTestMixin(object):
         
         Model = self.model_def.model_class()
         instance = Model.objects.create()
-        self.assertEqual(self.get_field_value(instance), default)
+        created_default = self.prepare_default_value(self.get_field_value(instance))
+        self.assertEqual(created_default, default)
         
     def test_model_save(self):
         first_value, second_value = self.field_values
