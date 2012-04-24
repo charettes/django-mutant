@@ -24,6 +24,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         self.assertRaises(AssertionError, self.assertTableExists, db, table_name)
         
     def _table_columns_iterator(self, table_name):
+        # TODO: This should support multi-db
         cursor = connection.cursor()
         description = connection.introspection.get_table_description(cursor, table_name)
         return (row[0] for row in description)
