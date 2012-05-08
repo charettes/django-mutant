@@ -1,7 +1,6 @@
 branches:
   only:
     - master
-    - contrib-geo
 
 language: python
 
