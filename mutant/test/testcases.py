@@ -105,11 +105,12 @@ class FieldDefinitionTestMixin(object):
         Model = self.model_def.model_class()
         
         Model.objects.create(field=value)
-        
+        _, original_column_name = Model._meta.get_field('field').get_attname_column()
         self.field.name = 'renamed_field'
         self.field.save()
-        self.assertColumnDoesntExists(Model._meta.db_table, 'field')
-        self.assertColumnExists(Model._meta.db_table, 'renamed_field')
+        _, new_column_name = Model._meta.get_field('renamed_field').get_attname_column()
+        self.assertColumnDoesntExists(Model._meta.db_table, original_column_name)
+        self.assertColumnExists(Model._meta.db_table, new_column_name)
         
         instance = Model.objects.get()
         self.assertEqual(self.get_field_value(instance, 'renamed_field'), value)

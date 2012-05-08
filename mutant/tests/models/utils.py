@@ -30,7 +30,8 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         return (row[0] for row in description)
     
     def assertColumnExists(self, table_name, field_name):
-        fields = self._table_columns_iterator(table_name)
+        # TODO: This should support multi-db
+        fields = tuple(self._table_columns_iterator(table_name))
         self.assertTrue(field_name in fields,
                         "Field '%(table)s.%(field)s' doesn't exist, '%(table)s'"
                         "'s fields are %(fields)s" % {'table': table_name,
