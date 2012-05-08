@@ -1,10 +1,8 @@
 
 from django.contrib.gis.db import models
-from django.db.models.signals import post_save
 from django.utils.translation import ugettext_lazy as _
 
-from ....management import FIELD_DEFINITION_POST_SAVE_UID
-from ....models import FieldDefinition, FieldDefinitionBase
+from ....models import FieldDefinition
 
 
 DIM_CHOICES = (
