@@ -109,8 +109,8 @@ class FieldDefinitionTestMixin(object):
         self.field.name = 'renamed_field'
         self.field.save()
         _, new_column_name = Model._meta.get_field('renamed_field').get_attname_column()
-        self.assertColumnDoesntExists(Model._meta.db_table, original_column_name)
-        self.assertColumnExists(Model._meta.db_table, new_column_name)
+        self.assertModelTablesColumnDoesntExists(Model, original_column_name)
+        self.assertModelTablesColumnExists(Model, new_column_name)
         
         instance = Model.objects.get()
         self.assertEqual(self.get_field_value(instance, 'renamed_field'), value)
@@ -126,8 +126,9 @@ class FieldDefinitionTestMixin(object):
         
         Model.objects.create(field=value)
 
+        _, field_column_name = Model._meta.get_field('field').get_attname_column()
         self.field.delete()
-        self.assertColumnDoesntExists(Model._meta.db_table, 'field')
+        self.assertModelTablesColumnDoesntExists(Model, field_column_name)
         
         msg = "'field' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg, Model, field=value)

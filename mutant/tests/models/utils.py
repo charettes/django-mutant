@@ -1,5 +1,5 @@
 
-from django.db import connection, connections, router
+from django.db import connections, router
 from django.test.testcases import _deferredSkip
 
 from mutant.db.models import MutableModel
@@ -8,50 +8,92 @@ from mutant.test.testcases import (ModelDefinitionDDLTestCase,
     VersionCompatMixinTestCase)
 
 
+def table_columns_iterator(db, table_name):
+    connection = connections[db]
+    cursor = connection.cursor()
+    description = connection.introspection.get_table_description(cursor, table_name)
+    return (row[0] for row in description)
+
+def model_dbs(model):
+    for db in connections:
+        if router.allow_syncdb(db, model):
+            yield db
+
+def db_is_nonrel(db):
+    """
+    Returns True if the db is non-relational
+    """
+    try:
+        from djangotoolbox.db.base import NonrelDatabaseWrapper
+    except ImportError:
+        return False
+    else:
+        return isinstance(connections[db], NonrelDatabaseWrapper)
+
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                                   VersionCompatMixinTestCase):
     
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
-        
-    def assertTableExists(self, db, table_name):
+    def assertTableExists(self, db, table):
         tables = connections[db].introspection.table_names()
         msg = "Table '%s.%s' doesn't exist, existing tables are %s"
-        self.assertTrue(table_name in tables, msg % (db, table_name, tables))
+        self.assertTrue(table in tables, msg % (db, table, tables))
         
-    def assertTableDoesntExists(self, db, table_name):
-        self.assertRaises(AssertionError, self.assertTableExists, db, table_name)
+    def assertTableDoesntExists(self, db, table):
+        self.assertRaises(AssertionError, self.assertTableExists, db, table)
         
-    def _table_columns_iterator(self, table_name):
-        # TODO: This should support multi-db
-        cursor = connection.cursor()
-        description = connection.introspection.get_table_description(cursor, table_name)
-        return (row[0] for row in description)
+    def assertModelTablesExist(self, model):
+        table = model._meta.db_table
+        for db in model_dbs(model):
+            self.assertTableExists(db, table)
+            
+    def assertModelTablesDontExist(self, model):
+        table = model._meta.db_table
+        for db in model_dbs(model):
+            self.assertTableDoesntExists(db, table)
     
-    def assertColumnExists(self, table_name, field_name):
-        # TODO: This should support multi-db
-        fields = tuple(self._table_columns_iterator(table_name))
-        self.assertTrue(field_name in fields,
-                        "Field '%(table)s.%(field)s' doesn't exist, '%(table)s'"
-                        "'s fields are %(fields)s" % {'table': table_name,
-                                                      'field': field_name,
-                                                      'fields': fields})
+    def assertColumnExists(self, db, table, column):
+        columns = tuple(table_columns_iterator(db, table))
+        data = {
+            'db': db,
+            'table': table,
+            'column': column,
+            'columns': columns
+        }
+        self.assertIn(column, columns,
+                      "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
+                      "%(db)s.'%(table)s's columns are %(columns)s" % data)
         
-    def assertColumnDoesntExists(self, table_name, field_name):
+    def assertColumnDoesntExists(self, db, table, column):
         self.assertRaises(AssertionError, self.assertColumnExists,
-                          table_name, field_name)
-
-def _get_mutant_model_db():
-    # TODO: This should rely on syncdb instead
-    return router.db_for_write(MutableModel)
+                          db, table, column)
+        
+    def assertModelTablesColumnExists(self, model, column):
+        table = model._meta.db_table
+        for db in model_dbs(model):
+            if not db_is_nonrel(db):
+                self.assertColumnExists(db, table, column)
+            
+    def assertModelTablesColumnDoesntExists(self, model, column):
+        table = model._meta.db_table
+        for db in model_dbs(model):
+            if not db_is_nonrel(db):
+                self.assertColumnDoesntExists(db, table, column)
 
 def skipIfMutantModelDBFeature(feature, default=False):
-    db = _get_mutant_model_db()
-    return _deferredSkip(lambda: getattr(connections[db].features, feature, default),
-                         "Database %s has feature %s" % (db, feature))
+    dbs = tuple(model_dbs(MutableModel))
+    def _dbs_have_feature():
+        return all(getattr(connections[db].features, feature, default)
+                   for db in dbs)
+    return _deferredSkip(_dbs_have_feature,
+                         "Databases %s have feature %s" % (dbs, feature))
 
 def skipUnlessMutantModelDBFeature(feature, default=True):
-    db = _get_mutant_model_db()
-    return _deferredSkip(lambda: not getattr(connections[db].features, feature, default),
-                         "Database %s doesn't support feature %s" % (db, feature))
+    dbs = tuple(model_dbs(MutableModel))
+    def _dbs_dont_have_feature():
+        return all(not getattr(connections[db].features, feature, default)
+                   for db in dbs)
+    return _deferredSkip(_dbs_dont_have_feature,
+                         "Databases %s don't have feature %s" % (dbs, feature))
