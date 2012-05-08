@@ -10,9 +10,9 @@ from south.db import dbs as south_dbs
 from ..models.model import ModelDefinition
 
 
-def connections_support_ddl_transactions():
+def connections_have_ddl_transactions():
     """
-    Returns True if all connections support ddl transactions
+    Returns True if all connections have ddl transactions
     """
     return all(south_dbs[name].has_ddl_transactions for name in connections)
 
@@ -23,13 +23,13 @@ class DDLTestCase(TestCase):
     """
     
     def _fixture_setup(self):
-        if not connections_support_ddl_transactions():
+        if not connections_have_ddl_transactions():
             return super(TestCase, self)._fixture_setup()
         else:
             return super(DDLTestCase, self)._fixture_setup()
         
     def _fixture_teardown(self):
-        if not connections_support_ddl_transactions():
+        if not connections_have_ddl_transactions():
             return super(TestCase, self)._fixture_teardown()
         else:
             return super(DDLTestCase, self)._fixture_teardown()
@@ -37,7 +37,7 @@ class DDLTestCase(TestCase):
 class ModelDefinitionDDLTestCase(DDLTestCase):
     
     def tearDown(self):
-        if not connections_support_ddl_transactions():
+        if not connections_have_ddl_transactions():
             # We must delete the ModelDefinition tables by ourself since
             # they won't be removed by a rollback.
             for md in ModelDefinition.objects.all():
