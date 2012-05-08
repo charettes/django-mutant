@@ -47,7 +47,7 @@ class ModelDefinitionDDLTestCase(DDLTestCase):
 class VersionCompatMixinTestCase(TestCase):
     
     # Django < 1.4 doesn't have assertIsIntance and `ordered` kwarg for assertQuerysetEqual
-    if django.VERSION[0] == 1 and django.VERSION[1] < 4:
+    if django.VERSION < (1, 4):
         def assertRaisesMessage(self, expected_exception, expected_message,
                                 callable_obj=None, *args, **kwargs):
             return self.assertRaisesRegexp(expected_exception,
