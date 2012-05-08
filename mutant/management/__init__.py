@@ -5,6 +5,8 @@ from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
 from south.db import dbs
 
+from mutant import logger
+
 from mutant.models import (ModelDefinition, BaseDefinition, FieldDefinition,
     UniqueTogetherDefinition)
 
@@ -16,7 +18,14 @@ def allow_syncdbs(model):
         
 def perform_ddl(model, action, *args, **kwargs):
     for db in allow_syncdbs(model):
+        if db.deferred_sql:
+            for statement in db.deferred_sql:
+                logger.warn("Clearing non-executed deferred SQL statement "
+                            "since we can't assume it's safe to execute it now. "
+                            "Statements was: %s", statement)
+            db.clear_deferred_sql()
         getattr(db, action)(*args, **kwargs)
+        db.execute_deferred_sql()
 
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
     if raw:

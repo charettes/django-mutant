@@ -146,3 +146,5 @@ LOGGING = {
         },
     }
 }
+
+SKIP_SOUTH_TESTS = False

@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
-from south.db import db as south_api
 
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel

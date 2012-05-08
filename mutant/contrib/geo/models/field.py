@@ -6,21 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 from ....management import FIELD_DEFINITION_POST_SAVE_UID
 from ....models import FieldDefinition, FieldDefinitionBase
 
-from ..management import geometry_field_definition_post_save
-
-
-class GeometryFieldDefinitionBase(FieldDefinitionBase):
-    """
-    Replace `post_save` connected signal by a wrapper that execute deferred sql
-    required for some geometry field creation when relying on south
-    """
-    def __new__(cls, name, parents, attrs):
-        definition = super(GeometryFieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
-        model = definition._meta.object_name.lower()
-        post_save.disconnect(sender=definition,
-                             dispatch_uid=FIELD_DEFINITION_POST_SAVE_UID % model)
-        post_save.connect(geometry_field_definition_post_save, definition)
-        return definition
 
 DIM_CHOICES = (
     (2, _(u'Two-dimensional')),
@@ -38,8 +23,6 @@ geography_help_text = _(u'Creates a database column of type geography, '
                         u'rather than geometry.')
 
 class GeometryFieldDefinition(FieldDefinition):
-    
-    __metaclass__ = GeometryFieldDefinitionBase
     
     srid = models.IntegerField(_(u'SRID'), default=4326,
                                help_text=srid_help_text)
