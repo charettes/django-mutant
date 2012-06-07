@@ -301,11 +301,11 @@ class FieldDefinition(ModelDefinitionAttribute):
         return tuple(self.choices.as_choices())
     
     def get_field_options(self):
-        opts = self._meta
+        model_opts = self._meta
         options = {}
-        for name in opts.defined_field_options:
+        for name in getattr(model_opts, FieldDefinitionBase.FIELD_OPTIONS_ATTR):
             value = getattr(self, name)
-            if value != opts.get_field(name).get_default():
+            if value != model_opts.get_field(name).get_default():
                 options[name] = value
         choices = self.get_field_choices()
         if choices:
