@@ -41,6 +41,10 @@ def _copy_fields(src, to_cls):
 
 class FieldDefinitionBase(models.base.ModelBase):
     
+    FIELD_CLASS_ATTR = 'defined_field_class'
+    FIELD_OPTIONS_ATTR = 'defined_field_options'
+    FIELD_CATEGORY_ATTR = 'defined_field_category'
+
     _base_definition = None
     _subclasses_lookups = []
     _proxies = {}
@@ -49,22 +53,22 @@ class FieldDefinitionBase(models.base.ModelBase):
     def __new__(cls, name, parents, attrs):
         if 'Meta' in attrs:
             Meta = attrs['Meta']
-            field_class = getattr(Meta, 'defined_field_class', None)
+            field_class = getattr(Meta, cls.FIELD_CLASS_ATTR, None)
             if field_class:
                 if not issubclass(field_class, models.Field):
                     msg = ("Meta's defined_field_class must be a subclass of "
                            "django.db.models.fields.Field")
                     raise ImproperlyConfigured(msg)
-                del Meta.defined_field_class
-            field_options = getattr(Meta, 'defined_field_options', ())
+                delattr(Meta, cls.FIELD_CLASS_ATTR)
+            field_options = getattr(Meta, cls.FIELD_OPTIONS_ATTR, ())
             if field_options:
                 if not isinstance(field_options, tuple):
                     msg = "Meta's defined_field_options must be a tuple"
                     raise ImproperlyConfigured(msg)
-                del Meta.defined_field_options
-            field_category = getattr(Meta, 'defined_field_category', None)
+                delattr(Meta, cls.FIELD_OPTIONS_ATTR)
+            field_category = getattr(Meta, cls.FIELD_CATEGORY_ATTR, None)
             if field_category:
-                del Meta.defined_field_category
+                delattr(Meta, cls.FIELD_CATEGORY_ATTR)
         else:
             field_class = None
             field_options = ()
@@ -83,11 +87,13 @@ class FieldDefinitionBase(models.base.ModelBase):
             parents = [definition]
             while parents:
                 parent = parents.pop(0)
-                if issubclass(parent, base_definition):
+                if isinstance(parent, cls):
                     parent_opts = parent._meta
-                    field_class = getattr(parent_opts, 'field_class', field_class)
-                    field_category = getattr(parent_opts, 'field_category', field_category)
-                    field_options += getattr(parent_opts, 'defined_field_options', ())
+                    if field_class is None:
+                        field_class = getattr(parent_opts, cls.FIELD_CLASS_ATTR, None)
+                    field_options += getattr(parent_opts, cls.FIELD_OPTIONS_ATTR, ())
+                    if field_category is None:
+                        field_category = getattr(parent_opts, cls.FIELD_CATEGORY_ATTR, None)
                     if parent is not base_definition:
                         if not (parent_opts.abstract or parent_opts.proxy):
                             lookup.insert(0, parent_opts.object_name.lower())
@@ -113,10 +119,10 @@ class FieldDefinitionBase(models.base.ModelBase):
             # Warn the user that they should rely on signals instead of
             # overriding the delete methods since it might not be called
             # when deleting the associated model definition.
-            if definition.delete != cls._base_definition.delete:
+            if definition.delete != base_definition.delete:
                 concrete_model = _get_concrete_model(definition)
                 if (opts.proxy and
-                    concrete_model.delete != cls._base_definition.delete):
+                    concrete_model.delete != base_definition.delete):
                     # Because of the workaround for django #18083 in
                     # FieldDefinition, overriding the `delete` method on a proxy
                     # of a concrete FieldDefinition that also override the
@@ -138,9 +144,9 @@ class FieldDefinitionBase(models.base.ModelBase):
                               "deletion, add hooks to the `pre_delete` and "
                               "`post_delete` signals." % def_name, UserWarning)
         
-        definition._meta.defined_field_class = field_class
-        definition._meta.defined_field_options = tuple(set(field_options))
-        definition._meta.defined_field_category = field_category
+        setattr(definition._meta, cls.FIELD_CLASS_ATTR, field_class)
+        setattr(definition._meta, cls.FIELD_OPTIONS_ATTR, tuple(set(field_options)))
+        setattr(definition._meta, cls.FIELD_CATEGORY_ATTR, field_category)
         
         return definition
 
@@ -282,7 +288,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     @classmethod
     def get_field_class(cls):
-        field_class = cls._meta.defined_field_class
+        field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
         if not field_class:
             raise NotImplementedError
         return field_class
