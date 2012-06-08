@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.forms.widgets import TextInput
 
-from mutant.admin.fields import FieldDefinitionTypeField
+from mutant.forms import FieldDefinitionTypeField
 from mutant.models.field import FieldDefinition
 from mutant.models.model import ModelDefinition, UniqueTogetherDefinition
 

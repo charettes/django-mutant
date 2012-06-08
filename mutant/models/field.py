@@ -46,6 +46,7 @@ class FieldDefinitionBase(models.base.ModelBase):
     FIELD_CATEGORY_ATTR = 'defined_field_category'
 
     _base_definition = None
+    _field_definitions = {}
     _subclasses_lookups = []
     _proxies = {}
     _lookups = {}
@@ -147,6 +148,9 @@ class FieldDefinitionBase(models.base.ModelBase):
         setattr(definition._meta, cls.FIELD_CLASS_ATTR, field_class)
         setattr(definition._meta, cls.FIELD_OPTIONS_ATTR, tuple(set(field_options)))
         setattr(definition._meta, cls.FIELD_CATEGORY_ATTR, field_category)
+        
+        if field_class is not None:
+            cls._field_definitions[field_class] = definition
         
         return definition
 
@@ -296,6 +300,10 @@ class FieldDefinition(ModelDefinitionAttribute):
     @classmethod
     def get_field_description(cls):
         return capfirst(cls._meta.verbose_name)
+    
+    @classmethod
+    def get_field_category(cls):
+        return getattr(cls._meta, FieldDefinitionBase.FIELD_CATEGORY_ATTR)
     
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
