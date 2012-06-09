@@ -2,7 +2,6 @@ import warnings
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.contrib.contenttypes.generic import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import signals
 from django.db.models.sql.constants import LOOKUP_SEP
@@ -13,21 +12,13 @@ from picklefield.fields import dbsafe_encode, PickledObjectField
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     ProxyAwareGenericForeignKey, PythonIdentifierField)
+from ..hacks import get_concrete_model, get_real_content_type
 from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
 
 from .model import ModelDefinitionAttribute
 
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
-
-def _get_concrete_model(model):
-    """
-    Prior to django r17573 (django 1.4), `proxy_for_model` returned the
-    actual concrete model of a proxy and there was no `concrete_model`
-    property so we try to fetch the `concrete_model` from the opts
-    and fallback to `proxy_for_model` if it's not defined.
-    """
-    return getattr(model._meta, 'concrete_model', model._meta.proxy_for_model)
 
 def _copy_fields(src, to_cls):
     """
@@ -121,7 +112,7 @@ class FieldDefinitionBase(models.base.ModelBase):
             # overriding the delete methods since it might not be called
             # when deleting the associated model definition.
             if definition.delete != base_definition.delete:
-                concrete_model = _get_concrete_model(definition)
+                concrete_model = get_concrete_model(definition)
                 if (opts.proxy and
                     concrete_model.delete != base_definition.delete):
                     # Because of the workaround for django #18083 in
@@ -225,9 +216,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     def save(self, *args, **kwargs):
         if not self.pk:
-            app_label = self._meta.app_label
-            model = self._meta.object_name.lower()
-            self.field_type = ContentType.objects.get_by_natural_key(app_label, model)
+            self.field_type = get_real_content_type(self.__class__)
             
         saved = super(FieldDefinition, self).save(*args, **kwargs)
 
@@ -244,7 +233,7 @@ class FieldDefinition(ModelDefinitionAttribute):
             # proxied model and it's subclasses. Here we attempt to fix this by
             # getting the concrete model instance of the proxy and deleting it
             # while sending proxy model signals.
-            concrete_model = _get_concrete_model(self)
+            concrete_model = get_concrete_model(self)
             concrete_model_instance = _copy_fields(self, concrete_model)
             
             # Send proxy pre_delete
@@ -278,7 +267,7 @@ class FieldDefinition(ModelDefinitionAttribute):
         # If it's a proxy model we make to type cast it
         proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
         if proxy:
-            concrete_model = _get_concrete_model(proxy)
+            concrete_model = get_concrete_model(proxy)
             if not isinstance(type_casted, concrete_model):
                 msg = ("Concrete type casted model %s is not an instance of %s "
                        "which is the model proxied by %s" % (type_casted, concrete_model, proxy))

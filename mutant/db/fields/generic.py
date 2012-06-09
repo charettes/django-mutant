@@ -5,6 +5,8 @@ from django.core import exceptions
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
+from ...hacks import get_real_content_type
+
 
 class FieldDefinitionTypeField(fields.related.ForeignKey):
     
@@ -39,9 +41,7 @@ class ProxyAwareGenericForeignKey(GenericForeignKey):
     """
     
     def get_content_type(self, obj=None, **kwargs):
-        if obj and obj._meta.proxy:
-            opts = obj._meta
-            natural_key = (opts.app_label, opts.object_name.lower())
-            return ContentType.objects.db_manager(obj._state.db).get_by_natural_key(*natural_key)
+        if obj:
+            return get_real_content_type(obj.__class__, obj._state.db)
         else:
             return super(ProxyAwareGenericForeignKey, self).get_content_type(obj, **kwargs)
