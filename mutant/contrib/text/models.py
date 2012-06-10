@@ -22,4 +22,6 @@ class TextFieldDefinition(CharFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
+        verbose_name = _(u'text field')
+        verbose_name_plural = _(u'text fields')
         defined_field_class = fields.TextField
