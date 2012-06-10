@@ -5,8 +5,9 @@ from django.forms.fields import ChoiceField
 from django.forms.models import ModelChoiceField
 from django.utils.text import capfirst
 
-from mutant.common import choices_from_dict
-from mutant.models.field import FieldDefinitionBase
+from .common import choices_from_dict
+from .hacks import get_real_content_type
+from .models.field import FieldDefinitionBase
 
 
 class FieldDefinitionTypeField(ModelChoiceField):
@@ -18,13 +19,9 @@ class FieldDefinitionTypeField(ModelChoiceField):
     def _get_choices(self):
         if not hasattr(self.__class__, '_choices'):
             choices = []
-            # Here we can't use ContentType.objects.get_for_models until
-            # django's #18399 is fixed.
             for field_definition in FieldDefinitionBase._field_definitions.values():
-                app_label = field_definition._meta.app_label
-                model = field_definition._meta.object_name.lower()
                 try:
-                    ct = ContentType.objects.get_by_natural_key(app_label, model)
+                    ct = get_real_content_type(field_definition)
                 except ContentType.DoesNotExist:
                     # Ignore stale ContentTypes
                     continue
