@@ -2,6 +2,7 @@
 
 from django.db import connection
 from django.db.utils import DatabaseError
+from django.utils.translation import ugettext_lazy as _
 from django.utils.unittest.case import skipUnless
 
 from ...test.testcases import FieldDefinitionTestMixin
@@ -10,7 +11,10 @@ from ...tests.models.utils import BaseModelDefinitionTestCase
 from .models import CharFieldDefinition, TextFieldDefinition
 
 
-class CharFieldDefinitionTest(FieldDefinitionTestMixin,
+class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):
+    field_definition_category = _(u'text')
+
+class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = CharFieldDefinition
     field_defintion_init_kwargs = {'max_length': 255}
@@ -25,7 +29,7 @@ class CharFieldDefinitionTest(FieldDefinitionTestMixin,
         with self.assertRaises(DatabaseError):
             Model.objects.create(field='Simon' * 5)
 
-class TextFieldDefinitionTest(FieldDefinitionTestMixin,
+class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = TextFieldDefinition
     field_values = (

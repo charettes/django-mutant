@@ -89,7 +89,7 @@ class FieldDefinitionBase(models.base.ModelBase):
                     if parent is not base_definition:
                         if not (parent_opts.abstract or parent_opts.proxy):
                             lookup.insert(0, parent_opts.object_name.lower())
-                        parents = list(parent._meta.parents) + parents # mimic mro
+                        parents = list(parent.__bases__) + parents # mimic mro
             cls._lookups[model] = lookup
             if opts.proxy:
                 cls._proxies[model] = definition

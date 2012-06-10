@@ -2,6 +2,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
+from django.utils.translation import ugettext_lazy as _
 
 from ...models.model import ModelDefinition
 from ...test.testcases import FieldDefinitionTestMixin
@@ -11,6 +12,7 @@ from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
+    field_definition_category = _(u'related')
     
     def setUp(self):
         self.field_defintion_init_kwargs = {

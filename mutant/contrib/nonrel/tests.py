@@ -1,6 +1,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models.utils import BaseModelDefinitionTestCase
@@ -9,7 +10,10 @@ from .models import (DictFieldDefinition, EmbeddedModelFieldDefinition,
     ListFieldDefinition, SetFieldDefinition)
 
 
-class DictFieldDefinitionTest(FieldDefinitionTestMixin,
+class NonRelFieldDefinitionTestMixin(FieldDefinitionTestMixin):
+    field_definition_category = _(u'nonrel')
+
+class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = DictFieldDefinition
     field_defintion_init_kwargs = {'default': {'1': 2}}
@@ -21,7 +25,7 @@ class DictFieldDefinitionTest(FieldDefinitionTestMixin,
 def identity(obj):
     return obj
 
-class ListFieldDefinitionTest(FieldDefinitionTestMixin,
+class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = ListFieldDefinition
     field_defintion_init_kwargs = {'default': ['Y', 'M', 'C', 'A']}
@@ -41,7 +45,7 @@ class ListFieldDefinitionTest(FieldDefinitionTestMixin,
         field.full_clean()
         field.save()
 
-class SetFieldDefinitionTest(FieldDefinitionTestMixin,
+class SetFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = SetFieldDefinition
     field_defintion_init_kwargs = {'default': set(['Y', 'M', 'C', 'A'])}
@@ -53,12 +57,12 @@ class SetFieldDefinitionTest(FieldDefinitionTestMixin,
 def default_embedded():
     return ContentType(app_label='abc', model='DoTheDance')
 
-class EmbeddedModelFieldTest(FieldDefinitionTestMixin,
+class EmbeddedModelFieldTest(NonRelFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = EmbeddedModelFieldDefinition
     field_defintion_init_kwargs = {'default': default_embedded}
     field_values = (
-        ContentType(app_label='pyt', model='The way you move is a mistery'),
+        ContentType(app_label='pyt', model='The way you move is a mystery'),
         ContentType(app_label='everybody', model='Knows this is nowhere'),
     )
     

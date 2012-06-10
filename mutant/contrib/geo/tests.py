@@ -1,6 +1,7 @@
 
 from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)
+from django.utils.translation import ugettext_lazy as _
 
 from ...models import BaseDefinition
 from ...test.testcases import FieldDefinitionTestMixin
@@ -13,6 +14,7 @@ from .models import (GeoModel, GeometryCollectionFieldDefinition,
 
 
 class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
+    field_definition_category = _(u'geometry')
     
     def setUp(self):
         super(GeometryFieldDefinitionBaseTest, self).setUp()

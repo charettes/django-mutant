@@ -143,3 +143,7 @@ class FieldDefinitionTestMixin(object):
         Model.objects.create(field=value)
         with self.assertRaises(IntegrityError):
             Model.objects.create(field=value)
+
+    def test_field_defintion_category(self):
+        self.assertEqual(self.field_definition_cls.get_field_category(),
+                         self.field_definition_category)

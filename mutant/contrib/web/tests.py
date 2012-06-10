@@ -1,4 +1,6 @@
 
+from django.utils.translation import ugettext_lazy as _
+
 from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models.utils import BaseModelDefinitionTestCase
 
@@ -6,18 +8,21 @@ from .models import (EmailFieldDefinition, IPAddressFieldDefinition,
     SlugFieldDefinition, URLFieldDefinition)
 
 
-class EmailFieldDefinitionTest(FieldDefinitionTestMixin,
+class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):
+    field_definition_category = _(u'web')
+
+class EmailFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
     field_definition_cls = EmailFieldDefinition
     field_values = ('guido@python.org', 'god@heaven.com')
     
-class IPAddressFieldDefinitionTest(FieldDefinitionTestMixin,
+class IPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                    BaseModelDefinitionTestCase):
     field_definition_cls = IPAddressFieldDefinition
     field_defintion_init_kwargs = {'default': '192.168.1.1'}
     field_values = ('127.0.0.1', '82.94.164.162')
 
-class SlugFieldDefinitionTest(FieldDefinitionTestMixin,
+class SlugFieldDefinitionTest(WebFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = SlugFieldDefinition
     field_values = (
@@ -25,7 +30,7 @@ class SlugFieldDefinitionTest(FieldDefinitionTestMixin,
         '2012-4-7-so-late'
     )
     
-class URLFieldDefinitionTest(FieldDefinitionTestMixin,
+class URLFieldDefinitionTest(WebFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = URLFieldDefinition
     field_values = (
@@ -38,7 +43,7 @@ try:
 except ImportError:
     pass
 else:
-    class GenericIPAddressFieldDefinitionTest(FieldDefinitionTestMixin,
+    class GenericIPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                               BaseModelDefinitionTestCase):
         field_definition_cls = GenericIPAddressFieldDefinition
         field_values = (

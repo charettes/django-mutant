@@ -1,6 +1,8 @@
 import os
 import sys
 
+from django.utils.translation import ugettext_lazy as _
+
 from ...test import testcases
 from ...tests.models.utils import BaseModelDefinitionTestCase
 
@@ -13,10 +15,11 @@ MODELS_MODULE_PATH = os.path.abspath(models.__file__)
 
 class FilePathFieldDefinitionTest(testcases.FieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
+    field_definition_category = _(u'file')
     field_definition_cls = models.FilePathFieldDefinition
     field_defintion_init_kwargs = {'path': PACKAGE_PATH}
     field_values = (MODULE_PATH, MODELS_MODULE_PATH)
-        
+    
     def test_formfield(self):
         self.field.match = r'\.pyc?$'
         self.field.save()
