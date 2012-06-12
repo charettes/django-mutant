@@ -13,11 +13,14 @@ from picklefield.fields import dbsafe_encode, PickledObjectField
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     ProxyAwareGenericForeignKey, PythonIdentifierField)
-from ..hacks import get_concrete_model, get_real_content_type
+from ..hacks import (get_concrete_model, get_real_content_type,
+    patch_model_option_verbose_name_raw)
 from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
 
 from .model import ModelDefinitionAttribute
 
+
+patch_model_option_verbose_name_raw()
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
 
