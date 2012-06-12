@@ -216,7 +216,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.field_type = get_real_content_type(self.__class__)
+            self.field_type = self.get_content_type()
             
         saved = super(FieldDefinition, self).save(*args, **kwargs)
 
@@ -294,6 +294,10 @@ class FieldDefinition(ModelDefinitionAttribute):
     def get_field_category(cls):
         return getattr(cls._meta, FieldDefinitionBase.FIELD_CATEGORY_ATTR)
     
+    @classmethod
+    def get_content_type(cls):
+        return get_real_content_type(cls)
+
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
     
