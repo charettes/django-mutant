@@ -35,9 +35,7 @@ class FieldDefinitionTypeField(ChoiceField):
                 'label': unicode(fd.get_field_description()),
                 'group': unicode(fd.get_field_category()),
             })
-        choices = choices_from_dict(sorted(fds_choices, key=group_item_getter))
-        if not kwargs.get('required', True):
-            choices = [(u'', empty_label)] + list(choices)
+        choices = [(u'', empty_label)] + list(choices_from_dict(sorted(fds_choices, key=group_item_getter)))
         super(FieldDefinitionTypeField, self).__init__(choices, *args, **kwargs)
 
     def to_python(self, value):
