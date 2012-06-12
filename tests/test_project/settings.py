@@ -116,7 +116,7 @@ INSTALLED_APPS = [
     'south',
     'mutant',
     'mutant.contrib.boolean',
-    'mutant.contrib.datetime',
+    'mutant.contrib.temporal',
     'mutant.contrib.file',
     'mutant.contrib.numeric',
     'mutant.contrib.related',

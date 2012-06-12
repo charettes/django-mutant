@@ -9,10 +9,10 @@ from .models import (DateFieldDefinition, DateTimeFieldDefinition,
     TimeFieldDefinition)
 
 
-class DateTimeFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'datetime')
+class TemporalFieldDefinitionTestMixin(FieldDefinitionTestMixin):
+    field_definition_category = _(u'temporal')
 
-class DateFieldDefinitionTest(DateTimeFieldDefinitionTestMixin,
+class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = DateFieldDefinition
     field_defintion_init_kwargs = {'default': datetime.date(1990, 8, 31)}
@@ -21,7 +21,7 @@ class DateFieldDefinitionTest(DateTimeFieldDefinitionTestMixin,
         datetime.date(1988, 5, 15)
     )
 
-class DateTimeFieldDefinitionTest(DateTimeFieldDefinitionTestMixin,
+class DateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
     field_definition_cls = DateTimeFieldDefinition
     field_defintion_init_kwargs = {'default': datetime.datetime(1990, 8, 31, 23, 46)}
@@ -30,7 +30,7 @@ class DateTimeFieldDefinitionTest(DateTimeFieldDefinitionTestMixin,
         datetime.datetime(1988, 5, 15, 15, 30)
     )
     
-class TimeFieldDefinitionTest(DateTimeFieldDefinitionTestMixin,
+class TimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = TimeFieldDefinition
     field_defintion_init_kwargs = {'default': datetime.time(1, 1)}

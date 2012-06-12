@@ -24,7 +24,7 @@ class DateFieldDefinition(FieldDefinition):
         verbose_name_plural = _(u'date fields')
         defined_field_class = fields.DateField
         defined_field_options = ('auto_now', 'auto_now_add',)
-        defined_field_category = _(u'datetime')
+        defined_field_category = _(u'temporal')
 
 class TimeFieldDefinition(DateFieldDefinition):
     
