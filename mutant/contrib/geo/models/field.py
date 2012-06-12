@@ -34,17 +34,14 @@ class GeometryFieldDefinition(FieldDefinition):
     
     class Meta:
         app_label = 'mutant'
-        defined_field_class = models.GeometryField
         defined_field_options = ('srid', 'spatial_index', 'dim', 'geography')
-        defined_field_category = _(u'geometry')
+        defined_field_category = _(u'Geometry')
 
 class PointFieldDefinition(GeometryFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'point field')
-        verbose_name_plural = _(u'point fields')
         defined_field_class = models.PointField
         
 class LineStringFieldDefinition(GeometryFieldDefinition):
@@ -52,8 +49,6 @@ class LineStringFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'line string field')
-        verbose_name_plural = _(u'line string fields')
         defined_field_class = models.LineStringField
         
 class PolygonFieldDefinition(GeometryFieldDefinition):
@@ -61,8 +56,6 @@ class PolygonFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'polygon field')
-        verbose_name_plural = _(u'polygon fields')
         defined_field_class = models.PolygonField
 
 class MultiPointFieldDefinition(GeometryFieldDefinition):
@@ -70,8 +63,6 @@ class MultiPointFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'multi point field')
-        verbose_name_plural = _(u'multi point fields')
         defined_field_class = models.MultiPointField
         
 class MultiLineStringFieldDefinition(GeometryFieldDefinition):
@@ -79,8 +70,6 @@ class MultiLineStringFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'multi line string field')
-        verbose_name_plural = _(u'multi line string fields')
         defined_field_class = models.MultiLineStringField
 
 class MultiPolygonFieldDefinition(GeometryFieldDefinition):
@@ -88,8 +77,6 @@ class MultiPolygonFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'multi polygon field')
-        verbose_name_plural = _(u'multi polygon fields')
         defined_field_class = models.MultiPolygonField
 
 class GeometryCollectionFieldDefinition(GeometryFieldDefinition):
@@ -97,6 +84,4 @@ class GeometryCollectionFieldDefinition(GeometryFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'geometry collection field')
-        verbose_name_plural = _(u'geometry collection fields')
         defined_field_class = models.GeometryCollectionField

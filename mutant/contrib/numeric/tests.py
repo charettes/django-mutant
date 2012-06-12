@@ -12,7 +12,7 @@ from .models import (BigIntegerFieldDefinition, DecimalFieldDefinition,
 
 
 class NumericFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'numeric')
+    field_definition_category = _(u'Numeric')
 
 class SmallIntegerFieldDefinitionTest(NumericFieldDefinitionTestMixin,
                                       BaseModelDefinitionTestCase):

@@ -32,8 +32,8 @@ class FieldDefinitionTypeField(ChoiceField):
                 continue
             fds_choices.append({
                 'value': ct.pk,
-                'label': unicode(capfirst(fd.get_field_description())),
-                'group': unicode(capfirst(fd.get_field_category())),
+                'label': unicode(fd.get_field_description()),
+                'group': unicode(fd.get_field_category()),
             })
         choices = choices_from_dict(sorted(fds_choices, key=group_item_getter))
         if not kwargs.get('required', True):

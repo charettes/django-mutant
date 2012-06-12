@@ -5,7 +5,8 @@ from django.contrib.contenttypes.generic import GenericRelation
 from django.db import models
 from django.db.models import signals
 from django.db.models.sql.constants import LOOKUP_SEP
-from django.utils.text import capfirst
+from django.utils.encoding import force_unicode
+from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 import orderable
 from picklefield.fields import dbsafe_encode, PickledObjectField
@@ -30,11 +31,43 @@ def _copy_fields(src, to_cls):
     data = tuple(getattr(src, field.attname) for field in fields)
     return to_cls(*data)
 
+def _popattr(obj, attr, default):
+    """
+    Useful for retrieving an object attr and removing it if it's part of it's 
+    dict while allowing retrieving from subclass.
+    i.e.
+    class A:
+        a = 'a'
+    class B(A):
+        b = 'b'
+    >>> popattr(B, 'a', None)
+    'a'
+    >>> A.a
+    'a'
+    """
+    val = getattr(obj, attr, default)
+    try:
+        delattr(obj, attr)
+    except AttributeError:
+        pass
+    return val
+
+def _string_format(string, *args, **kwargs):
+    if args:
+        return string % tuple(force_unicode(s) for s in args)
+    elif kwargs:
+        return string % dict((k, force_unicode(v)) for k, v in kwargs.iteritems())
+string_format = lazy(_string_format, unicode)
+
 class FieldDefinitionBase(models.base.ModelBase):
     
     FIELD_CLASS_ATTR = 'defined_field_class'
     FIELD_OPTIONS_ATTR = 'defined_field_options'
+    FIELD_DESCRIPTION_ATTR = 'defined_field_description'
     FIELD_CATEGORY_ATTR = 'defined_field_category'
+
+    DEFAULT_VERBOSE_NAME = _(u"%s field definition")
+    DEFAULT_VERBOSE_NAME_PLURAL = _(u"%s field definitions")
 
     _base_definition = None
     _field_definitions = {}
@@ -45,26 +78,35 @@ class FieldDefinitionBase(models.base.ModelBase):
     def __new__(cls, name, parents, attrs):
         if 'Meta' in attrs:
             Meta = attrs['Meta']
-            field_class = getattr(Meta, cls.FIELD_CLASS_ATTR, None)
+
+            field_description = _popattr(Meta, cls.FIELD_DESCRIPTION_ATTR, None)
+
+            field_class = _popattr(Meta, cls.FIELD_CLASS_ATTR, None)
             if field_class:
                 if not issubclass(field_class, models.Field):
                     msg = ("Meta's defined_field_class must be a subclass of "
                            "django.db.models.fields.Field")
                     raise ImproperlyConfigured(msg)
-                delattr(Meta, cls.FIELD_CLASS_ATTR)
-            field_options = getattr(Meta, cls.FIELD_OPTIONS_ATTR, ())
+                elif field_description is None:
+                    field_description = getattr(field_class, 'description', None)
+
+            field_options = _popattr(Meta, cls.FIELD_OPTIONS_ATTR, ())
             if field_options:
                 if not isinstance(field_options, tuple):
                     msg = "Meta's defined_field_options must be a tuple"
                     raise ImproperlyConfigured(msg)
-                delattr(Meta, cls.FIELD_OPTIONS_ATTR)
-            field_category = getattr(Meta, cls.FIELD_CATEGORY_ATTR, None)
-            if field_category:
-                delattr(Meta, cls.FIELD_CATEGORY_ATTR)
+
+            field_category = _popattr(Meta, cls.FIELD_CATEGORY_ATTR, None)
+
+            has_verbose_name = hasattr(Meta, 'verbose_name')
+            has_verbose_name_plural = hasattr(Meta, 'verbose_name_plural')
         else:
             field_class = None
             field_options = ()
+            field_description = None
             field_category = None
+            has_verbose_name = False
+            has_verbose_name_plural = False
         
         definition = super(FieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
         
@@ -81,8 +123,12 @@ class FieldDefinitionBase(models.base.ModelBase):
                 parent = parents.pop(0)
                 if isinstance(parent, cls):
                     parent_opts = parent._meta
+                    if field_description is None:
+                        field_description = getattr(parent_opts, cls.FIELD_DESCRIPTION_ATTR, None)
                     if field_class is None:
                         field_class = getattr(parent_opts, cls.FIELD_CLASS_ATTR, None)
+                        if field_class and field_description is None:
+                            field_description = field_class.description
                     field_options += getattr(parent_opts, cls.FIELD_OPTIONS_ATTR, ())
                     if field_category is None:
                         field_category = getattr(parent_opts, cls.FIELD_CATEGORY_ATTR, None)
@@ -138,8 +184,18 @@ class FieldDefinitionBase(models.base.ModelBase):
         
         setattr(definition._meta, cls.FIELD_CLASS_ATTR, field_class)
         setattr(definition._meta, cls.FIELD_OPTIONS_ATTR, tuple(set(field_options)))
+        setattr(definition._meta, cls.FIELD_DESCRIPTION_ATTR, field_description)
         setattr(definition._meta, cls.FIELD_CATEGORY_ATTR, field_category)
         
+        if field_description is not None:
+            if not has_verbose_name:
+                lazy
+                verbose_name = string_format(cls.DEFAULT_VERBOSE_NAME, field_description)
+                definition._meta.verbose_name = verbose_name
+                if not has_verbose_name_plural:
+                    verbose_name_plural = string_format(cls.DEFAULT_VERBOSE_NAME_PLURAL, field_description)
+                    definition._meta.verbose_name_plural = verbose_name_plural
+
         if field_class is not None:
             cls._field_definitions[field_class] = definition
         
@@ -211,8 +267,14 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     def __init__(self, *args, **kwargs):
         super(FieldDefinition, self).__init__(*args, **kwargs)
-        if self.pk and self.__class__ != FieldDefinition:
-            self._old_field = self.field_instance()
+        if self.pk:
+            # Attempt to get a reference to the actual field instance
+            try:
+                self._old_field = self.field_instance()
+            except NotImplementedError:
+                # Some FieldDefinition subclass (including FieldDefinition)
+                # have no explicit `defined_field_class` and thus raise here
+                pass
     
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -288,7 +350,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     @classmethod
     def get_field_description(cls):
-        return capfirst(cls._meta.verbose_name)
+        return getattr(cls._meta, FieldDefinitionBase.FIELD_DESCRIPTION_ATTR)
     
     @classmethod
     def get_field_category(cls):

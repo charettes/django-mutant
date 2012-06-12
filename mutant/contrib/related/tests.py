@@ -12,7 +12,7 @@ from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'related')
+    field_definition_category = _(u'Related')
     
     def setUp(self):
         self.field_defintion_init_kwargs = {

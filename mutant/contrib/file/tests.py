@@ -15,7 +15,7 @@ MODELS_MODULE_PATH = os.path.abspath(models.__file__)
 
 class FilePathFieldDefinitionTest(testcases.FieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
-    field_definition_category = _(u'file')
+    field_definition_category = _(u'File')
     field_definition_cls = models.FilePathFieldDefinition
     field_defintion_init_kwargs = {'path': PACKAGE_PATH}
     field_values = (MODULE_PATH, MODELS_MODULE_PATH)

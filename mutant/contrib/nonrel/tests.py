@@ -11,7 +11,7 @@ from .models import (DictFieldDefinition, EmbeddedModelFieldDefinition,
 
 
 class NonRelFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'nonrel')
+    field_definition_category = _(u'Nonrel')
 
 class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):

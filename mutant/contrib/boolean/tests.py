@@ -8,7 +8,7 @@ from .models import BooleanFieldDefinition, NullBooleanFieldDefinition
 
 
 class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'boolean')
+    field_definition_category = _(u'Boolean')
 
 class BooleanFieldDefinitionTest(BooleanFieldDefinitionTestMixin,
                                  BaseModelDefinitionTestCase):

@@ -23,8 +23,6 @@ class FilePathFieldDefinition(CharFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
-        verbose_name = _(u'file path field')
-        verbose_name_plural = _(u'file paths fields')
         defined_field_class = fields.FilePathField
         defined_field_options = ('path', 'match', 'recursive')
-        defined_field_category = _(u'file')
+        defined_field_category = _(u'File')

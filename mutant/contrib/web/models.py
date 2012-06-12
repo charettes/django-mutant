@@ -5,50 +5,39 @@ from django.utils.translation import ugettext_lazy as _
 
 from ..text.models import CharFieldDefinition
 
+class _WebMeta:
+    defined_field_category = _(u'Web')
 
 class EmailFieldDefinition(CharFieldDefinition):
     
-    class Meta:
+    class Meta(_WebMeta):
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'email field')
-        verbose_name_plural = _(u'email fields')
         defined_field_class = fields.EmailField
-        defined_field_category = _(u'web')
         
 class URLFieldDefinition(CharFieldDefinition):
     
-    class Meta:
+    class Meta(_WebMeta):
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'URL field')
-        verbose_name_plural = _(u'URL fields')
         defined_field_class = fields.URLField
-        defined_field_category = _(u'web')
         
 class SlugFieldDefinition(CharFieldDefinition):
     
-    class Meta:
+    class Meta(_WebMeta):
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'slug field')
-        verbose_name_plural = _(u'slug fields')
         defined_field_class = fields.SlugField
-        defined_field_category = _(u'web')
+        defined_field_description = _(u'slug')
         
 class IPAddressFieldDefinition(CharFieldDefinition):
     
-    class Meta:
+    class Meta(_WebMeta):
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'IP address field')
-        verbose_name_plural = _(u'IP address fields')
         defined_field_class = fields.IPAddressField
-        defined_field_category = _(u'web')
 
-# We should eat our own dogfood and
-# provide those options as FieldDefinitionOptionChoice initial_data
-# fixture
+# TODO: Remove when support for django 1.3 is dropped
 try:
     # Django 1.4+
     GenericIPAddressField = fields.GenericIPAddressField
@@ -71,13 +60,11 @@ else:
         
         unpack_ipv4 = fields.BooleanField(_(u'unpack ipv4'), default=False)
         
-        class Meta:
+        class Meta(_WebMeta):
             app_label = 'mutant'
-            verbose_name = _(u'generic IP address field')
-            verbose_name_plural = _(u'generic IP address fields')
             defined_field_class = GenericIPAddressField
             defined_field_options = ('protocol', 'unpack_ipv4',)
-            defined_field_category = _(u'web')
+            defined_field_description = _(u'generic IP address')
             
         def clean(self):
             if self.unpack_ipv4 and self.procotol != 'both':

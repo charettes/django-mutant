@@ -9,7 +9,7 @@ from .models import (EmailFieldDefinition, IPAddressFieldDefinition,
 
 
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'web')
+    field_definition_category = _(u'Web')
 
 class EmailFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):

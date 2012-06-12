@@ -10,7 +10,7 @@ from .models import (DateFieldDefinition, DateTimeFieldDefinition,
 
 
 class TemporalFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'temporal')
+    field_definition_category = _(u'Temporal')
 
 class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):

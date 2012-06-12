@@ -12,7 +12,7 @@ from .models import CharFieldDefinition, TextFieldDefinition
 
 
 class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'text')
+    field_definition_category = _(u'Text')
 
 class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):

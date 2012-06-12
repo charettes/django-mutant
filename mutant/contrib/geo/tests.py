@@ -14,7 +14,7 @@ from .models import (GeoModel, GeometryCollectionFieldDefinition,
 
 
 class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
-    field_definition_category = _(u'geometry')
+    field_definition_category = _(u'Geometry')
     
     def setUp(self):
         super(GeometryFieldDefinitionBaseTest, self).setUp()

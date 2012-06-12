@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ...models import FieldDefinition
 
+
 auto_now_help_text = _(u'Automatically set the field to now every time the '
                        u'object is saved.')
 
@@ -20,19 +21,15 @@ class DateFieldDefinition(FieldDefinition):
     
     class Meta:
         app_label = 'mutant'
-        verbose_name = _(u'date field')
-        verbose_name_plural = _(u'date fields')
         defined_field_class = fields.DateField
         defined_field_options = ('auto_now', 'auto_now_add',)
-        defined_field_category = _(u'temporal')
+        defined_field_category = _(u'Temporal')
 
 class TimeFieldDefinition(DateFieldDefinition):
     
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'time field')
-        verbose_name_plural = _(u'time fields')
         defined_field_class = fields.TimeField
 
 class DateTimeFieldDefinition(DateFieldDefinition):
@@ -40,6 +37,4 @@ class DateTimeFieldDefinition(DateFieldDefinition):
     class Meta:
         app_label = 'mutant'
         proxy = True
-        verbose_name = _(u'date time field')
-        verbose_name_plural = _(u'date time fields')
         defined_field_class = fields.DateTimeField
