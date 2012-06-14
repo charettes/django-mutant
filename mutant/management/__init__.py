@@ -141,8 +141,9 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         perform_ddl(model_class, 'add_column', table_name,
                     instance.name, field, keep_default=keep_default)
     else:
-        __, column = field.get_attname_column()
-        old_field = instance._old_field
+        column = field.get_attname_column()[1]
+        old_field = instance._state._pre_save_field
+        delattr(instance._state, '_pre_save_field')
         
         # Field renaming
         old_column = old_field.get_attname_column()[1]

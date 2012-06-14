@@ -228,6 +228,8 @@ class FieldDefinitionManager(InheritedModelManager):
     
 class FieldDefinition(ModelDefinitionAttribute):
     
+    FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
+
     __metaclass__ = FieldDefinitionBase
     
     # TODO: rename field_def_type
@@ -268,26 +270,13 @@ class FieldDefinition(ModelDefinitionAttribute):
                                  'editable', 'default', 'primary_key', 'unique',
                                  'unique_for_date', 'unique_for_month', 'unique_for_year')
     
-    def __init__(self, *args, **kwargs):
-        super(FieldDefinition, self).__init__(*args, **kwargs)
-        if self.pk:
-            # Attempt to get a reference to the actual field instance
-            try:
-                self._old_field = self.field_instance()
-            except NotImplementedError:
-                # Some FieldDefinition subclass (including FieldDefinition)
-                # have no explicit `defined_field_class` and thus raise here
-                pass
-    
     def save(self, *args, **kwargs):
         if not self.pk:
             self.field_type = self.get_content_type()
+        else:
+            self._state._pre_save_field = self.get_bound_field()
             
-        saved = super(FieldDefinition, self).save(*args, **kwargs)
-
-        self._old_field = self._south_ready_field_instance()
-        
-        return saved
+        return super(FieldDefinition, self).save(*args, **kwargs)
     
     def delete(self, *args, **kwargs):
         if self._meta.proxy:
@@ -337,7 +326,7 @@ class FieldDefinition(ModelDefinitionAttribute):
                 msg = ("Concrete type casted model %s is not an instance of %s "
                        "which is the model proxied by %s" % (type_casted, concrete_model, proxy))
                 raise AssertionError(msg)
-            type_casted = _copy_fields(self, proxy)
+            type_casted = _copy_fields(type_casted, proxy)
         
         if type_casted._meta.object_name.lower() != field_type_model:
             raise AssertionError("Failed to type cast %s to %s" % (self, field_type_model))
@@ -381,7 +370,15 @@ class FieldDefinition(ModelDefinitionAttribute):
     def field_instance(self):
         cls = self.get_field_class()
         options = self.get_field_options()
-        return cls(**options)
+        instance = cls(**options)
+        setattr(instance, self.FIELD_DEFINITION_PK_ATTR, self.pk)
+        return instance
+
+    def get_bound_field(self):
+        opts = self.model_def.model_class()._meta
+        for field in opts.fields:
+            if getattr(field, self.FIELD_DEFINITION_PK_ATTR, None) == self.pk:
+                return field
     
     def _south_ready_field_instance(self):
         """
