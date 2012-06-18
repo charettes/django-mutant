@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EMPTY_VALUES
 from django.forms.fields import ChoiceField
 from django.utils.encoding import smart_unicode
-from django.utils.text import capfirst
 
 from .common import group_item_getter, choices_from_dict
 from .models.field import FieldDefinition, FieldDefinitionBase
