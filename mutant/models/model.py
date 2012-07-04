@@ -18,13 +18,28 @@ from ..db.models import MutableModel
 def _get_db_table(app_label, model):
     return "mutant_%s_%s" % (app_label, model)
 
+if hasattr(model_cache, 'write_lock'):
+    def model_cache_lock():
+        return model_cache.write_lock
+else:
+    # django >= 1.5 use imp.lock instead
+    from contextlib import contextmanager
+    @contextmanager
+    def model_cache_lock():
+        import imp
+        try:
+            imp.acquire_lock()
+            yield
+        finally:
+            imp.release_lock()
+
 def _remove_from_model_cache(model_class):
     try:
         opts = model_class._meta
     except AttributeError:
         return
     app_label, model_name = opts.app_label, opts.object_name.lower()
-    with model_cache.write_lock:
+    with model_cache_lock():
         app_models = model_cache.app_models.get(app_label, False)
         if app_models:
             model = app_models.pop(model_name, False)
