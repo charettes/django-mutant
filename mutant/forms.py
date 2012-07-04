@@ -14,7 +14,7 @@ from .models.field import FieldDefinition, FieldDefinitionBase
 class FieldDefinitionTypeField(ChoiceField):
 
     def __init__(self, field_definitions=None, empty_label="---------",
-                 *args, **kwargs):
+                 group_by_category=True, *args, **kwargs):
         if field_definitions is None:
             field_definitions = FieldDefinitionBase._field_definitions.values()
         else:
@@ -24,10 +24,11 @@ class FieldDefinitionTypeField(ChoiceField):
         fds_choices = []
         for fd in field_definitions:
             ct = get_real_content_type(fd)
+            group = unicode(fd.get_field_category()) if group_by_category else None
             fds_choices.append({
                 'value': ct.pk,
                 'label': unicode(fd.get_field_description()),
-                'group': unicode(fd.get_field_category()),
+                'group': group,
             })
         choices = [(u'', empty_label)] + list(choices_from_dict(sorted(fds_choices, key=group_item_getter)))
         super(FieldDefinitionTypeField, self).__init__(choices, *args, **kwargs)
