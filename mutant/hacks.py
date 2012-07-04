@@ -86,13 +86,29 @@ def get_real_content_type(model, db=None):
     """
     # TODO: Remove when support for django 1.4 is dropped
     from django.contrib.contenttypes.models import ContentType
+    from django.utils.encoding import smart_unicode
     cts = ContentType.objects
     if db:
         cts = cts.db_manager(db)
-    try:
-        return cts.get_for_model(model, for_concrete_model=False)
-    except TypeError:
-        opts = model._meta
-        app_label = opts.app_label
-        object_name = opts.object_name.lower()
-        return cts.get_by_natural_key(app_label, object_name)
+    opts = model._meta
+    if opts.proxy:
+        try:
+            # Attempt to use the `for_concrete_model` kwarg available in
+            # django >= 1.5
+            return cts.get_for_model(model, for_concrete_model=False)
+        except TypeError:
+            if model._deferred:
+                opts = opts.proxy_for_model._meta
+            try:
+                ct = cts._get_from_cache(opts)
+            except KeyError:
+                ct, _created = cts.get_or_create(
+                    app_label = opts.app_label,
+                    model = opts.object_name.lower(),
+                    defaults = {'name': smart_unicode(opts.verbose_name_raw)},
+                )
+                cts._add_to_cache(cts.db, ct)
+                return ct
+    else:
+        return cts.get_for_model(model)
+ 
