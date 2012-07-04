@@ -7,6 +7,7 @@ from django.forms.fields import ChoiceField
 from django.utils.encoding import smart_unicode
 
 from .common import group_item_getter, choices_from_dict
+from .hacks import get_real_content_type
 from .models.field import FieldDefinition, FieldDefinitionBase
 
 
@@ -22,13 +23,7 @@ class FieldDefinitionTypeField(ChoiceField):
                     raise TypeError("%r is not a subclass of FieldDefinitionBase" % fd)
         fds_choices = []
         for fd in field_definitions:
-            try:
-                opts = fd._meta
-                app_label = opts.app_label
-                object_name = opts.object_name.lower()
-                ct = ContentType.objects.get_by_natural_key(app_label, object_name)
-            except ContentType.DoesNotExist:
-                continue
+            ct = get_real_content_type(fd)
             fds_choices.append({
                 'value': ct.pk,
                 'label': unicode(fd.get_field_description()),
