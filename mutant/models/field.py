@@ -391,6 +391,8 @@ class FieldDefinition(ModelDefinitionAttribute):
         # Make sure we can build the field
         try:
             field = self.field_instance()
+        except NotImplementedError:
+            pass # `get_field_class` is not implemented
         except Exception as e:
             raise ValidationError(e)
         else:
