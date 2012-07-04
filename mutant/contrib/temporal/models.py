@@ -16,7 +16,7 @@ class DateFieldDefinition(FieldDefinition):
     auto_now = fields.BooleanField(_(u'auto now'), default=False,
                                    help_text=auto_now_help_text)
     
-    auto_now_add = fields.BooleanField(_(u'auto_now_add'), default=False,
+    auto_now_add = fields.BooleanField(_(u'auto now add'), default=False,
                                        help_text=auto_now_add_help_text)
     
     class Meta:
