@@ -100,7 +100,13 @@ def get_real_content_type(model, db=None):
             if model._deferred:
                 opts = opts.proxy_for_model._meta
             try:
-                ct = cts._get_from_cache(opts)
+                try:
+                    ct = cts._get_from_cache(opts)
+                # TODO: Remove when support for django 1.3 is dropped
+                except AttributeError:
+                    # django 1.3 doesn't have the `_get_from_cache` method
+                    key = (opts.app_label, opts.object_name.lower())
+                    return cts.__class__._cache[cts.db][key]
             except KeyError:
                 ct, _created = cts.get_or_create(
                     app_label = opts.app_label,
