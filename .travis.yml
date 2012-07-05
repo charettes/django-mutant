@@ -9,16 +9,22 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.3.X            TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
-  - REQUIREMENTS=1.3.X-postgres   TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
-  - REQUIREMENTS=1.3.X-postgres   TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
-  - REQUIREMENTS=1.4.X            TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
-  - REQUIREMENTS=1.4.X-postgres   TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
-  - REQUIREMENTS=1.4.X-postgres   TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
-  - REQUIREMENTS=master           TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
-  - REQUIREMENTS=master-postgres  TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
-  - REQUIREMENTS=master-postgres  TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
-  - REQUIREMENTS=mongo            TESTS="mutant boolean temporal file numeric nonrel text web"            SETTINGS=mongodb_settings
+  - REQUIREMENTS=1.3.X           TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
+  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
+  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
+  - REQUIREMENTS=mongo           TESTS="mutant boolean temporal file numeric nonrel text web"            SETTINGS=mongodb_settings
+  - REQUIREMENTS=1.4.X           TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
+  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
+  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
+  - REQUIREMENTS=master          TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
+  - REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
+  - REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
+
+matrix:
+  allow_failures:
+    - env: REQUIREMENTS=master          TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=test_project.settings
+    - env: REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web south"     SETTINGS=travis.postgres_settings TEMPLATE=template0
+    - env: REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web geo south" SETTINGS=travis.postgis_settings TEMPLATE=template_postgis
 
 postgres:
   adapter: postgresql
