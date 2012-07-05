@@ -1,18 +1,17 @@
 import warnings
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.contrib.contenttypes.generic import GenericRelation
 from django.db import models
 from django.db.models import signals
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-import orderable
+from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    ProxyAwareGenericForeignKey, PythonIdentifierField)
+    PythonIdentifierField)
 from ..hacks import (get_concrete_model, get_real_content_type,
     patch_model_option_verbose_name_raw)
 from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
@@ -241,9 +240,6 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     null = models.BooleanField(_(u'null'), default=False)
     blank = models.BooleanField(_(u'blank'), default=False)
-    choices = GenericRelation('FieldDefinitionChoice',
-                              content_type_field='field_def_type',
-                              object_id_field='field_def_id')
     
     db_column = models.SlugField(_(u'db column'), max_length=30, blank=True, null=True)
     db_index = models.BooleanField(_(u'db index'), default=False)
@@ -334,7 +330,7 @@ class FieldDefinition(ModelDefinitionAttribute):
         return type_casted
     
     @classmethod
-    def get_field_class(cls):
+    def get_field_class(cls, **kwargs):
         field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
         if not field_class:
             raise NotImplementedError
@@ -355,21 +351,22 @@ class FieldDefinition(ModelDefinitionAttribute):
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
     
-    def get_field_options(self):
+    def get_field_options(self, **kwargs):
         model_opts = self._meta
         options = {}
         for name in getattr(model_opts, FieldDefinitionBase.FIELD_OPTIONS_ATTR):
             value = getattr(self, name)
             if value != model_opts.get_field(name).get_default():
                 options[name] = value
-        choices = self.get_field_choices()
-        if choices:
-            options['choices'] = choices
+        if kwargs.get('choices', True):
+            choices = self.get_field_choices()
+            if choices:
+                options['choices'] = choices
         return options
     
-    def field_instance(self):
-        cls = self.get_field_class()
-        options = self.get_field_options()
+    def field_instance(self, **kwargs):
+        cls = self.get_field_class(**kwargs)
+        options = self.get_field_options(**kwargs)
         instance = cls(**options)
         setattr(instance, self.FIELD_DEFINITION_PK_ATTR, self.pk)
         return instance
@@ -405,14 +402,11 @@ class FieldDefinition(ModelDefinitionAttribute):
                     msg = _(u"%r is not a valid default value") % default
                     raise ValidationError({'default': [msg]})
 
-class FieldDefinitionChoice(orderable.models.OrderableModel):
+class FieldDefinitionChoice(OrderableModel):
     """
     A Model to allow specifying choices for a field definition instance
     """
-    field_def_type = FieldDefinitionTypeField(verbose_name=_(u'field_def type'))
-    field_def_id = models.IntegerField(_(u'field_def def id'), db_index=True)
-    field_def = ProxyAwareGenericForeignKey(ct_field='field_def_type',
-                                            fk_field='field_def_id')
+    field_def = models.ForeignKey(FieldDefinition, related_name='choices')
     
     group = LazilyTranslatedField(_(u'group'), blank=True, null=True)
     value = models.CharField(_(u'value'), max_length=255)
@@ -422,25 +416,19 @@ class FieldDefinitionChoice(orderable.models.OrderableModel):
     
     class Meta:
         app_label = 'mutant'
-        verbose_name = _(u'field_def choice')
-        verbose_name_plural = _(u'field_def choices')
-        unique_together = (('field_def_type', 'field_def_id', 'order'),
-                           ('field_def_type', 'field_def_id', 'group', 'value'))
+        verbose_name = _(u'field definition choice')
+        verbose_name_plural = _(u'field definition choices')
+        unique_together = (('field_def', 'order'),
+                           ('field_def', 'group', 'value'))
     
     def clean(self):
-        messages = {}
-        
         try:
-            self.field_def.field_instance().clean(self.value, None)
+            # Make sure to create a field instance with no choices to avoid
+            # validating against existing ones.
+            field = self.field_def.type_cast().field_instance(choices=False)
+            field.clean(self.value, None)
         except ValidationError as e:
-            messages['value'] = e.messages
-            
-        if not isinstance(self.field_def, FieldDefinition):
-            msg = _(u'This must be an instance of a `FieldDefinition`')
-            messages['field_def'] = [msg]
-        
-        if messages:
-            raise ValidationError(messages)
+            raise ValidationError({'value': e.messages})
     
     def save(self, *args, **kwargs):
         save = super(FieldDefinitionChoice, self).save(*args, **kwargs)

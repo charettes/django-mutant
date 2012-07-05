@@ -69,8 +69,8 @@ class EmbeddedModelFieldDefinition(FieldDefinition):
         defined_field_class = fields.EmbeddedModelField
         defined_field_description = _(u'Embedded model')
     
-    def get_field_options(self):
-        options = super(EmbeddedModelFieldDefinition, self).get_field_options()
+    def get_field_options(self, **kwargs):
+        options = super(EmbeddedModelFieldDefinition, self).get_field_options(**kwargs)
         if self.model:
             options['model'] = self.model.model_class()
         return options

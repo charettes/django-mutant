@@ -114,22 +114,26 @@ class FieldDefinitionChoiceTest(BaseModelDefinitionTestCase):
         field_def = CharFieldDefinition.objects.create(name='gender',
                                                        max_length=1,
                                                        model_def=self.model_def)
-        choice = FieldDefinitionChoice(field_def=field_def,
+        male_choice = FieldDefinitionChoice(field_def=field_def,
                                        value='Male', label='Male')
         
-        self.assertRaises(ValidationError, choice.clean)
+        self.assertRaises(ValidationError, male_choice.clean)
         
-        choice.value = 'M'
-        choice.full_clean()
-        choice.save()
+        male_choice.value = 'M'
+        male_choice.full_clean()
+        male_choice.save()
         
         Model = self.model_def.model_class()
-        obj = Model(gender='Male')
+        obj = Model(gender='T')
         
         self.assertRaises(ValidationError, obj.full_clean)
         
-        FieldDefinitionChoice.objects.create(field_def=field_def,
-                                             value='F', label='Female')
+        female_choice = FieldDefinitionChoice(field_def=field_def,
+                                              value='F', label='Female')
+
+        female_choice.value = 'F'
+        female_choice.full_clean()
+        female_choice.save()
         
         obj = Model(gender='F')
         obj.full_clean()

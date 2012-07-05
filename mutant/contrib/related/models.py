@@ -53,8 +53,8 @@ class RelatedFieldDefinition(FieldDefinition):
             msg = _(u'Cannot assign a related manager to non-mutable model')
             raise ValidationError({'related_name': [msg]})
     
-    def get_field_options(self):
-        options = super(RelatedFieldDefinition, self).get_field_options()
+    def get_field_options(self, **kwargs):
+        options = super(RelatedFieldDefinition, self).get_field_options(**kwargs)
         
         if self.is_recursive_relationship:
             options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
@@ -130,8 +130,8 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
         if messages:
             raise ValidationError(messages)
         
-    def get_field_options(self):
-        options = super(ForeignKeyDefinition, self).get_field_options()
+    def get_field_options(self, **kwargs):
+        options = super(ForeignKeyDefinition, self).get_field_options(**kwargs)
         if self.on_delete == 'SET_VALUE':
             on_delete = deletion.SET(self.on_delete_set_value)
         else:
