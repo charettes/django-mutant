@@ -409,7 +409,7 @@ class FieldDefinitionChoice(OrderableModel):
     field_def = models.ForeignKey(FieldDefinition, related_name='choices')
     
     group = LazilyTranslatedField(_(u'group'), blank=True, null=True)
-    value = models.CharField(_(u'value'), max_length=255)
+    value = PickledObjectField(_(u'value'))
     label = LazilyTranslatedField(_(u'label'))
     
     objects = FieldDefinitionChoiceManager()
