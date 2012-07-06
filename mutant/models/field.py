@@ -330,7 +330,7 @@ class FieldDefinition(ModelDefinitionAttribute):
         return type_casted
     
     @classmethod
-    def get_field_class(cls, **kwargs):
+    def get_field_class(cls):
         field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
         if not field_class:
             raise NotImplementedError
@@ -351,22 +351,25 @@ class FieldDefinition(ModelDefinitionAttribute):
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
     
-    def get_field_options(self, **kwargs):
+    def get_field_options(self, **overrides):
         model_opts = self._meta
         options = {}
         for name in getattr(model_opts, FieldDefinitionBase.FIELD_OPTIONS_ATTR):
+            if name in overrides: # Avoid fetching if it's overridden
+                continue
             value = getattr(self, name)
             if value != model_opts.get_field(name).get_default():
                 options[name] = value
-        if kwargs.get('choices', True):
+        if 'choices' not in overrides: # Avoid a fetching if it's overridden
             choices = self.get_field_choices()
             if choices:
                 options['choices'] = choices
         return options
     
-    def field_instance(self, **kwargs):
-        cls = self.get_field_class(**kwargs)
-        options = self.get_field_options(**kwargs)
+    def field_instance(self, **overrides):
+        cls = self.get_field_class()
+        options = self.get_field_options(**overrides)
+        options.update(overrides)
         instance = cls(**options)
         setattr(instance, self.FIELD_DEFINITION_PK_ATTR, self.pk)
         return instance
@@ -425,7 +428,7 @@ class FieldDefinitionChoice(OrderableModel):
         try:
             # Make sure to create a field instance with no choices to avoid
             # validating against existing ones.
-            field = self.field_def.type_cast().field_instance(choices=False)
+            field = self.field_def.type_cast().field_instance(choices=None)
             field.clean(self.value, None)
         except ValidationError as e:
             raise ValidationError({'value': e.messages})
