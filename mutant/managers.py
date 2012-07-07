@@ -65,7 +65,9 @@ class FieldDefinitionChoiceManager(Manager):
                         'value': choice.value}
                        for choice in self.only('group', 'value', 'label'))
             return choices_from_dict(choices)
-    
+
     def as_choices(self):
-        qs = self.ChoiceDefinitionQuerySet(self.model, using=self._db)
-        return qs.as_choices()
+        return self.get_query_set().as_choices()
+
+    def get_query_set(self):
+        return self.ChoiceDefinitionQuerySet(self.model, using=self._db)
