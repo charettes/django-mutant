@@ -368,7 +368,7 @@ class FieldDefinition(ModelDefinitionAttribute):
             value = getattr(self, name)
             if value != model_opts.get_field(name).get_default():
                 options[name] = value
-        if 'choices' not in overrides: # Avoid a fetching if it's overridden
+        if 'choices' not in overrides: # Avoid fetching if it's overridden
             choices = self.get_field_choices()
             if choices:
                 options['choices'] = choices
