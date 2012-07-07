@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import signals
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.encoding import force_unicode
-from django.utils.functional import lazy
+from django.utils.functional import lazy, memoize
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
@@ -73,7 +73,6 @@ class FieldDefinitionBase(models.base.ModelBase):
 
     _base_definition = None
     _field_definitions = {}
-    _subclasses_lookups = []
     _proxies = {}
     _lookups = {}
     
@@ -141,13 +140,6 @@ class FieldDefinitionBase(models.base.ModelBase):
             cls._lookups[model] = lookup
             if opts.proxy:
                 cls._proxies[model] = definition
-            elif not opts.abstract:
-                if len(lookup) == 1:
-                    # TODO: #16572
-                    # We can't do `select_related` on multiple one-to-one
-                    # relationships...
-                    # see https://code.djangoproject.com/ticket/16572
-                    cls._subclasses_lookups.append(LOOKUP_SEP.join(lookup))
             
             from ..management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
@@ -300,10 +292,23 @@ class FieldDefinition(ModelDefinitionAttribute):
             return delete
         return super(FieldDefinition, self).delete(*args, **kwargs)
     
-    @classmethod
-    def subclasses(cls):
-        # TODO: rename subclasses lookups?
-        return FieldDefinitionBase._subclasses_lookups
+    def subclasses_lookups(cls, subclasses): #@NoSelf
+        if subclasses:
+            def _lookups():
+                for subclass in subclasses:
+                    assert issubclass(subclass, cls), "%r is not a subclass of %r" % (subclass, cls)
+                    model = subclass._meta.object_name.lower()
+                    yield FieldDefinitionBase._lookups[model]
+            lookups = _lookups()
+        else:
+            lookups = FieldDefinitionBase._lookups.itervalues()
+
+        # TODO: #16572
+        # We can't do `select_related` on multiple one-to-one
+        # relationships...
+        # see https://code.djangoproject.com/ticket/16572
+        return set(LOOKUP_SEP.join(lookup) for lookup in lookups if len(lookup) == 1)
+    subclasses_lookups = classmethod(memoize(subclasses_lookups, {}, 2))
     
     def type_cast(self):
         field_type_model = self.field_type.model

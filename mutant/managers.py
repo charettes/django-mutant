@@ -1,10 +1,10 @@
 
-from django.db.models import Manager
-from django.db.models.query import QuerySet
+from django.db import models
 
 from .common import choices_from_dict
 
-class FilteredQuerysetManager(Manager):
+
+class FilteredQuerysetManager(models.Manager):
     
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -15,32 +15,27 @@ class FilteredQuerysetManager(Manager):
         qs = super(FilteredQuerysetManager, self).get_query_set()
         return qs.filter(*self.args, **self.kwargs)
 
-class InheritedModelManager(Manager):
+class InheritedModelManager(models.Manager):
     use_for_related_fields = True
     
-    class InheritanceQuerySet(QuerySet):
+    class InheritanceQuerySet(models.query.QuerySet):
         """
         Based on http://goo.gl/8CM5X by Jeff Elmores
         """
         
         def select_subclasses(self, *subclasses):
-            if not subclasses:
-                subclasses = self.model.subclasses()
-            qs = self.select_related(*subclasses)
-            qs.subclasses = subclasses
-            return qs
+            self.type_cast = True
+            lookups = self.model.subclasses_lookups(subclasses)
+            return self.select_related(*lookups)
         
         def _clone(self, klass=None, setup=False, **kwargs):
-            try:
-                kwargs.update({'subclasses': self.subclasses})
-            except AttributeError:
-                pass
+            kwargs.update(type_cast=getattr(self, 'type_cast', False))
             cls = InheritedModelManager.InheritanceQuerySet
             return super(cls, self)._clone(klass, setup, **kwargs)
         
         def iterator(self):
             iterator = super(InheritedModelManager.InheritanceQuerySet, self).iterator()
-            if getattr(self, 'subclasses', False):
+            if getattr(self, 'type_cast', False):
                 for obj in iterator:
                     yield obj.type_cast()
             else:
@@ -54,10 +49,10 @@ class InheritedModelManager(Manager):
     def get_query_set(self):
         return self.InheritanceQuerySet(self.model, using=self._db)
 
-class FieldDefinitionChoiceManager(Manager):
+class FieldDefinitionChoiceManager(models.Manager):
     use_for_related_fields = True
     
-    class ChoiceDefinitionQuerySet(QuerySet):
+    class ChoiceDefinitionQuerySet(models.query.QuerySet):
         
         def as_choices(self):
             choices = ({'group': choice.group,
