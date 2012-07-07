@@ -26,7 +26,7 @@ class InheritedModelManager(models.Manager):
         def select_subclasses(self, *subclasses):
             self.type_cast = True
             lookups = self.model.subclasses_lookups(subclasses)
-            return self.select_related(*lookups)
+            return self.select_related('content_type', *lookups)
         
         def _clone(self, klass=None, setup=False, **kwargs):
             kwargs.update(type_cast=getattr(self, 'type_cast', False))

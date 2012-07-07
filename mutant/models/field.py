@@ -223,8 +223,7 @@ class FieldDefinition(ModelDefinitionAttribute):
 
     __metaclass__ = FieldDefinitionBase
     
-    # TODO: rename field_def_type
-    field_type = FieldDefinitionTypeField()
+    content_type = FieldDefinitionTypeField()
     
     name = PythonIdentifierField(_(u'name'))
     verbose_name = LazilyTranslatedField(_(u'verbose name'), blank=True, null=True)
@@ -260,7 +259,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.field_type = self.get_content_type()
+            self.content_type = self.get_content_type()
         else:
             self._state._pre_save_field = self.get_bound_field()
             
@@ -311,16 +310,16 @@ class FieldDefinition(ModelDefinitionAttribute):
     subclasses_lookups = classmethod(memoize(subclasses_lookups, {}, 2))
     
     def type_cast(self):
-        field_type_model = self.field_type.model
+        model = self.content_type.model
         
         # Cast to the right concrete model by going up in the 
         # SingleRelatedObjectDescriptor chain
         type_casted = self
-        for subclass in FieldDefinitionBase._lookups[field_type_model]:
+        for subclass in FieldDefinitionBase._lookups[model]:
             type_casted = getattr(type_casted, subclass)
         
-        # If it's a proxy model we make to type cast it
-        proxy = FieldDefinitionBase._proxies.get(field_type_model, None)
+        # If it's a proxy model we make sure to type cast it
+        proxy = FieldDefinitionBase._proxies.get(model, None)
         if proxy:
             concrete_model = get_concrete_model(proxy)
             if not isinstance(type_casted, concrete_model):
@@ -329,8 +328,8 @@ class FieldDefinition(ModelDefinitionAttribute):
                 raise AssertionError(msg)
             type_casted = _copy_fields(type_casted, proxy)
         
-        if type_casted._meta.object_name.lower() != field_type_model:
-            raise AssertionError("Failed to type cast %s to %s" % (self, field_type_model))
+        if type_casted._meta.object_name.lower() != model:
+            raise AssertionError("Failed to type cast %s to %s" % (self, model))
         
         return type_casted
     
