@@ -312,6 +312,10 @@ class FieldDefinition(ModelDefinitionAttribute):
     def type_cast(self):
         model = self.content_type.model
         
+        # We're already of the right type
+        if self._meta.object_name.lower() == model:
+            return self
+
         # Cast to the right concrete model by going up in the 
         # SingleRelatedObjectDescriptor chain
         type_casted = self
