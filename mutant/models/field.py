@@ -425,7 +425,7 @@ class FieldDefinitionChoice(OrderableModel):
     
     objects = FieldDefinitionChoiceManager()
     
-    class Meta:
+    class Meta(OrderableModel.Meta):
         app_label = 'mutant'
         verbose_name = _(u'field definition choice')
         verbose_name_plural = _(u'field definition choices')
