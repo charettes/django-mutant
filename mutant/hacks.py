@@ -117,4 +117,3 @@ def get_real_content_type(model, db=None):
                 return ct
     else:
         return cts.get_for_model(model)
- 

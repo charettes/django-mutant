@@ -183,7 +183,6 @@ class FieldDefinitionBase(models.base.ModelBase):
         
         if field_description is not None:
             if not has_verbose_name:
-                lazy
                 verbose_name = string_format(cls.DEFAULT_VERBOSE_NAME, field_description)
                 definition._meta.verbose_name = verbose_name
                 if not has_verbose_name_plural:
