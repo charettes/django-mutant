@@ -5,9 +5,9 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EMPTY_VALUES
 from django.forms.fields import ChoiceField
 from django.utils.encoding import smart_unicode
+from polymodels.utils import get_content_types
 
 from .common import group_item_getter, choices_from_dict
-from .hacks import get_real_content_type
 from .models.field import FieldDefinition, FieldDefinitionBase
 
 
@@ -22,8 +22,7 @@ class FieldDefinitionTypeField(ChoiceField):
                 if not isinstance(fd, FieldDefinitionBase):
                     raise TypeError("%r is not a subclass of FieldDefinitionBase" % fd)
         fds_choices = []
-        for fd in field_definitions:
-            ct = get_real_content_type(fd)
+        for fd, ct in get_content_types(field_definitions).iteritems():
             group = unicode(fd.get_field_category()) if group_by_category else None
             fds_choices.append({
                 'value': ct.pk,

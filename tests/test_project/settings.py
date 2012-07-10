@@ -114,6 +114,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'south',
+    'polymodels',
     'mutant',
     'mutant.contrib.boolean',
     'mutant.contrib.temporal',

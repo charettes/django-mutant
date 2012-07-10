@@ -4,8 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
-
-from ...hacks import get_real_content_type
+from polymodels.utils import get_content_type
 
 
 class FieldDefinitionTypeField(fields.related.ForeignKey):
@@ -36,12 +35,12 @@ class FieldDefinitionTypeField(fields.related.ForeignKey):
         
 class ProxyAwareGenericForeignKey(GenericForeignKey):
     """
-    Basically a GenericForeignKey that saves the actal ContentType of the object
+    Basically a GenericForeignKey that saves the actual ContentType of the object
     even if it's a proxy Model.
     """
     
     def get_content_type(self, obj=None, **kwargs):
         if obj:
-            return get_real_content_type(obj.__class__, obj._state.db)
+            return get_content_type(obj.__class__, obj._state.db)
         else:
             return super(ProxyAwareGenericForeignKey, self).get_content_type(obj, **kwargs)

@@ -3,19 +3,19 @@ import warnings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
-from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.encoding import force_unicode
-from django.utils.functional import lazy, memoize
+from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
+from polymodels.models import BasePolymorphicModel
+from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
+from polymodels.utils import get_content_type
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
-from ..hacks import (get_concrete_model, get_real_content_type,
-    patch_model_option_verbose_name_raw)
-from ..managers import FieldDefinitionChoiceManager, InheritedModelManager
-
+from ..hacks import get_concrete_model, patch_model_option_verbose_name_raw
+from ..managers import FieldDefinitionChoiceManager
 from .model import ModelDefinitionAttribute
 
 
@@ -116,8 +116,6 @@ class FieldDefinitionBase(models.base.ModelBase):
             cls._base_definition = definition
         else:
             opts = definition._meta
-            model = opts.object_name.lower()
-            lookup = []
             base_definition = cls._base_definition
             parents = [definition]
             while parents:
@@ -134,13 +132,8 @@ class FieldDefinitionBase(models.base.ModelBase):
                     if field_category is None:
                         field_category = getattr(parent_opts, cls.FIELD_CATEGORY_ATTR, None)
                     if parent is not base_definition:
-                        if not (parent_opts.abstract or parent_opts.proxy):
-                            lookup.insert(0, parent_opts.object_name.lower())
                         parents = list(parent.__bases__) + parents # mimic mro
-            cls._lookups[model] = lookup
-            if opts.proxy:
-                cls._proxies[model] = definition
-            
+
             from ..management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
             object_name = definition._meta.object_name.lower()
@@ -194,9 +187,9 @@ class FieldDefinitionBase(models.base.ModelBase):
         
         return definition
 
-class FieldDefinitionManager(InheritedModelManager):
+class FieldDefinitionManager(PolymorphicManager):
     
-    class FieldDefinitionQuerySet(InheritedModelManager.InheritanceQuerySet):
+    class FieldDefinitionQuerySet(PolymorphicQuerySet):
         
         def create_with_default(self, default, **kwargs):
             obj = self.model(**kwargs)
@@ -216,12 +209,13 @@ class FieldDefinitionManager(InheritedModelManager):
         qs = self.get_query_set()
         return qs.create_with_default(default, **kwargs)
     
-class FieldDefinition(ModelDefinitionAttribute):
+class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     
     FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
 
     __metaclass__ = FieldDefinitionBase
     
+    content_type_field_name = 'content_type'
     content_type = FieldDefinitionTypeField()
     
     name = PythonIdentifierField(_(u'name'))
@@ -257,9 +251,7 @@ class FieldDefinition(ModelDefinitionAttribute):
                                  'unique_for_date', 'unique_for_month', 'unique_for_year')
     
     def save(self, *args, **kwargs):
-        if not self.pk:
-            self.content_type = self.get_content_type()
-        else:
+        if self.pk:
             self._state._pre_save_field = self.get_bound_field()
             
         return super(FieldDefinition, self).save(*args, **kwargs)
@@ -290,52 +282,6 @@ class FieldDefinition(ModelDefinitionAttribute):
             return delete
         return super(FieldDefinition, self).delete(*args, **kwargs)
     
-    def subclasses_lookups(cls, subclasses): #@NoSelf
-        if subclasses:
-            def _lookups():
-                for subclass in subclasses:
-                    assert issubclass(subclass, cls), "%r is not a subclass of %r" % (subclass, cls)
-                    model = subclass._meta.object_name.lower()
-                    yield FieldDefinitionBase._lookups[model]
-            lookups = _lookups()
-        else:
-            lookups = FieldDefinitionBase._lookups.itervalues()
-
-        # TODO: #16572
-        # We can't do `select_related` on multiple one-to-one
-        # relationships...
-        # see https://code.djangoproject.com/ticket/16572
-        return set(LOOKUP_SEP.join(lookup) for lookup in lookups if len(lookup) == 1)
-    subclasses_lookups = classmethod(memoize(subclasses_lookups, {}, 2))
-    
-    def type_cast(self):
-        model = self.content_type.model
-        
-        # We're already of the right type
-        if self._meta.object_name.lower() == model:
-            return self
-
-        # Cast to the right concrete model by going up in the 
-        # SingleRelatedObjectDescriptor chain
-        type_casted = self
-        for subclass in FieldDefinitionBase._lookups[model]:
-            type_casted = getattr(type_casted, subclass)
-        
-        # If it's a proxy model we make sure to type cast it
-        proxy = FieldDefinitionBase._proxies.get(model, None)
-        if proxy:
-            concrete_model = get_concrete_model(proxy)
-            if not isinstance(type_casted, concrete_model):
-                msg = ("Concrete type casted model %s is not an instance of %s "
-                       "which is the model proxied by %s" % (type_casted, concrete_model, proxy))
-                raise AssertionError(msg)
-            type_casted = _copy_fields(type_casted, proxy)
-        
-        if type_casted._meta.object_name.lower() != model:
-            raise AssertionError("Failed to type cast %s to %s" % (self, model))
-        
-        return type_casted
-    
     @classmethod
     def get_field_class(cls):
         field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
@@ -353,7 +299,7 @@ class FieldDefinition(ModelDefinitionAttribute):
     
     @classmethod
     def get_content_type(cls):
-        return get_real_content_type(cls)
+        return get_content_type(cls)
 
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
