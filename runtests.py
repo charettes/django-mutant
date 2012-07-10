@@ -55,8 +55,7 @@ ENGINE_SETTINGS = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql_psycopg2',
                 'NAME': 'mutant',
-                'USER': 'mutant',
-                'PASSWORD': 'mutant',
+                'USER': 'postgres',
             }
         }
     },
@@ -65,8 +64,7 @@ ENGINE_SETTINGS = {
             'default': {
                 'ENGINE': 'django.contrib.gis.db.backends.postgis',
                 'NAME': 'mutant',
-                'USER': 'mutant',
-                'PASSWORD': 'mutant',
+                'USER': 'postgres',
             }
         },
         'INSTALLED_APPS': DEFAULT_SETTINGS['INSTALLED_APPS'] + [
@@ -90,9 +88,9 @@ ENGINE_SETTINGS = {
                 }
             }
         },
-        'DATABASE_ROUTERS': {
+        'DATABASE_ROUTERS': (
             'runtests.MongoRouter',
-        },
+        ),
         'SOUTH_DATABASE_ADAPTERS': {
             'mongo': 'django_mongodb_engine.south_adapter'
         },
