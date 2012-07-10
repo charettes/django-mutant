@@ -116,7 +116,7 @@ DEFAULT_TEST_LABELS = [
     'polymodels',
 ]
 
-def main(engine, verbosity, failfast, test_labels):
+def main(engine, user, verbosity, failfast, test_labels):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'runtests'
     try:
         engine_settings = ENGINE_SETTINGS[engine]
@@ -129,6 +129,8 @@ def main(engine, verbosity, failfast, test_labels):
         elif engine == 'mongodb':
             test_labels.remove('related')
     options = dict(DEFAULT_SETTINGS, **engine_settings)
+    if user:
+        options['DATABASES']['default']['USER'] = user
     settings.configure(**options)
     from django.test.utils import get_runner
     TestRunner = get_runner(settings)
@@ -141,7 +143,8 @@ if __name__ == '__main__':
     parser.add_argument('--failfast', action='store_true', default=False,
                         dest='failfast')
     parser.add_argument('--engine', default='sqlite3')
+    parser.add_argument('--user')
     parser.add_argument('--verbosity', default=1)
     parser.add_argument('test_labels', nargs='*')
     args = parser.parse_args()
-    main(args.engine, args.verbosity, args.failfast, args.test_labels)
+    main(args.engine, args.user, args.verbosity, args.failfast, args.test_labels)
