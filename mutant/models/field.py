@@ -10,7 +10,7 @@ from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
 from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
-from polymodels.utils import get_content_type
+from polymodels.utils import copy_fields, get_content_type
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
@@ -22,16 +22,6 @@ from .model import ModelDefinitionAttribute
 patch_model_option_verbose_name_raw()
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
-
-def _copy_fields(src, to_cls):
-    """
-    Returns a new instance of `to_cls` with fields data fetched from `src`.
-    Useful for getting a model proxy instance from concrete model instance or
-    the other way around.
-    """
-    fields = src._meta.fields
-    data = tuple(getattr(src, field.attname) for field in fields)
-    return to_cls(*data)
 
 def _popattr(obj, attr, default):
     """
@@ -266,7 +256,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
             # getting the concrete model instance of the proxy and deleting it
             # while sending proxy model signals.
             concrete_model = get_concrete_model(self)
-            concrete_model_instance = _copy_fields(self, concrete_model)
+            concrete_model_instance = copy_fields(self, concrete_model)
             
             # Send proxy pre_delete
             signals.pre_delete.send(self.__class__, instance=self)
