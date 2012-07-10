@@ -4,49 +4,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
-from django.db.models.loading import cache as model_cache
 from django.db.models.sql.constants import LOOKUP_SEP
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import PickledObjectField
 
-from ..db.fields import (LazilyTranslatedField,
-    PythonIdentifierField)
+from ..db.fields import LazilyTranslatedField, PythonIdentifierField
 from ..db.models import MutableModel
+from ..utils import get_db_table, remove_from_model_cache
 
-
-def _get_db_table(app_label, model):
-    return "mutant_%s_%s" % (app_label, model)
-
-if hasattr(model_cache, 'write_lock'):
-    def model_cache_lock():
-        return model_cache.write_lock
-else:
-    # django >= 1.5 use imp.lock instead
-    from contextlib import contextmanager
-    @contextmanager
-    def model_cache_lock():
-        import imp
-        try:
-            imp.acquire_lock()
-            yield
-        finally:
-            imp.release_lock()
-
-def _remove_from_model_cache(model_class):
-    try:
-        opts = model_class._meta
-    except AttributeError:
-        return
-    app_label, model_name = opts.app_label, opts.object_name.lower()
-    with model_cache_lock():
-        app_models = model_cache.app_models.get(app_label, False)
-        if app_models:
-            model = app_models.pop(model_name, False)
-            if model:
-                model_cache._get_models_cache.clear()
-                model._is_obsolete = True
-                return model
 
 class _ModelClassProxy(object):
 
@@ -143,7 +109,7 @@ class ModelDefinition(ContentType):
     def get_model_opts(self):
         attrs = {
             'app_label': self.app_label,
-            'db_table': _get_db_table(*self.natural_key()),
+            'db_table': get_db_table(*self.natural_key()),
         }
         
         if self.verbose_name is not None:
@@ -186,7 +152,7 @@ class ModelDefinition(ContentType):
             
         attrs = self.get_model_attrs(existing_model_class)
         
-        _remove_from_model_cache(existing_model_class)
+        remove_from_model_cache(existing_model_class)
         
         model = type(str(self.object_name), bases, attrs)
         
@@ -244,7 +210,7 @@ class ModelDefinition(ContentType):
         
         ContentType.objects.clear_cache()
         
-        _remove_from_model_cache(model_class)
+        remove_from_model_cache(model_class)
         
         del self._model_class
         
