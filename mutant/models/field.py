@@ -3,8 +3,6 @@ import warnings
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
-from django.utils.encoding import force_unicode
-from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
@@ -14,42 +12,15 @@ from polymodels.utils import copy_fields, get_content_type
 
 from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
-from ..hacks import get_concrete_model, patch_model_option_verbose_name_raw
+from ..hacks import patch_model_option_verbose_name_raw
 from ..managers import FieldDefinitionChoiceManager
 from .model import ModelDefinitionAttribute
+from ..utils import get_concrete_model, lazy_string_format, popattr
 
 
 patch_model_option_verbose_name_raw()
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
-
-def _popattr(obj, attr, default):
-    """
-    Useful for retrieving an object attr and removing it if it's part of it's 
-    dict while allowing retrieving from subclass.
-    i.e.
-    class A:
-        a = 'a'
-    class B(A):
-        b = 'b'
-    >>> popattr(B, 'a', None)
-    'a'
-    >>> A.a
-    'a'
-    """
-    val = getattr(obj, attr, default)
-    try:
-        delattr(obj, attr)
-    except AttributeError:
-        pass
-    return val
-
-def _string_format(string, *args, **kwargs):
-    if args:
-        return string % tuple(force_unicode(s) for s in args)
-    elif kwargs:
-        return string % dict((k, force_unicode(v)) for k, v in kwargs.iteritems())
-string_format = lazy(_string_format, unicode)
 
 class FieldDefinitionBase(models.base.ModelBase):
     
@@ -70,9 +41,9 @@ class FieldDefinitionBase(models.base.ModelBase):
         if 'Meta' in attrs:
             Meta = attrs['Meta']
 
-            field_description = _popattr(Meta, cls.FIELD_DESCRIPTION_ATTR, None)
+            field_description = popattr(Meta, cls.FIELD_DESCRIPTION_ATTR, None)
 
-            field_class = _popattr(Meta, cls.FIELD_CLASS_ATTR, None)
+            field_class = popattr(Meta, cls.FIELD_CLASS_ATTR, None)
             if field_class:
                 if not issubclass(field_class, models.Field):
                     msg = ("Meta's defined_field_class must be a subclass of "
@@ -81,13 +52,13 @@ class FieldDefinitionBase(models.base.ModelBase):
                 elif field_description is None:
                     field_description = getattr(field_class, 'description', None)
 
-            field_options = _popattr(Meta, cls.FIELD_OPTIONS_ATTR, ())
+            field_options = popattr(Meta, cls.FIELD_OPTIONS_ATTR, ())
             if field_options:
                 if not isinstance(field_options, tuple):
                     msg = "Meta's defined_field_options must be a tuple"
                     raise ImproperlyConfigured(msg)
 
-            field_category = _popattr(Meta, cls.FIELD_CATEGORY_ATTR, None)
+            field_category = popattr(Meta, cls.FIELD_CATEGORY_ATTR, None)
 
             has_verbose_name = hasattr(Meta, 'verbose_name')
             has_verbose_name_plural = hasattr(Meta, 'verbose_name_plural')
@@ -166,10 +137,10 @@ class FieldDefinitionBase(models.base.ModelBase):
         
         if field_description is not None:
             if not has_verbose_name:
-                verbose_name = string_format(cls.DEFAULT_VERBOSE_NAME, field_description)
+                verbose_name = lazy_string_format(cls.DEFAULT_VERBOSE_NAME, field_description)
                 definition._meta.verbose_name = verbose_name
                 if not has_verbose_name_plural:
-                    verbose_name_plural = string_format(cls.DEFAULT_VERBOSE_NAME_PLURAL, field_description)
+                    verbose_name_plural = lazy_string_format(cls.DEFAULT_VERBOSE_NAME_PLURAL, field_description)
                     definition._meta.verbose_name_plural = verbose_name_plural
 
         if field_class is not None:

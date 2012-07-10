@@ -67,13 +67,3 @@ def patch_model_option_verbose_name_raw():
         return name
     _get_verbose_name_raw.patched = True
     Options.verbose_name_raw = property(_get_verbose_name_raw)
-
-def get_concrete_model(model):
-    """
-    Prior to django r17573 (django 1.4), `proxy_for_model` returned the
-    actual concrete model of a proxy and there was no `concrete_model`
-    property so we try to fetch the `concrete_model` from the opts
-    and fallback to `proxy_for_model` if it's not defined.
-    """
-    # TODO: Remove when support for django 1.4 is dropped
-    return getattr(model._meta, 'concrete_model', model._meta.proxy_for_model)
