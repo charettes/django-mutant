@@ -33,7 +33,8 @@ postgres:
   username: postgres
 
 install:
-  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors -I
+  - pip install argparse --use-mirrors
+  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
   - python setup.py install
 
 before_script:
