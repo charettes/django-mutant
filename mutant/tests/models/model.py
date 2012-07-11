@@ -33,6 +33,42 @@ except ImportError:
         finally:
             sys.stderr = stderr
 
+
+class Mixin(object):
+
+    def method(self):
+        return 'Mixin'
+
+
+class ModelProxy(CharFieldDefinition):
+
+    class Meta:
+        proxy = True
+
+
+class ModelSubclass(models.Model):
+    field = models.CharField(max_length=5)
+
+    class Meta:
+        abstract = True
+
+    def method(self):
+        return 'ModelSubclass'
+
+
+class ModelSubclassWithTextField(models.Model):
+
+    field = models.TextField()
+    second_field = models.NullBooleanField()
+
+    class Meta:
+        abstract = True
+
+
+class MutableModelSubclass(MutableModel):
+    pass
+
+
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
     
     def test_model_class_creation_cache(self):
@@ -98,7 +134,41 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
                             self.model_def.model_class())
         
         self.assertNotEqual(other_model_def.model_ct, self.model_def.model_ct)
-            
+
+
+class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
+
+    def test_fields_creation(self):
+        char_field = CharFieldDefinition(name='name', max_length=10)
+        ct_ct = ContentType.objects.get_for_model(ContentType)
+        fk_field = ForeignKeyDefinition(name='ct', to=ct_ct)
+        model_def = ModelDefinition.objects.create(fields=(char_field, fk_field),
+                                                   app_label='app',
+                                                   object_name='OtherModel')
+        model_cls = model_def.model_class()
+        db = router.db_for_write(model_cls)
+        table = model_cls._meta.db_table
+        column = model_cls._meta.get_field('name').get_attname_column()[1]
+        # Make sure column was created
+        self.assertColumnExists(db, table, column)
+
+        # Make sure field definitions were created
+        self.assertIsNotNone(char_field.pk)
+        self.assertIsNotNone(fk_field.pk)
+
+    def test_bases_creation(self):
+        mixin_base = BaseDefinition(base=Mixin)
+        concrete_base = BaseDefinition(base=ModelSubclass)
+        model_def = ModelDefinition.objects.create(bases=(mixin_base,
+                                                          concrete_base),
+                                                   app_label='app',
+                                                   object_name='OtherModel')
+        model_cls = model_def.model_class()
+        db = router.db_for_write(model_cls)
+        table = model_cls._meta.db_table
+        column = model_cls._meta.get_field('field').get_attname_column()[1]
+        self.assertColumnExists(db, table, column)
+
 class ModelValidationTest(BaseModelDefinitionTestCase):
     
     def test_installed_app_override_failure(self):
@@ -369,38 +439,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.field_defs.add(self.f1, self.f2)
         self.ut.field_defs.clear()
         self.Model.objects.create(f1='a', f2='b')
-    
-class Mixin(object):
-    
-    def method(self):
-        return 'Mixin'
 
-class ModelProxy(CharFieldDefinition):
-    
-    class Meta:
-        proxy = True
-
-class ModelSubclass(models.Model):
-    
-    field = models.CharField(max_length=5)
-    
-    class Meta:
-        abstract = True
-    
-    def method(self):
-        return 'ModelSubclass'
-    
-class ModelSubclassWithTextField(models.Model):
-    
-    field = models.TextField()
-    second_field = models.NullBooleanField()
-    
-    class Meta:
-        abstract = True
-
-class MutableModelSubclass(MutableModel):
-    pass
-        
 class BaseDefinitionTest(BaseModelDefinitionTestCase):
     
     def test_clean(self):

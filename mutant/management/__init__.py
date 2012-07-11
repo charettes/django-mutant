@@ -6,7 +6,6 @@ from django.db.models.signals import m2m_changed, post_delete, post_save, pre_de
 from south.db import dbs
 
 from mutant import logger
-
 from mutant.models import (ModelDefinition, BaseDefinition, FieldDefinition,
     UniqueTogetherDefinition)
 
@@ -35,7 +34,26 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
     if created:
-        fields = tuple((field.name, field) for field in opts.fields)
+        fields = [(field.get_attname_column()[1], field) for field in opts.fields]
+
+        try:
+            extra_fields = getattr(instance._state, '_create_extra_fields')
+        except AttributeError:
+            pass
+        else:
+            fields.extend(extra_fields)
+            delattr(instance._state, '_create_extra_fields')
+
+        try:
+            delayed_save = getattr(instance._state, '_create_delayed_save')
+        except AttributeError:
+            pass
+        else:
+            for obj in delayed_save:
+                obj.model_def = instance
+                obj.save()
+            delattr(instance._state, '_create_delayed_save')
+
         perform_ddl(model_class, 'create_table', opts.db_table, fields)
     else:
         old_opts = instance._model_class._meta
@@ -56,17 +74,25 @@ post_delete.connect(model_definition_post_delete, ModelDefinition,
                     dispatch_uid='mutant.management.model_definition_post_delete')
 
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
-    base = instance.base
-    if issubclass(base, models.Model):
+    declared_fields = instance.get_declared_fields()
+    if declared_fields:
         model_class = instance.model_def.model_class()
         opts = model_class._meta
         table_name = opts.db_table
         if created:
-            for field in base._meta.fields:
-                perform_ddl(model_class, 'add_column', table_name,
-                            field.name, field, keep_default=False)
+            try:
+                add_columns = getattr(instance._state, '_add_columns')
+            except AttributeError:
+                add_columns = True
+            else:
+                delattr(instance._state, '_add_columns')
+            finally:
+                if add_columns:
+                    for field in declared_fields:
+                        perform_ddl(model_class, 'add_column', table_name,
+                                    field.name, field, keep_default=False)
         else:
-            for field in base._meta.fields:
+            for field in declared_fields:
                 try:
                     old_field = opts.get_field(field.name)
                 except FieldDoesNotExist:
@@ -76,7 +102,7 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                     column = old_field.get_attname_column()[1]
                     perform_ddl(model_class, 'alter_column', table_name,
                                 column, field)
-                    
+
 post_save.connect(base_definition_post_save, BaseDefinition,
                   dispatch_uid='mutant.management.base_definition_post_save')
 
@@ -117,7 +143,7 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
         # Safe guard against m2m_changed.action API change
         elif action in ('post_add', 'post_remove'):
             perform_ddl(model_class, 'create_unique', table_name, columns)
-            
+
 m2m_changed.connect(unique_together_field_defs_changed,
                     UniqueTogetherDefinition.field_defs.through,
                     dispatch_uid='mutant.management.unique_together_field_defs_changed')
@@ -130,7 +156,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_def.model_class()
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
-    
+
     if created:
         if hasattr(instance._state, '_creation_default_value'):
             field.default = instance._state._creation_default_value
@@ -138,8 +164,16 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
             keep_default = False
         else:
             keep_default = True
-        perform_ddl(model_class, 'add_column', table_name,
-                    instance.name, field, keep_default=keep_default)
+        try:
+            add_column = getattr(instance._state, '_add_column')
+        except AttributeError:
+            add_column = True
+        else:
+            delattr(instance._state, '_add_column')
+        finally:
+            if add_column:
+                perform_ddl(model_class, 'add_column', table_name,
+                            instance.name, field, keep_default=keep_default)
     else:
         column = field.get_attname_column()[1]
         old_field = instance._state._pre_save_field

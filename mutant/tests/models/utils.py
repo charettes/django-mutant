@@ -8,8 +8,7 @@ from mutant.test.testcases import (ModelDefinitionDDLTestCase,
     VersionCompatMixinTestCase)
 
 
-def table_columns_iterator(db, table_name):
-    connection = connections[db]
+def table_columns_iterator(connection, table_name):
     cursor = connection.cursor()
     description = connection.introspection.get_table_description(cursor, table_name)
     return (row[0] for row in description)
@@ -55,7 +54,11 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
             self.assertTableDoesntExists(db, table)
     
     def assertColumnExists(self, db, table, column):
-        columns = tuple(table_columns_iterator(db, table))
+        connection = connections[db]
+        # Nonrel engines have no table description
+        if not hasattr(connection, 'get_table_description'):
+            return True
+        columns = tuple(table_columns_iterator(connection, table))
         data = {
             'db': db,
             'table': table,
@@ -67,6 +70,10 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                       "%(db)s.'%(table)s's columns are %(columns)s" % data)
         
     def assertColumnDoesntExists(self, db, table, column):
+        connection = connections[db]
+        # Nonrel engines have no table description
+        if not hasattr(connection, 'get_table_description'):
+            return True
         self.assertRaises(AssertionError, self.assertColumnExists,
                           db, table, column)
         

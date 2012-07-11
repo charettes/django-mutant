@@ -84,15 +84,44 @@ class _ModelClassProxy(object):
         model_class = self.__get_model_class()
         return str(model_class)
 
+class ModelDefinitionManager(models.Manager):
+
+    def create(self, bases=(), fields=(), **kwargs):
+        obj = self.model(**kwargs)
+        extra_fields = []
+        delayed_save = []
+
+        for base in bases:
+            extra_fields.extend([(f.get_attname_column()[1], f)
+                                 for f in base.get_declared_fields()])
+            base._state._add_columns = False
+            delayed_save.append(base)
+
+        for field in fields:
+            field_instance = field._south_ready_field_instance()
+            extra_fields.append((field_instance.get_attname_column()[1], field_instance))
+            field._state._add_column = False
+            delayed_save.append(field)
+
+        obj._state._create_extra_fields = extra_fields
+        obj._state._create_delayed_save = delayed_save
+
+        self._for_write = True
+        obj.save(force_insert=True, using=self.db)
+        return obj
+
 class ModelDefinition(ContentType):
     
     object_name = PythonIdentifierField(_(u'object name'))
-    
+
     verbose_name = LazilyTranslatedField(_(u'verbose name'),
                                          blank=True, null=True)
     
     verbose_name_plural = LazilyTranslatedField(_(u'verbose name plural'),
                                                 blank=True, null=True)
+
+    objects = ModelDefinitionManager()
+
     class Meta:
         app_label = 'mutant'
         verbose_name = _(u'model definition')
@@ -234,7 +263,7 @@ class ModelDefinitionAttribute(models.Model):
         save = super(ModelDefinitionAttribute, self).save(*args, **kwargs)
         self.model_def.model_class(force_create=True)
         return save
-    
+
     def delete(self, *args, **kwargs):
         delete = super(ModelDefinitionAttribute, self).delete(*args, **kwargs)
         self.model_def.model_class(force_create=True)
@@ -244,14 +273,19 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
     """
     Model used to represent bases of a ModelDefinition
     """
-    
+
     base = PickledObjectField(_(u'base'))
-    
+
     class Meta:
         app_label = 'mutant'
         ordering = ('order',)
         unique_together = (('model_def', 'order'),)
-    
+
+    def get_declared_fields(self):
+        if isinstance(self.base, models.base.ModelBase):
+            return self.base._meta.fields
+        return ()
+
     def clean(self):
         # TODO: Validate the whole inheritance field clashes
         base = self.base
