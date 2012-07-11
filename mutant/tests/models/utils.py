@@ -8,7 +8,8 @@ from mutant.test.testcases import (ModelDefinitionDDLTestCase,
     VersionCompatMixinTestCase)
 
 
-def table_columns_iterator(connection, table_name):
+def table_columns_iterator(db, table_name):
+    connection = connections[db]
     cursor = connection.cursor()
     description = connection.introspection.get_table_description(cursor, table_name)
     return (row[0] for row in description)
@@ -57,28 +58,22 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
             self.assertTableDoesntExists(db, table)
 
     def assertColumnExists(self, db, table, column):
-        connection = connections[db]
-        # Nonrel engines have no table description
-        if not hasattr(connection, 'get_table_description'):
-            return True
-        columns = tuple(table_columns_iterator(connection, table))
-        data = {
-            'db': db,
-            'table': table,
-            'column': column,
-            'columns': columns
-        }
-        self.assertIn(column, columns,
-                      "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
-                      "%(db)s.'%(table)s's columns are %(columns)s" % data)
+        if not db_is_nonrel(db):
+            columns = tuple(table_columns_iterator(db, table))
+            data = {
+                'db': db,
+                'table': table,
+                'column': column,
+                'columns': columns
+            }
+            self.assertIn(column, columns,
+                          "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
+                          "%(db)s.'%(table)s's columns are %(columns)s" % data)
 
     def assertColumnDoesntExists(self, db, table, column):
-        connection = connections[db]
-        # Nonrel engines have no table description
-        if not hasattr(connection, 'get_table_description'):
-            return True
-        self.assertRaises(AssertionError, self.assertColumnExists,
-                          db, table, column)
+        if not db_is_nonrel(db):
+            self.assertRaises(AssertionError, self.assertColumnExists,
+                              db, table, column)
 
     def assertModelTablesColumnExists(self, model, column):
         table = model._meta.db_table
