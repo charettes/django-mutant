@@ -11,16 +11,19 @@ from .models import (EmailFieldDefinition, IPAddressFieldDefinition,
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _(u'Web')
 
+
 class EmailFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
     field_definition_cls = EmailFieldDefinition
     field_values = ('guido@python.org', 'god@heaven.com')
-    
+
+
 class IPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                    BaseModelDefinitionTestCase):
     field_definition_cls = IPAddressFieldDefinition
     field_defintion_init_kwargs = {'default': '192.168.1.1'}
     field_values = ('127.0.0.1', '82.94.164.162')
+
 
 class SlugFieldDefinitionTest(WebFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
@@ -29,7 +32,8 @@ class SlugFieldDefinitionTest(WebFieldDefinitionTestMixin,
         'an-awesome-slug_-_-',
         '2012-4-7-so-late'
     )
-    
+
+
 class URLFieldDefinitionTest(WebFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = URLFieldDefinition
@@ -37,6 +41,7 @@ class URLFieldDefinitionTest(WebFieldDefinitionTestMixin,
         'https://github.com/charettes/django-mutant',
         'http://travis-ci.org/#!/charettes/django-mutant',
     )
+
 
 try:
     from .models import GenericIPAddressFieldDefinition

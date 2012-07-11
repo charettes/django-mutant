@@ -16,26 +16,28 @@ def connections_have_ddl_transactions():
     """
     return all(south_dbs[name].has_ddl_transactions for name in connections)
 
+
 class DDLTestCase(TestCase):
     """
     A class that behaves like TestCase if all connections support ddl
     transactions or like TransactionTestCase if it's not the case.
     """
-    
+
     def _fixture_setup(self):
         if not connections_have_ddl_transactions():
             return super(TestCase, self)._fixture_setup()
         else:
             return super(DDLTestCase, self)._fixture_setup()
-        
+
     def _fixture_teardown(self):
         if not connections_have_ddl_transactions():
             return super(TestCase, self)._fixture_teardown()
         else:
             return super(DDLTestCase, self)._fixture_teardown()
-        
+
+
 class ModelDefinitionDDLTestCase(DDLTestCase):
-    
+
     def tearDown(self):
         if not connections_have_ddl_transactions():
             # We must delete the ModelDefinition tables by ourself since
@@ -44,8 +46,9 @@ class ModelDefinitionDDLTestCase(DDLTestCase):
                 md.delete()
         ContentType.objects.clear_cache()
 
+
 class VersionCompatMixinTestCase(TestCase):
-    
+
     # Django < 1.4 doesn't have assertIsIntance and `ordered` kwarg for assertQuerysetEqual
     if django.VERSION < (1, 4):
         def assertRaisesMessage(self, expected_exception, expected_message,
@@ -57,53 +60,54 @@ class VersionCompatMixinTestCase(TestCase):
             if not ordered:
                 return self.assertEqual(set(map(transform, qs)), set(values))
             return self.assertEqual(map(transform, qs), values)
-        
+
+
 class FieldDefinitionTestMixin(object):
-    
+
     field_defintion_init_kwargs = {}
     field_values = ()
-    
+
     def setUp(self):
         super(FieldDefinitionTestMixin, self).setUp()
         self.field = self.field_definition_cls.objects.create(model_def=self.model_def,
                                                               name='field',
                                                               **self.field_defintion_init_kwargs)
-    
+
     def get_field_value(self, instance, name='field'):
         return getattr(instance, name)
-    
+
     def prepare_default_value(self, value):
         return value
-    
+
     def test_field_default(self):
         default = self.prepare_default_value(self.field_values[0])
         field = self.field
-        
+
         field.default = default
         field.full_clean()
         field.save()
-        
+
         Model = self.model_def.model_class()
         instance = Model.objects.create()
         created_default = self.prepare_default_value(self.get_field_value(instance))
         self.assertEqual(created_default, default)
-        
+
     def test_model_save(self):
         first_value, second_value = self.field_values
-        
+
         Model = self.model_def.model_class()
         instance = Model.objects.create(field=first_value)
         self.assertEqual(self.get_field_value(instance), first_value)
-        
+
         instance.field = second_value
         instance.save()
         instance = Model.objects.get()
         self.assertEqual(self.get_field_value(instance), second_value)
-        
+
     def test_field_renaming(self):
         value = self.field_values[0]
         Model = self.model_def.model_class()
-        
+
         Model.objects.create(field=value)
         _, original_column_name = Model._meta.get_field('field').get_attname_column()
         self.field.name = 'renamed_field'
@@ -111,35 +115,35 @@ class FieldDefinitionTestMixin(object):
         _, new_column_name = Model._meta.get_field('renamed_field').get_attname_column()
         self.assertModelTablesColumnDoesntExists(Model, original_column_name)
         self.assertModelTablesColumnExists(Model, new_column_name)
-        
+
         instance = Model.objects.get()
         self.assertEqual(self.get_field_value(instance, 'renamed_field'), value)
-        
+
         msg = "'field' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg, Model, field=value)
-        
+
         Model.objects.create(renamed_field=value)
-        
+
     def test_field_deletion(self):
         value = self.field_values[0]
         Model = self.model_def.model_class()
-        
+
         Model.objects.create(field=value)
 
         _, field_column_name = Model._meta.get_field('field').get_attname_column()
         self.field.delete()
         self.assertModelTablesColumnDoesntExists(Model, field_column_name)
-        
+
         msg = "'field' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg, Model, field=value)
-        
+
     def test_field_unique(self):
         value = self.field_values[0]
         Model = self.model_def.model_class()
-        
+
         self.field.unique = True
         self.field.save()
-        
+
         Model.objects.create(field=value)
         with self.assertRaises(IntegrityError):
             Model.objects.create(field=value)

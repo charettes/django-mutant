@@ -13,10 +13,12 @@ def table_columns_iterator(connection, table_name):
     description = connection.introspection.get_table_description(cursor, table_name)
     return (row[0] for row in description)
 
+
 def model_dbs(model):
     for db in connections:
         if router.allow_syncdb(db, model):
             yield db
+
 
 def db_is_nonrel(db):
     """
@@ -28,6 +30,7 @@ def db_is_nonrel(db):
         return False
     else:
         return isinstance(connections[db], NonrelDatabaseWrapper)
+
 
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                                   VersionCompatMixinTestCase):

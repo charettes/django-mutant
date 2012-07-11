@@ -12,6 +12,7 @@ from .models import (DateFieldDefinition, DateTimeFieldDefinition,
 class TemporalFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _(u'Temporal')
 
+
 class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = DateFieldDefinition
@@ -21,6 +22,7 @@ class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
         datetime.date(1988, 5, 15)
     )
 
+
 class DateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
     field_definition_cls = DateTimeFieldDefinition
@@ -29,7 +31,8 @@ class DateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
         datetime.datetime(2020, 11, 15, 15, 34),
         datetime.datetime(1988, 5, 15, 15, 30)
     )
-    
+
+
 class TimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = TimeFieldDefinition

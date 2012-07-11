@@ -13,14 +13,14 @@ recursive_help_text = _(u'Specifies whether all subdirectories of '
                         u'path should be included')
 
 class FilePathFieldDefinition(CharFieldDefinition):
-    
+
     path = DirectoryPathField(_(u'path'), max_length=100,
                               help_text=path_help_text)
     match = RegExpStringField(_(u'match'), max_length=100,
                               blank=True, null=True, help_text=match_help_text)
     recursive = fields.BooleanField(_(u'recursive'), default=False,
                                     help_text=recursive_help_text)
-    
+
     class Meta:
         app_label = 'mutant'
         defined_field_class = fields.FilePathField

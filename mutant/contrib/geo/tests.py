@@ -15,16 +15,18 @@ from .models import (GeoModel, GeometryCollectionFieldDefinition,
 
 class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
     field_definition_category = _(u'Geometry')
-    
+
     def setUp(self):
         super(GeometryFieldDefinitionBaseTest, self).setUp()
         BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
+
 
 class PointFieldDefinitionTest(FieldDefinitionTestMixin,
                                GeometryFieldDefinitionBaseTest):
     field_definition_cls = PointFieldDefinition
     field_values = (Point(5, 23), Point(13, 37))
-    
+
+
 class LineStringFieldDefinitionTest(FieldDefinitionTestMixin,
                                     GeometryFieldDefinitionBaseTest):
     field_definition_cls = LineStringFieldDefinition
@@ -33,6 +35,7 @@ class LineStringFieldDefinitionTest(FieldDefinitionTestMixin,
         LineString((1, 2), (3, 4), (5, 6), (7, 8), (9, 10))
     )
 
+
 class PolygonFieldDefinitionTest(FieldDefinitionTestMixin,
                                  GeometryFieldDefinitionBaseTest):
     field_definition_cls = PolygonFieldDefinition
@@ -40,6 +43,7 @@ class PolygonFieldDefinitionTest(FieldDefinitionTestMixin,
         Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0)) ),
         Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
     )
+
 
 class MultiLineStringFieldDefinitionTest(FieldDefinitionTestMixin,
                                          GeometryFieldDefinitionBaseTest):
@@ -56,6 +60,7 @@ class MultiLineStringFieldDefinitionTest(FieldDefinitionTestMixin,
         ),
     )
 
+
 class MultiPointFieldDefinitionTest(FieldDefinitionTestMixin,
                                     GeometryFieldDefinitionBaseTest):
     field_definition_cls = MultiPointFieldDefinition
@@ -63,7 +68,8 @@ class MultiPointFieldDefinitionTest(FieldDefinitionTestMixin,
         MultiPoint(Point(0, 0), Point(1, 1)),
         MultiPoint(Point(5, 23), Point(13, 37), Point(13, 58)),
     )
-    
+
+
 class MultiPolygonFieldDefinitionTest(FieldDefinitionTestMixin,
                                       GeometryFieldDefinitionBaseTest):
     field_definition_cls = MultiPolygonFieldDefinition
@@ -78,6 +84,7 @@ class MultiPolygonFieldDefinitionTest(FieldDefinitionTestMixin,
             Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 51.0), (50.0, 45), (0.0, 0.0)) ),
         ),
     )
+
 
 class GeometryCollectionFieldDefinitionTest(FieldDefinitionTestMixin,
                                             GeometryFieldDefinitionBaseTest):
@@ -94,4 +101,3 @@ class GeometryCollectionFieldDefinitionTest(FieldDefinitionTestMixin,
             Point(13, 37),
         ),
     )
-    

@@ -13,6 +13,7 @@ from .models import (DictFieldDefinition, EmbeddedModelFieldDefinition,
 class NonRelFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _(u'Nonrel')
 
+
 class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = DictFieldDefinition
@@ -22,8 +23,10 @@ class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
         {'somewhere': None, 'I': 'Belong'}
     )
 
+
 def identity(obj):
     return obj
+
 
 class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
@@ -45,6 +48,7 @@ class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
         field.full_clean()
         field.save()
 
+
 class SetFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = SetFieldDefinition
@@ -53,6 +57,7 @@ class SetFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
         set(['A', 'B', 'C', 1, 2, 3]),
         set(['I', 'LOVE', 'ROCK', 'N', 'ROLL'])
     )
+
 
 def default_embedded():
     return ContentType(app_label='abc', model='DoTheDance')
@@ -65,12 +70,11 @@ class EmbeddedModelFieldTest(NonRelFieldDefinitionTestMixin,
         ContentType(app_label='pyt', model='The way you move is a mystery'),
         ContentType(app_label='everybody', model='Knows this is nowhere'),
     )
-    
+
     def test_field_default(self):
         # TODO: Find out why this fails sometimes
         pass
-    
+
     def test_field_unique(self):
         # TODO: Find out why this fails sometimes
         pass
-

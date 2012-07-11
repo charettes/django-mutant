@@ -29,6 +29,7 @@ def patch_postgis_bad_geomery_escape():
                 return 'ST_GeomFromEWKB(%s)' % self._adapter.getquoted()
             PostGISAdapter.getquoted = _PostGISAdapter_getquoted
 
+
 def patch_db_field_compare():
     """
     Field instances cannot be compared to other objects because of attribute
@@ -49,6 +50,7 @@ def patch_db_field_compare():
             return NotImplemented
         Field.__lt__ = _Field__lt__
         assert Field() != None
+
 
 def patch_model_option_verbose_name_raw():
     """

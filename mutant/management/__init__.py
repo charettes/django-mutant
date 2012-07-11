@@ -14,7 +14,8 @@ def allow_syncdbs(model):
     for db in connections:
         if router.allow_syncdb(db, model):
             yield dbs[db]
-        
+
+
 def perform_ddl(model, action, *args, **kwargs):
     for db in allow_syncdbs(model):
         if db.deferred_sql:
@@ -25,6 +26,7 @@ def perform_ddl(model, action, *args, **kwargs):
             db.clear_deferred_sql()
         getattr(db, action)(*args, **kwargs)
         db.execute_deferred_sql()
+
 
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
     if raw:
@@ -65,13 +67,15 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
 post_save.connect(model_definition_post_save, ModelDefinition,
                   dispatch_uid='mutant.management.model_definition_post_save')
 
+
 def model_definition_post_delete(sender, instance, **kwargs):
     model_class = instance.model_class()
     table_name = model_class._meta.db_table
     perform_ddl(model_class, 'delete_table', table_name)
-    
+
 post_delete.connect(model_definition_post_delete, ModelDefinition,
                     dispatch_uid='mutant.management.model_definition_post_delete')
+
 
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
     declared_fields = instance.get_declared_fields()
@@ -106,6 +110,7 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
 post_save.connect(base_definition_post_save, BaseDefinition,
                   dispatch_uid='mutant.management.base_definition_post_save')
 
+
 def base_definition_pre_delete(sender, instance, **kwargs):
     """
     This is used to pass data required for deletion to the post_delete
@@ -121,6 +126,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
 pre_delete.connect(base_definition_pre_delete, BaseDefinition,
                    dispatch_uid='mutant.management.base_definition_pre_delete')
 
+
 def base_definition_post_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
         syncdbs, table_name = instance._state._deletion
@@ -131,6 +137,7 @@ def base_definition_post_delete(sender, instance, **kwargs):
 
 post_delete.connect(base_definition_post_delete, BaseDefinition,
                     dispatch_uid='mutant.management.base_definition_post_delete')
+
 
 def unique_together_field_defs_changed(instance, action, model, **kwargs):
     columns = list(instance.field_defs.names())
@@ -147,6 +154,7 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
 m2m_changed.connect(unique_together_field_defs_changed,
                     UniqueTogetherDefinition.field_defs.through,
                     dispatch_uid='mutant.management.unique_together_field_defs_changed')
+
 
 def field_definition_post_save(sender, instance, created, raw, **kwargs):
     """
@@ -178,12 +186,10 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         column = field.get_attname_column()[1]
         old_field = instance._state._pre_save_field
         delattr(instance._state, '_pre_save_field')
-        
         # Field renaming
         old_column = old_field.get_attname_column()[1]
         if column != old_column:
             perform_ddl(model_class, 'rename_column', table_name, old_column, column)
-        
         # Create/Drop unique and primary key
         for opt in ('primary_key', 'unique'):
             value = getattr(field, opt)
@@ -196,6 +202,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
 
 FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
 
+
 def field_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_def.model_class()
     opts = model_class._meta
@@ -207,6 +214,7 @@ def field_definition_pre_delete(sender, instance, **kwargs):
 
 pre_delete.connect(field_definition_pre_delete, sender=FieldDefinition,
                    dispatch_uid='mutant.management.field_definition_pre_delete')
+
 
 def field_definition_post_delete(sender, instance, **kwargs):
     syncdbs, table_name, name = instance._state._deletion

@@ -10,12 +10,12 @@ def _is_ugettext_promise(obj):
                                          obj._delegate_str)
 
 class LazilyTranslatedField(TextField):
-    
+
     def to_python(self, value):
         if value is None or _is_ugettext_promise(value):
             return value
         return _(smart_unicode(value))
-    
+
     def get_prep_value(self, value):
         if value is None:
             return value

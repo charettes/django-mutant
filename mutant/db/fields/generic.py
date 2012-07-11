@@ -8,12 +8,12 @@ from polymodels.utils import get_content_type
 
 
 class FieldDefinitionTypeField(fields.related.ForeignKey):
-    
+
     def __init__(self, *args, **kwargs):
         defaults={'to': ContentType}
         defaults.update(kwargs)
         super(FieldDefinitionTypeField, self).__init__(*args, **defaults)
-        
+
     def validate(self, value, model_instance):
         super(FieldDefinitionTypeField, self).validate(value, model_instance)
         if value is None:
@@ -32,13 +32,13 @@ class FieldDefinitionTypeField(fields.related.ForeignKey):
             msg = _(u'This field must be the ContentType of '
                     u'an explicit FieldDefinition subclass.')
             raise exceptions.ValidationError(msg)
-        
+
 class ProxyAwareGenericForeignKey(GenericForeignKey):
     """
     Basically a GenericForeignKey that saves the actual ContentType of the object
     even if it's a proxy Model.
     """
-    
+
     def get_content_type(self, obj=None, **kwargs):
         if obj:
             return get_content_type(obj.__class__, obj._state.db)

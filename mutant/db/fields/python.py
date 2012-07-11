@@ -10,7 +10,7 @@ from ...validators import validate_python_identifier
 
 
 class DirectoryPathField(CharField):
-    
+
     def to_python(self, value):
         value = super(DirectoryPathField, self).to_python(value)
         if value is None:
@@ -22,8 +22,9 @@ class DirectoryPathField(CharField):
         else:
             return value
 
+
 class RegExpStringField(CharField):
-    
+
     def to_python(self, value):
         value = super(RegExpStringField, self).to_python(value)
         if value is None:
@@ -35,17 +36,19 @@ class RegExpStringField(CharField):
         else:
             return value
 
+
 class PythonIdentifierField(CharField):
+    __metaclass__ = models.SubfieldBase
+
     default_validators = [validate_python_identifier]
     description = _(u'Python identifier')
     empty_strings_allowed = False
-    __metaclass__ = models.SubfieldBase
 
     def __init__(self, *args, **kwargs):
         defaults = {'max_length': 255}
         defaults.update(kwargs)
         super(PythonIdentifierField, self).__init__(*args, **defaults)
-        
+
     def to_python(self, value):
         value = super(PythonIdentifierField, self).to_python(value)
         if value is not None:

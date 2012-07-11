@@ -3,6 +3,7 @@ from django.db.models.loading import cache as model_cache
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
 
+
 # TODO: Remove when support for django 1.4 is dropped
 def get_concrete_model(model):
     """
@@ -12,6 +13,7 @@ def get_concrete_model(model):
     and fallback to `proxy_for_model` if it's not defined.
     """
     return getattr(model._meta, 'concrete_model', model._meta.proxy_for_model)
+
 
 def popattr(obj, attr, default):
     """
@@ -34,6 +36,7 @@ def popattr(obj, attr, default):
         pass
     return val
 
+
 def _string_format(string, *args, **kwargs):
     if args:
         return string % tuple(force_unicode(s) for s in args)
@@ -41,8 +44,10 @@ def _string_format(string, *args, **kwargs):
         return string % dict((k, force_unicode(v)) for k, v in kwargs.iteritems())
 lazy_string_format = lazy(_string_format, unicode)
 
+
 def get_db_table(app_label, model):
     return "mutant_%s_%s" % (app_label, model)
+
 
 if hasattr(model_cache, 'write_lock'):
     def model_cache_lock():

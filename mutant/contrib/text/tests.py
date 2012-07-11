@@ -19,7 +19,7 @@ class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
     field_definition_cls = CharFieldDefinition
     field_defintion_init_kwargs = {'max_length': 255}
     field_values = ('Raptor Jesus', 'Nirvana')
-    
+
     @skipUnless(connection.settings_dict['ENGINE'] != 'django.db.backends.sqlite3',
                 "Skipping because sqlite3 doesn't enforce CHAR length")
     def test_field_max_length(self):
@@ -46,7 +46,7 @@ class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,
         Et tous ces clairs matins
         Fait d'heureux souvenirs lointains
         """,
-        
+
         u"""
         Quand la vie
         Par moments me trahi

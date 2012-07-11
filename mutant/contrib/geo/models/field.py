@@ -21,7 +21,7 @@ geography_help_text = _(u'Creates a database column of type geography, '
                         u'rather than geometry.')
 
 class GeometryFieldDefinition(FieldDefinition):
-    
+
     srid = models.IntegerField(_(u'SRID'), default=4326,
                                help_text=srid_help_text)
     spatial_index = models.BooleanField(_(u'spatial index'), default=True,
@@ -31,56 +31,63 @@ class GeometryFieldDefinition(FieldDefinition):
                                            help_text=dim_help_text)
     geography = models.BooleanField(_(u'geography'), default=False,
                                     help_text=geography_help_text)
-    
+
     class Meta:
         app_label = 'mutant'
         defined_field_options = ('srid', 'spatial_index', 'dim', 'geography')
         defined_field_category = _(u'Geometry')
 
+
 class PointFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.PointField
-        
+
+
 class LineStringFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.LineStringField
-        
+
+
 class PolygonFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.PolygonField
 
+
 class MultiPointFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.MultiPointField
-        
+
+
 class MultiLineStringFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.MultiLineStringField
 
+
 class MultiPolygonFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
         defined_field_class = models.MultiPolygonField
 
+
 class GeometryCollectionFieldDefinition(GeometryFieldDefinition):
-    
+
     class Meta:
         app_label = 'mutant'
         proxy = True
