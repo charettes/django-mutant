@@ -34,7 +34,7 @@ def db_is_nonrel(db):
 
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                                   VersionCompatMixinTestCase):
-    
+
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
@@ -42,20 +42,20 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         tables = connections[db].introspection.table_names()
         msg = "Table '%s.%s' doesn't exist, existing tables are %s"
         self.assertTrue(table in tables, msg % (db, table, tables))
-        
+
     def assertTableDoesntExists(self, db, table):
         self.assertRaises(AssertionError, self.assertTableExists, db, table)
-        
+
     def assertModelTablesExist(self, model):
         table = model._meta.db_table
         for db in model_dbs(model):
             self.assertTableExists(db, table)
-            
+
     def assertModelTablesDontExist(self, model):
         table = model._meta.db_table
         for db in model_dbs(model):
             self.assertTableDoesntExists(db, table)
-    
+
     def assertColumnExists(self, db, table, column):
         connection = connections[db]
         # Nonrel engines have no table description
@@ -71,7 +71,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
         self.assertIn(column, columns,
                       "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
                       "%(db)s.'%(table)s's columns are %(columns)s" % data)
-        
+
     def assertColumnDoesntExists(self, db, table, column):
         connection = connections[db]
         # Nonrel engines have no table description
@@ -79,13 +79,13 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
             return True
         self.assertRaises(AssertionError, self.assertColumnExists,
                           db, table, column)
-        
+
     def assertModelTablesColumnExists(self, model, column):
         table = model._meta.db_table
         for db in model_dbs(model):
             if not db_is_nonrel(db):
                 self.assertColumnExists(db, table, column)
-            
+
     def assertModelTablesColumnDoesntExists(self, model, column):
         table = model._meta.db_table
         for db in model_dbs(model):
