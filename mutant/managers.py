@@ -1,7 +1,7 @@
 
 from django.db import models
 
-from .common import choices_from_dict
+from .utils import choices_from_dict
 
 
 class FilteredQuerysetManager(models.Manager):

@@ -7,8 +7,8 @@ from django.forms.fields import ChoiceField
 from django.utils.encoding import smart_unicode
 from polymodels.utils import get_content_types
 
-from .common import group_item_getter, choices_from_dict
 from .models.field import FieldDefinition, FieldDefinitionBase
+from .utils import group_item_getter, choices_from_dict
 
 
 class FieldDefinitionTypeField(ChoiceField):

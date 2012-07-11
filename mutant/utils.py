@@ -1,3 +1,6 @@
+from itertools import groupby
+from operator import itemgetter
+
 
 from django.db.models.loading import cache as model_cache
 from django.utils.encoding import force_unicode
@@ -64,6 +67,7 @@ else:
         finally:
             imp.release_lock()
 
+
 def remove_from_model_cache(model_class):
     try:
         opts = model_class._meta
@@ -78,3 +82,14 @@ def remove_from_model_cache(model_class):
                 model_cache._get_models_cache.clear()
                 model._is_obsolete = True
                 return model
+
+
+group_item_getter = itemgetter('group')
+def choices_from_dict(choices):
+    for grp, choices in groupby(choices, key=group_item_getter):
+        if grp is None:
+            for choice in choices:
+                yield (choice['value'], choice['label'])
+        else:
+            yield (grp, tuple((choice['value'], choice['label'])
+                                for choice in choices))
