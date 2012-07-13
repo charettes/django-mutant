@@ -87,6 +87,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
             if not db_is_nonrel(db):
                 self.assertColumnDoesntExists(db, table, column)
 
+
 def skipIfMutantModelDBFeature(feature, default=False):
     dbs = tuple(model_dbs(MutableModel))
     def _dbs_have_feature():
@@ -94,6 +95,7 @@ def skipIfMutantModelDBFeature(feature, default=False):
                    for db in dbs)
     return _deferredSkip(_dbs_have_feature,
                          "Databases %s have feature %s" % (dbs, feature))
+
 
 def skipUnlessMutantModelDBFeature(feature, default=True):
     dbs = tuple(model_dbs(MutableModel))
