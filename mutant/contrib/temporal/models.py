@@ -2,7 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from ...models import FieldDefinition
+from ...models import FieldDefinition, FieldDefinitionManager
 
 
 auto_now_help_text = _(u'Automatically set the field to now every time the '
@@ -18,6 +18,8 @@ class DateFieldDefinition(FieldDefinition):
 
     auto_now_add = fields.BooleanField(_(u'auto now add'), default=False,
                                        help_text=auto_now_add_help_text)
+
+    objects = FieldDefinitionManager()
 
     class Meta:
         app_label = 'mutant'

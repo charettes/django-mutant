@@ -5,12 +5,11 @@ from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
+from .managers import ForeignKeyDefinitionManager
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
 from ...management import perform_ddl
-from ...managers import FilteredQuerysetManager
-from ...models.field import FieldDefinition
-from ...models.model import ModelDefinition
+from ...models import FieldDefinition, FieldDefinitionManager, ModelDefinition
 
 
 related_name_help_text = _(u'The name to use for the relation from the '
@@ -24,6 +23,8 @@ class RelatedFieldDefinition(FieldDefinition):
     related_name = PythonIdentifierField(_(u'related name'),
                                          blank=True, null=True,
                                          help_text=related_name_help_text)
+
+    objects = FieldDefinitionManager()
 
     class Meta:
         app_label = 'mutant'
@@ -104,7 +105,7 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
 
     on_delete_set_value = PickledObjectField(_(u'on delete set value'), null=True)
 
-    objects = FilteredQuerysetManager(one_to_one=False)
+    objects = ForeignKeyDefinitionManager(one_to_one=False)
 
     class Meta:
         app_label = 'mutant'
@@ -143,7 +144,7 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
 
 class OneToOneFieldDefinition(ForeignKeyDefinition):
 
-    objects = FilteredQuerysetManager(one_to_one=True)
+    objects = ForeignKeyDefinitionManager(one_to_one=True)
 
     class Meta:
         app_label = 'mutant'

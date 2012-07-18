@@ -2,7 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from ...models.field import FieldDefinition
+from ...models.field import FieldDefinition, FieldDefinitionManager
 
 
 class _NumericMeta:
@@ -70,6 +70,8 @@ class DecimalFieldDefinition(FieldDefinition):
                                                   help_text=max_digits_help_text)
     decimal_places = fields.PositiveSmallIntegerField(_(u'decimal_places'),
                                                       help_text=decimal_places_help_text)
+
+    objects = FieldDefinitionManager()
 
     class Meta(_NumericMeta):
         app_label = 'mutant'

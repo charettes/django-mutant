@@ -6,7 +6,7 @@ from djangotoolbox import fields
 from picklefield.fields import PickledObjectField
 
 from ....hacks import patch_db_field_compare
-from ....models import FieldDefinition
+from ....models import FieldDefinition, FieldDefinitionManager
 
 
 # Since we use a pickled field that might contain a Field instance
@@ -20,6 +20,8 @@ class _NonRelMeta:
 class AbstractIterableFieldDefinition(FieldDefinition):
 
     item_field = PickledObjectField(_(u'item field'), blank=True, null=True)
+
+    objects = FieldDefinitionManager()
 
     class Meta(_NonRelMeta):
         abstract = True
@@ -69,6 +71,8 @@ class EmbeddedModelFieldDefinition(FieldDefinition):
 
     model = models.ForeignKey(ContentType, verbose_name=_(u'model'),
                               related_name='+', blank=True, null=True)
+
+    objects = FieldDefinitionManager()
 
     class Meta(_NonRelMeta):
         app_label = 'mutant'

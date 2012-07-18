@@ -2,7 +2,7 @@
 from django.contrib.gis.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from ....models import FieldDefinition
+from ....models import FieldDefinition, FieldDefinitionManager
 
 
 DIM_CHOICES = (
@@ -31,6 +31,8 @@ class GeometryFieldDefinition(FieldDefinition):
                                            help_text=dim_help_text)
     geography = models.BooleanField(_(u'geography'), default=False,
                                     help_text=geography_help_text)
+
+    objects = FieldDefinitionManager()
 
     class Meta:
         app_label = 'mutant'

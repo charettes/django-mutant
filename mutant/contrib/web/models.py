@@ -4,6 +4,8 @@ from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
 from ..text.models import CharFieldDefinition
+from ...models import FieldDefinitionManager
+
 
 class _WebMeta:
     defined_field_category = _(u'Web')
@@ -64,6 +66,8 @@ else:
                                     choices=PROTOCOL_CHOICES, default='both')
 
         unpack_ipv4 = fields.BooleanField(_(u'unpack ipv4'), default=False)
+
+        objects = FieldDefinitionManager()
 
         class Meta(_WebMeta):
             app_label = 'mutant'

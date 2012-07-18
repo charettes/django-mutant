@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ...models.field import FieldDefinition
 
+
 class CharFieldDefinition(FieldDefinition):
 
     max_length = fields.PositiveSmallIntegerField(_(u'max length'),

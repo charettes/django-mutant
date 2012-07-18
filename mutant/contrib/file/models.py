@@ -2,6 +2,7 @@
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
+from ...models import FieldDefinitionManager
 from ..text.models import CharFieldDefinition
 from ...db.fields.python import DirectoryPathField, RegExpStringField
 
@@ -20,6 +21,8 @@ class FilePathFieldDefinition(CharFieldDefinition):
                               blank=True, null=True, help_text=match_help_text)
     recursive = fields.BooleanField(_(u'recursive'), default=False,
                                     help_text=recursive_help_text)
+
+    objects = FieldDefinitionManager()
 
     class Meta:
         app_label = 'mutant'
