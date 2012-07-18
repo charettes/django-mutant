@@ -9,10 +9,10 @@ from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import PickledObjectField
 
-from ..db.fields import LazilyTranslatedField, PythonIdentifierField
-from ..db.models import MutableModel
-from ..managers import ModelDefinitionManager
-from ..utils import get_db_table, remove_from_model_cache
+from .managers import ModelDefinitionManager
+from ...db.fields import LazilyTranslatedField, PythonIdentifierField
+from ...db.models import MutableModel
+from ...utils import get_db_table, remove_from_model_cache
 
 
 class _ModelClassProxy(object):

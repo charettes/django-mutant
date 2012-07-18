@@ -9,20 +9,20 @@ from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields, get_content_type
 
-from ..db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
+from .managers import FieldDefinitionManager, FieldDefinitionChoiceManager
+from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
-from ..hacks import patch_model_option_verbose_name_raw
-from ..managers import FieldDefinitionChoiceManager
-from ..utils import get_concrete_model, lazy_string_format, popattr
+from ...hacks import patch_model_option_verbose_name_raw
 
-from .model import ModelDefinitionAttribute
-from ..managers import FieldDefinitionManager
+from ...utils import get_concrete_model, lazy_string_format, popattr
+
+from ..model import ModelDefinitionAttribute
 
 
 patch_model_option_verbose_name_raw()
 
-NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
 
+NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
 
 class FieldDefinitionBase(models.base.ModelBase):
 
@@ -97,7 +97,7 @@ class FieldDefinitionBase(models.base.ModelBase):
                     if parent is not base_definition:
                         parents = list(parent.__bases__) + parents # mimic mro
 
-            from ..management import (field_definition_post_save,
+            from ...management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
             object_name = definition._meta.object_name.lower()
             post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % object_name
