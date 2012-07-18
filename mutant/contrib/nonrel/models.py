@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from djangotoolbox import fields
 from picklefield.fields import PickledObjectField
 
-from ....hacks import patch_db_field_compare
-from ....models import FieldDefinition, FieldDefinitionManager
+from ...hacks import patch_db_field_compare
+from ...models import FieldDefinition, FieldDefinitionManager
 
 
 # Since we use a pickled field that might contain a Field instance
