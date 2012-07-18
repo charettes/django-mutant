@@ -6,7 +6,6 @@ from django.db.models import signals
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
-from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields, get_content_type
 
@@ -17,6 +16,7 @@ from ..managers import FieldDefinitionChoiceManager
 from ..utils import get_concrete_model, lazy_string_format, popattr
 
 from .model import ModelDefinitionAttribute
+from ..managers import FieldDefinitionManager
 
 
 patch_model_option_verbose_name_raw()
@@ -149,29 +149,6 @@ class FieldDefinitionBase(models.base.ModelBase):
             cls._field_definitions[field_class] = definition
 
         return definition
-
-
-class FieldDefinitionManager(PolymorphicManager):
-
-    class FieldDefinitionQuerySet(PolymorphicQuerySet):
-
-        def create_with_default(self, default, **kwargs):
-            obj = self.model(**kwargs)
-            obj._state._creation_default_value = default
-            self._for_write = True
-            obj.save(force_insert=True, using=self.db)
-            return obj
-
-    def get_query_set(self):
-        return self.FieldDefinitionQuerySet(self.model, using=self._db)
-
-    def names(self):
-        qs = self.get_query_set()
-        return qs.order_by('name').values_list('name', flat=True)
-
-    def create_with_default(self, default, **kwargs):
-        qs = self.get_query_set()
-        return qs.create_with_default(default, **kwargs)
 
 
 class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):

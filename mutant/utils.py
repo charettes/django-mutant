@@ -1,7 +1,6 @@
 from itertools import groupby
 from operator import itemgetter
 
-
 from django.db.models.loading import cache as model_cache
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
