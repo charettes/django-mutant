@@ -53,7 +53,7 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
         else:
             for obj in delayed_save:
                 obj.model_def = instance
-                obj.save()
+                obj.save(force_insert=True)
             delattr(instance._state, '_create_delayed_save')
 
         perform_ddl(model_class, 'create_table', opts.db_table, fields)

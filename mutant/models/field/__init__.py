@@ -222,12 +222,21 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
             return delete
         return super(FieldDefinition, self).delete(*args, **kwargs)
 
+    def clone(self):
+        options = dict((name, getattr(self, name))
+                       for name in self.get_field_option_names())
+        return self.__class__(**options)
+
     @classmethod
     def get_field_class(cls):
         field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
         if not field_class:
             raise NotImplementedError
         return field_class
+
+    @classmethod
+    def get_field_option_names(cls):
+        return getattr(cls._meta, FieldDefinitionBase.FIELD_OPTIONS_ATTR)
 
     @classmethod
     def get_field_description(cls):
@@ -247,7 +256,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     def get_field_options(self, **overrides):
         model_opts = self._meta
         options = {}
-        for name in getattr(model_opts, FieldDefinitionBase.FIELD_OPTIONS_ATTR):
+        for name in self.get_field_option_names():
             if name in overrides: # Avoid fetching if it's overridden
                 continue
             value = getattr(self, name)
@@ -297,6 +306,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
                 except Exception:
                     msg = _(u"%r is not a valid default value") % default
                     raise ValidationError({'default': [msg]})
+
 
 class FieldDefinitionChoice(OrderableModel):
     """

@@ -32,6 +32,11 @@ class RelatedFieldDefinition(FieldDefinition):
         defined_field_options = ('related_name',)
         defined_field_category = _(u'Related')
 
+    def clone(self):
+        clone = super(RelatedFieldDefinition, self).clone()
+        clone.to = self.to
+        return clone
+
     @property
     def is_recursive_relationship(self):
         """

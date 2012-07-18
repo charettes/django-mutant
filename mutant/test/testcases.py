@@ -148,6 +148,12 @@ class FieldDefinitionTestMixin(object):
         with self.assertRaises(IntegrityError):
             Model.objects.create(field=value)
 
+    def test_field_cloning(self):
+        clone = self.field.clone()
+        clone.name = 'field_clone'
+        clone.model_def = self.model_def
+        clone.save(force_insert=True)
+
     def test_field_defintion_category(self):
         self.assertEqual(self.field_definition_cls.get_field_category(),
                          self.field_definition_category)
