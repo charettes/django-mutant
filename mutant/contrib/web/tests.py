@@ -21,7 +21,7 @@ class EmailFieldDefinitionTest(WebFieldDefinitionTestMixin,
 class IPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
                                    BaseModelDefinitionTestCase):
     field_definition_cls = IPAddressFieldDefinition
-    field_defintion_init_kwargs = {'default': '192.168.1.1'}
+    field_definition_init_kwargs = {'default': '192.168.1.1'}
     field_values = ('127.0.0.1', '82.94.164.162')
 
 

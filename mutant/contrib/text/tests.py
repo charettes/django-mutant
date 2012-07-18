@@ -17,7 +17,7 @@ class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):
 class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = CharFieldDefinition
-    field_defintion_init_kwargs = {'max_length': 255}
+    field_definition_init_kwargs = {'max_length': 255}
     field_values = ('Raptor Jesus', 'Nirvana')
 
     @skipUnless(connection.settings_dict['ENGINE'] != 'django.db.backends.sqlite3',

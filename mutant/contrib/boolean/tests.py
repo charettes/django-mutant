@@ -13,7 +13,7 @@ class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):
 class BooleanFieldDefinitionTest(BooleanFieldDefinitionTestMixin,
                                  BaseModelDefinitionTestCase):
     field_definition_cls = BooleanFieldDefinition
-    field_defintion_init_kwargs = {'default': True}
+    field_definition_init_kwargs = {'default': True}
     field_values = (True, False)
 
 class NullBooleanFieldDefinitionTest(BooleanFieldDefinitionTestMixin,

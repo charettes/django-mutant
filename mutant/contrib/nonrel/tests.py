@@ -17,7 +17,7 @@ class NonRelFieldDefinitionTestMixin(FieldDefinitionTestMixin):
 class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = DictFieldDefinition
-    field_defintion_init_kwargs = {'default': {'1': 2}}
+    field_definition_init_kwargs = {'default': {'1': 2}}
     field_values = (
         {'key': 'value', 'other': 1337},
         {'somewhere': None, 'I': 'Belong'}
@@ -31,7 +31,7 @@ def identity(obj):
 class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = ListFieldDefinition
-    field_defintion_init_kwargs = {'default': ['Y', 'M', 'C', 'A']}
+    field_definition_init_kwargs = {'default': ['Y', 'M', 'C', 'A']}
     field_values = (
         ['A', 'C', 'M', 'Y'],
         ['A', 'B', 'C', 1, 2, 3]
@@ -52,7 +52,7 @@ class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
 class SetFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = SetFieldDefinition
-    field_defintion_init_kwargs = {'default': set(['Y', 'M', 'C', 'A'])}
+    field_definition_init_kwargs = {'default': set(['Y', 'M', 'C', 'A'])}
     field_values = (
         set(['A', 'B', 'C', 1, 2, 3]),
         set(['I', 'LOVE', 'ROCK', 'N', 'ROLL'])
@@ -65,7 +65,7 @@ def default_embedded():
 class EmbeddedModelFieldTest(NonRelFieldDefinitionTestMixin,
                              BaseModelDefinitionTestCase):
     field_definition_cls = EmbeddedModelFieldDefinition
-    field_defintion_init_kwargs = {'default': default_embedded}
+    field_definition_init_kwargs = {'default': default_embedded}
     field_values = (
         ContentType(app_label='pyt', model='The way you move is a mystery'),
         ContentType(app_label='everybody', model='Knows this is nowhere'),

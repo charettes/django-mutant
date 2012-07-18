@@ -15,7 +15,7 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _(u'Related')
 
     def setUp(self):
-        self.field_defintion_init_kwargs = {
+        self.field_definition_init_kwargs = {
             'to': ContentType.objects.get_for_model(ContentType),
             'null': True
         }

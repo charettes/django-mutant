@@ -64,14 +64,14 @@ class VersionCompatMixinTestCase(TestCase):
 
 class FieldDefinitionTestMixin(object):
 
-    field_defintion_init_kwargs = {}
+    field_definition_init_kwargs = {}
     field_values = ()
 
     def setUp(self):
         super(FieldDefinitionTestMixin, self).setUp()
         self.field = self.field_definition_cls.objects.create(model_def=self.model_def,
                                                               name='field',
-                                                              **self.field_defintion_init_kwargs)
+                                                              **self.field_definition_init_kwargs)
 
     def get_field_value(self, instance, name='field'):
         return getattr(instance, name)
