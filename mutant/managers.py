@@ -16,7 +16,7 @@ class FilteredQuerysetManager(models.Manager):
         return qs.filter(*self.args, **self.kwargs)
 
 
-class ChoiceDefinitionQuerySet(models.query.QuerySet):
+class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
 
     def as_choices(self):
         choices = ({'group': choice.group,
@@ -33,4 +33,4 @@ class FieldDefinitionChoiceManager(models.Manager):
         return self.get_query_set().as_choices()
 
     def get_query_set(self):
-        return ChoiceDefinitionQuerySet(self.model, using=self._db)
+        return FieldDefinitionChoiceQuerySet(self.model, using=self._db)
