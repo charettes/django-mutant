@@ -10,12 +10,14 @@ class ModelDefinitionManager(models.Manager):
         delayed_save = []
 
         for base in bases:
+            assert base.pk is None, 'Cannot associate already existing BaseDefinition'
             extra_fields.extend([(f.get_attname_column()[1], f)
                                  for f in base.get_declared_fields()])
             base._state._add_columns = False
             delayed_save.append(base)
 
         for field in fields:
+            assert field.pk is None, 'Cannot associate already existing FieldDefinition'
             field_instance = field._south_ready_field_instance()
             extra_fields.append((field_instance.get_attname_column()[1], field_instance))
             field._state._add_column = False
