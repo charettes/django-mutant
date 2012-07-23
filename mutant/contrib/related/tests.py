@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -12,7 +13,7 @@ from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Related')
+    field_definition_category = _('Related')
 
     def setUp(self):
         self.field_definition_init_kwargs = {
@@ -84,7 +85,6 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         obj1.save()
 
 class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
-
     def test_protect(self):
         ForeignKeyDefinition.objects.create(model_def=self.model_def,
                                             name='f1', null=True,

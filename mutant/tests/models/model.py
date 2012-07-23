@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -35,13 +36,11 @@ except ImportError:
 
 
 class Mixin(object):
-
     def method(self):
         return 'Mixin'
 
 
 class ModelProxy(CharFieldDefinition):
-
     class Meta:
         proxy = True
 
@@ -57,7 +56,6 @@ class ModelSubclass(models.Model):
 
 
 class ModelSubclassWithTextField(models.Model):
-
     field = models.TextField()
     second_field = models.NullBooleanField()
 
@@ -70,7 +68,6 @@ class MutableModelSubclass(MutableModel):
 
 
 class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
-
     def test_model_class_creation_cache(self):
         Model = self.model_def.model_class()
         self.assertEqual(Model, self.model_def.model_class())
@@ -115,12 +112,12 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model._meta.verbose_name, self.model_def.model)
         self.assertEqual(Model._meta.verbose_name_plural, "%ss" % self.model_def.model)
 
-        self.model_def.verbose_name = u'MyMoDeL'
-        self.model_def.verbose_name_plural = u'MyMoDeLZ0Rs'
+        self.model_def.verbose_name = 'MyMoDeL'
+        self.model_def.verbose_name_plural = 'MyMoDeLZ0Rs'
         self.model_def.save()
 
-        self.assertEqual(Model._meta.verbose_name, ugettext(u'MyMoDeL'))
-        self.assertEqual(Model._meta.verbose_name_plural, ugettext(u'MyMoDeLZ0Rs'))
+        self.assertEqual(Model._meta.verbose_name, ugettext('MyMoDeL'))
+        self.assertEqual(Model._meta.verbose_name_plural, ugettext('MyMoDeLZ0Rs'))
 
     def test_multiple_model_definition(self):
         """
@@ -170,7 +167,6 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
 
 
 class ModelValidationTest(BaseModelDefinitionTestCase):
-
     def test_installed_app_override_failure(self):
         """
         Make sure we can't save a model definition with an app_label of
@@ -181,23 +177,18 @@ class ModelValidationTest(BaseModelDefinitionTestCase):
 
 
 class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
-
     def test_proxy_interactions(self):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)
         Model = self.model_def.model_class()
         sergei = Model.objects.create(name='Sergei')
-
         halak = Model(name='Halak')
         halak.save()
-
-        assert issubclass(Model, models.Model)
-
-        assert issubclass(Model, MutableModel)
-
-        assert unicode(Model) == u"<class 'mutant.apps.app.models.Model'>"
-
-        assert sergei == Model.objects.get(name='Sergei')
+        self.assertTrue(issubclass(Model, models.Model))
+        self.assertTrue(issubclass(Model, MutableModel))
+        self.assertEqual("<class 'mutant.apps.app.models.Model'>",
+                         unicode(Model))
+        self.assertEqual(sergei, Model.objects.get(name='Sergei'))
 
         class A(object):
             class_model = Model
@@ -207,8 +198,8 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
 
         a = A(Model)
 
-        assert Model == a.model
-        assert Model == A.class_model
+        self.assertEqual(Model, a.model)
+        self.assertEqual(Model, A.class_model)
 
         a.model = Model # Assign a proxy
         a.model = a.model # Assign a Model
@@ -244,7 +235,6 @@ class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
 
 
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):
-
     def setUp(self):
         super(OrderingDefinitionTest, self).setUp()
         self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
@@ -256,20 +246,20 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_clean(self):
         ordering = OrderingFieldDefinition(model_def=self.model_def)
-
+        # Random
         ordering.lookup = '?'
         ordering.clean()
-
+        # By f1
         ordering.lookup = 'f1'
         ordering.clean()
-
+        # By f2 app label
         ordering.lookup = 'f2__app_label'
         ordering.clean()
-
+        # Inexistent field
         with self.assertRaises(ValidationError):
-            ordering.lookup = 'f3'
+            ordering.lookup = 'inexistent_field'
             ordering.clean()
-
+        # Inexistent field of an existent field
         with self.assertRaises(ValidationError):
             ordering.lookup = 'f2__higgs_boson'
             ordering.clean()
@@ -281,39 +271,34 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=model_ct)
-
         # Instances should be sorted by id
         self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 [u'Simon', u'Alexander'],
+                                 ['Simon', 'Alexander'],
                                  transform=lambda x: x['f1'], ordered=True)
-
         # Instances should be sorted by f1 and not id
         f1_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f1')
         self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 [u'Alexander', u'Simon'],
+                                 ['Alexander', 'Simon'],
                                  transform=lambda x: x['f1'], ordered=True)
-
         # Swap the ordering to descending
         f1_ordering.descending = True
         f1_ordering.save()
         self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 [u'Simon', u'Alexander'],
+                                 ['Simon', 'Alexander'],
                                  transform=lambda x: x['f1'], ordered=True)
         f1_ordering.delete()
-
         # Order by f2__app_label
         f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f2__app_label')
         self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 [u'Alexander', u'Simon'],
+                                 ['Alexander', 'Simon'],
                                  transform=lambda x: x['f1'], ordered=True)
-
         # Swap the ordering to descending
         f2_ordering.descending = True
         f2_ordering.save()
         self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 [u'Simon', u'Alexander'],
+                                 ['Simon', 'Alexander'],
                                  transform=lambda x: x['f1'], ordered=True)
         f2_ordering.delete()
 
@@ -326,52 +311,46 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         Model.objects.create(f1='Alexander', f2=model_ct)
         Model.objects.create(f1='Julia', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=ct_ct)
-
+        # Orderings
         f1_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f1')
         f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f2__app_label')
-
         self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [(u'Alexander', u'app'), (u'Alexander', u'contenttypes'),
-                                  (u'Julia', u'contenttypes'), (u'Simon', u'contenttypes')],
+                                 [('Alexander', 'app'), ('Alexander', 'contenttypes'),
+                                  ('Julia', 'contenttypes'), ('Simon', 'contenttypes')],
                                  transform=lambda x: (x['f1'], x['f2__app_label']),
                                  ordered=True)
-
         # Swap the ordering to descending
         f2_ordering.descending = True
         f2_ordering.save()
         self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [(u'Alexander', u'contenttypes'), (u'Alexander', u'app'),
-                                  (u'Julia', u'contenttypes'), (u'Simon', u'contenttypes')],
+                                 [('Alexander', 'contenttypes'), ('Alexander', 'app'),
+                                  ('Julia', 'contenttypes'), ('Simon', 'contenttypes')],
                                  transform=lambda x: (x['f1'], x['f2__app_label']),
                                  ordered=True)
-
         # Swap order
         f1_ordering.order, f2_ordering.order = f2_ordering.order, f1_ordering.order
         f1_ordering.save()
         f2_ordering.save()
         self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [(u'Alexander', u'contenttypes'), (u'Julia', u'contenttypes'),
-                                  (u'Simon', u'contenttypes'), (u'Alexander', u'app')],
+                                 [('Alexander', 'contenttypes'), ('Julia', 'contenttypes'),
+                                  ('Simon', 'contenttypes'), ('Alexander', 'app')],
                                  transform=lambda x: (x['f1'], x['f2__app_label']),
                                  ordered=True)
-
         # Swap the ordering to descending
         f1_ordering.descending = True
         f1_ordering.save()
         self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [(u'Simon', u'contenttypes'), (u'Julia', u'contenttypes'),
-                                  (u'Alexander', u'contenttypes'), (u'Alexander', u'app')],
+                                 [('Simon', 'contenttypes'), ('Julia', 'contenttypes'),
+                                  ('Alexander', 'contenttypes'), ('Alexander', 'app')],
                                  transform=lambda x: (x['f1'], x['f2__app_label']),
                                  ordered=True)
-
         f1_ordering.delete()
         f2_ordering.delete()
 
 
 class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
-
     def setUp(self):
         super(UniqueTogetherDefinitionTest, self).setUp()
         self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
@@ -439,7 +418,6 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.Model.objects.create(f1='a', f2='b')
 
 class BaseDefinitionTest(BaseModelDefinitionTestCase):
-
     def test_clean(self):
         bd = BaseDefinition()
         # Base must be a class

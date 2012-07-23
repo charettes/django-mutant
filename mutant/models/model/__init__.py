@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from inspect import isclass
 
 from django.contrib.contenttypes.models import ContentType
@@ -16,7 +18,6 @@ from ...utils import get_db_table, remove_from_model_cache
 
 
 class _ModelClassProxy(object):
-
     def __init__(self, model_class):
         self.__dict__['model_class'] = model_class
 
@@ -87,24 +88,21 @@ class _ModelClassProxy(object):
 
 
 class ModelDefinition(ContentType):
-
-    object_name = PythonIdentifierField(_(u'object name'))
-
-    verbose_name = LazilyTranslatedField(_(u'verbose name'),
+    object_name = PythonIdentifierField(_('object name'))
+    verbose_name = LazilyTranslatedField(_('verbose name'),
                                          blank=True, null=True)
-
-    verbose_name_plural = LazilyTranslatedField(_(u'verbose name plural'),
+    verbose_name_plural = LazilyTranslatedField(_('verbose name plural'),
                                                 blank=True, null=True)
 
     objects = ModelDefinitionManager()
 
     class Meta:
         app_label = 'mutant'
-        verbose_name = _(u'model definition')
-        verbose_name_plural = _(u'model definitions')
+        verbose_name = _('model definition')
+        verbose_name_plural = _('model definitions')
 
     def __unicode__(self):
-        return u'.'.join((self.app_label, self.object_name))
+        return '.'.join((self.app_label, self.object_name))
 
     def __init__(self, *args, **kwargs):
         super(ModelDefinition, self).__init__(*args, **kwargs)
@@ -119,18 +117,17 @@ class ModelDefinition(ContentType):
             'app_label': self.app_label,
             'db_table': get_db_table(*self.natural_key()),
         }
-
+        # Verbose names
         if self.verbose_name is not None:
             attrs['verbose_name'] = self.verbose_name
-            
         if self.verbose_name_plural is not None:
             attrs['verbose_name_plural'] = self.verbose_name_plural
-
+        # Unique togethers
         unique_together = tuple(tuple(utd.field_defs.names())
                                     for utd in self.uniquetogetherdefinitions.all())
         if unique_together:
             attrs['unique_together'] = unique_together
-
+        # Ordering
         ordering = tuple(ordf.get_defined_ordering()
                             for ordf in self.orderingfielddefinitions.all())
         if ordering:
@@ -138,32 +135,25 @@ class ModelDefinition(ContentType):
             # prevent the model from inheriting it's possible base ordering.
             # Kinda related to django #17429
             attrs['ordering'] = ordering
-
-        return type('Meta', (), attrs)
+        return type(b'Meta', (), attrs)
 
     def get_model_attrs(self, existing_model_class=None):
         attrs = {
             'Meta': self.get_model_opts(),
-            '__module__': "mutant.apps.%s.models" % self.app_label,
+            '__module__': str("mutant.apps.%s.models" % self.app_label),
             '_definition': (self.__class__, self.pk),
             '_is_obsolete': False,
         }
-
         attrs.update(dict((f.name, f.field_instance())
                             for f in self.fielddefinitions.select_subclasses()))
-
         return attrs
 
     def _create_model_class(self, existing_model_class=None):
         bases = self.get_model_bases()
         bases += (MutableModel,)
-
         attrs = self.get_model_attrs(existing_model_class)
-
         remove_from_model_cache(existing_model_class)
-
         model = type(str(self.object_name), bases, attrs)
-
         return model
 
     def model_class(self, force_create=False):
@@ -199,29 +189,22 @@ class ModelDefinition(ContentType):
         except ImproperlyConfigured:
             pass
         else:
-            msg = _(u'Cannot cloak an installed app')
+            msg = _('Cannot cloak an installed app')
             raise ValidationError({'label': [msg]})
 
     def save(self, *args, **kwargs):
         self.model = self.object_name.lower()
-
         save = super(ModelDefinition, self).save(*args, **kwargs)
-
         self._model_class = super(ModelDefinition, self).model_class()
-
         return save
 
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
-
         delete = super(ModelDefinition, self).delete(*args, **kwargs)
-
+        # Clear ct cache
         ContentType.objects.clear_cache()
-
         remove_from_model_cache(model_class)
-
         del self._model_class
-
         return delete
 
 
@@ -230,7 +213,6 @@ class ModelDefinitionAttribute(models.Model):
     A mixin used to make sure models that alter the state of a defined model
     clear the cached version
     """
-
     model_def = models.ForeignKey(ModelDefinition, related_name="%(class)ss")
 
     class Meta:
@@ -251,8 +233,7 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
     """
     Model used to represent bases of a ModelDefinition
     """
-
-    base = PickledObjectField(_(u'base'))
+    base = PickledObjectField(_('base'))
 
     class Meta:
         app_label = 'mutant'
@@ -272,21 +253,19 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
             if issubclass(base, models.Model):
                 opts = base._meta
                 if not opts.abstract:
-                    msg = _(u'Model base must be abstract')
+                    msg = _('Model base must be abstract')
                 elif issubclass(base, MutableModel):
-                    msg = _(u'Base cannot be a subclass of MutableModel')
+                    msg = _('Base cannot be a subclass of MutableModel')
         else:
-            msg = _(u'Base must be a class')
+            msg = _('Base must be a class')
         if msg:
             raise ValidationError({'base': [msg]})
         return super(BaseDefinition, self).clean()
 
 
 class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
-
     lookup = models.CharField(max_length=255)
-
-    descending = models.BooleanField(_(u'descending'), default=False)
+    descending = models.BooleanField(_('descending'), default=False)
 
     class Meta(OrderableModel.Meta):
         app_label = 'mutant'
@@ -317,7 +296,7 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
                         valid = False
                 finally:
                     if not valid:
-                        msg = _(u"This field doesn't exist")
+                        msg = _('This field doesn\'t exist')
                         raise ValidationError({'lookup': [msg]})
 
     def get_defined_ordering(self):
@@ -325,7 +304,6 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
 
 
 class UniqueTogetherDefinition(ModelDefinitionAttribute):
-
     field_defs = models.ManyToManyField('FieldDefinition',
                                         related_name='unique_together_defs')
 
@@ -334,10 +312,10 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
 
     def __unicode__(self):
         names = ', '.join(self.field_defs.names())
-        return _(u"Unique together of (%s)") % names
+        return _("Unique together of (%s)") % names
 
     def clean(self):
         for field_def in self.field_defs.select_related('model_def'):
             if field_def.model_def != self.model_def:
-                msg = _(u'All fields must be of the same model')
+                msg = _('All fields must be of the same model')
                 raise ValidationError({'field_defs': [msg]})

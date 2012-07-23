@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 
 def patch_postgis_bad_geomery_escape():
     """

@@ -1,9 +1,9 @@
+from __future__ import unicode_literals
 
 from django.db import models
 
 
 class FilteredQuerysetManager(models.Manager):
-
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs

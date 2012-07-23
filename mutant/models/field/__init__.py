@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import warnings
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -10,13 +12,11 @@ from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields, get_content_type
 
 from .managers import FieldDefinitionManager, FieldDefinitionChoiceManager
+from ..model import ModelDefinitionAttribute
 from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
 from ...hacks import patch_model_option_verbose_name_raw
-
 from ...utils import get_concrete_model, lazy_string_format, popattr
-
-from ..model import ModelDefinitionAttribute
 
 
 patch_model_option_verbose_name_raw()
@@ -25,14 +25,13 @@ patch_model_option_verbose_name_raw()
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
 
 class FieldDefinitionBase(models.base.ModelBase):
-
     FIELD_CLASS_ATTR = 'defined_field_class'
     FIELD_OPTIONS_ATTR = 'defined_field_options'
     FIELD_DESCRIPTION_ATTR = 'defined_field_description'
     FIELD_CATEGORY_ATTR = 'defined_field_category'
 
-    DEFAULT_VERBOSE_NAME = _(u"%s field definition")
-    DEFAULT_VERBOSE_NAME_PLURAL = _(u"%s field definitions")
+    DEFAULT_VERBOSE_NAME = _("%s field definition")
+    DEFAULT_VERBOSE_NAME_PLURAL = _("%s field definitions")
 
     _base_definition = None
     _field_definitions = {}
@@ -159,32 +158,32 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     content_type_field_name = 'content_type'
     content_type = FieldDefinitionTypeField()
 
-    name = PythonIdentifierField(_(u'name'))
-    verbose_name = LazilyTranslatedField(_(u'verbose name'), blank=True, null=True)
-    help_text = LazilyTranslatedField(_(u'help text'), blank=True, null=True)
+    name = PythonIdentifierField(_('name'))
+    verbose_name = LazilyTranslatedField(_('verbose name'), blank=True, null=True)
+    help_text = LazilyTranslatedField(_('help text'), blank=True, null=True)
 
-    null = models.BooleanField(_(u'null'), default=False)
-    blank = models.BooleanField(_(u'blank'), default=False)
+    null = models.BooleanField(_('null'), default=False)
+    blank = models.BooleanField(_('blank'), default=False)
 
-    db_column = models.SlugField(_(u'db column'), max_length=30, blank=True, null=True)
-    db_index = models.BooleanField(_(u'db index'), default=False)
+    db_column = models.SlugField(_('db column'), max_length=30, blank=True, null=True)
+    db_index = models.BooleanField(_('db index'), default=False)
 
-    editable = models.BooleanField(_(u'editable'), default=True)
-    default = PickledObjectField(_(u'default'), null=True, default=NOT_PROVIDED)
+    editable = models.BooleanField(_('editable'), default=True)
+    default = PickledObjectField(_('default'), null=True, default=NOT_PROVIDED)
 
-    primary_key = models.BooleanField(_(u'primary key'), default=False)
-    unique = models.BooleanField(_(u'unique'), default=False)
+    primary_key = models.BooleanField(_('primary key'), default=False)
+    unique = models.BooleanField(_('unique'), default=False)
 
-    unique_for_date = PythonIdentifierField(_(u'unique for date'), blank=True, null=True)
-    unique_for_month = PythonIdentifierField(_(u'unique for month'), blank=True, null=True)
-    unique_for_year = PythonIdentifierField(_(u'unique for year'), blank=True, null=True)
+    unique_for_date = PythonIdentifierField(_('unique for date'), blank=True, null=True)
+    unique_for_month = PythonIdentifierField(_('unique for month'), blank=True, null=True)
+    unique_for_year = PythonIdentifierField(_('unique for year'), blank=True, null=True)
 
     objects = FieldDefinitionManager()
 
     class Meta:
         app_label = 'mutant'
-        verbose_name = _(u'field')
-        verbose_name_plural = _(u'fields')
+        verbose_name = _('field')
+        verbose_name_plural = _('fields')
         unique_together = (('model_def', 'name'),)
         defined_field_options = ('name', 'verbose_name', 'help_text',
                                  'null', 'blank', 'db_column', 'db_index',
@@ -304,7 +303,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
                 try:
                     field.clean(default, None)
                 except Exception:
-                    msg = _(u"%r is not a valid default value") % default
+                    msg = _("%r is not a valid default value") % default
                     raise ValidationError({'default': [msg]})
 
 
@@ -313,17 +312,16 @@ class FieldDefinitionChoice(OrderableModel):
     A Model to allow specifying choices for a field definition instance
     """
     field_def = models.ForeignKey(FieldDefinition, related_name='choices')
-
-    group = LazilyTranslatedField(_(u'group'), blank=True, null=True)
-    value = PickledObjectField(_(u'value'), editable=True)
-    label = LazilyTranslatedField(_(u'label'))
+    group = LazilyTranslatedField(_('group'), blank=True, null=True)
+    value = PickledObjectField(_('value'), editable=True)
+    label = LazilyTranslatedField(_('label'))
 
     objects = FieldDefinitionChoiceManager()
 
     class Meta(OrderableModel.Meta):
         app_label = 'mutant'
-        verbose_name = _(u'field definition choice')
-        verbose_name_plural = _(u'field definition choices')
+        verbose_name = _('field definition choice')
+        verbose_name_plural = _('field definition choices')
         unique_together = (('field_def', 'order'),
                            ('field_def', 'group', 'value'))
 

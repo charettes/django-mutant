@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from inspect import isclass
 
 from django.contrib.contenttypes.models import ContentType
@@ -12,7 +14,6 @@ from .utils import group_item_getter, choices_from_dict
 
 
 class FieldDefinitionTypeField(ChoiceField):
-
     def __init__(self, field_definitions=None, empty_label="---------",
                  group_by_category=True, *args, **kwargs):
         if field_definitions is None:
@@ -29,7 +30,7 @@ class FieldDefinitionTypeField(ChoiceField):
                 'label': unicode(fd.get_field_description()),
                 'group': group,
             })
-        choices = [(u'', empty_label)] + list(choices_from_dict(sorted(fds_choices, key=group_item_getter)))
+        choices = [('', empty_label)] + list(choices_from_dict(sorted(fds_choices, key=group_item_getter)))
         super(FieldDefinitionTypeField, self).__init__(choices, *args, **kwargs)
 
     def to_python(self, value):

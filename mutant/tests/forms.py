@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.forms.forms import Form
 from django.test.testcases import TestCase
@@ -9,7 +10,6 @@ from ..test.testcases import VersionCompatMixinTestCase
 
 
 class FieldDefinitionTypeFieldTest(VersionCompatMixinTestCase, TestCase):
-
     def test_invalid_fd(self):
         with self.assertRaisesMessage(TypeError,
                                       'is not a subclass of FieldDefinitionBase'):
@@ -24,13 +24,9 @@ class FieldDefinitionTypeFieldTest(VersionCompatMixinTestCase, TestCase):
 
     def test_form_validation(self):
         custom_field_ct = FieldDefinition.get_content_type()
-
         class CustomModelForm(Form):
             field_type = FieldDefinitionTypeField((FieldDefinition,))
-
         data = {'field_type': custom_field_ct.pk}
         form = CustomModelForm(data)
-
         self.assertTrue(form.is_valid())
-
         self.assertEqual(form.cleaned_data['field_type'], custom_field_ct)

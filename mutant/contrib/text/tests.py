@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from django.db import connection
 from django.db.utils import DatabaseError
@@ -12,7 +13,7 @@ from .models import CharFieldDefinition, TextFieldDefinition
 
 
 class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Text')
+    field_definition_category = _('Text')
 
 class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
@@ -33,21 +34,20 @@ class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
     field_definition_cls = TextFieldDefinition
     field_values = (
-        u"""
+        """
         J'ai caché
         Mieux que partout ailleurs
         Au grand jardin de mon coeur
         Une petite fleur
         Cette fleur
-        Plus jolie qu'un bouquet
+        Plus jolie q'un bouquet
         Elle garde en secret
         Tous mes rêves d'enfant
         L'amour de mes parents
         Et tous ces clairs matins
         Fait d'heureux souvenirs lointains
         """,
-
-        u"""
+        """
         Quand la vie
         Par moments me trahi
         Tu restes mon bonheur

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import datetime
 
 from django.utils.translation import ugettext_lazy as _
@@ -10,7 +12,7 @@ from .models import (DateFieldDefinition, DateTimeFieldDefinition,
 
 
 class TemporalFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Temporal')
+    field_definition_category = _('Temporal')
 
 
 class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,

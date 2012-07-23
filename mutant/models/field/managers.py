@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.db import models
 from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
@@ -6,7 +7,6 @@ from ...utils import choices_from_dict
 
 
 class FieldDefinitionQuerySet(PolymorphicQuerySet):
-
     def create_with_default(self, default, **kwargs):
         obj = self.model(**kwargs)
         obj._state._creation_default_value = default
@@ -16,7 +16,6 @@ class FieldDefinitionQuerySet(PolymorphicQuerySet):
 
 
 class FieldDefinitionManager(PolymorphicManager):
-
     def get_query_set(self):
         return FieldDefinitionQuerySet(self.model, using=self._db)
 
@@ -30,7 +29,6 @@ class FieldDefinitionManager(PolymorphicManager):
 
 
 class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
-
     def as_choices(self):
         # Here we don't use .values() since it's raw output from the database
         # and values are not prepared correctly.

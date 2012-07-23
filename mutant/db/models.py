@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -27,12 +28,12 @@ class MutableModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_obsolete():
-            msg = _(u'Cannot save an obsolete model')
+            msg = _('Cannot save an obsolete model')
             raise ValidationError(msg)
         return super(MutableModel, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         if self.is_obsolete():
-            msg = _(u'Cannot delete an obsolete model')
+            msg = _('Cannot delete an obsolete model')
             raise ValidationError(msg)
         return super(MutableModel, self).delete(*args, **kwargs)

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import warnings
 
 from django.core.exceptions import ValidationError
@@ -11,7 +13,6 @@ from mutant.tests.models.utils import BaseModelDefinitionTestCase
 
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
-
     def test_proxy_inheritance(self):
         obj = CharFieldDefinition.objects.create(name='caca',
                                                   max_length=25,
@@ -23,7 +24,6 @@ class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
 
 
 class FieldDefinitionDeclarationTest(TestCase):
-
     def test_delete_override(self):
         """
         Make sure a warning is raised when declaring a `FieldDefinition`
@@ -34,13 +34,11 @@ class FieldDefinitionDeclarationTest(TestCase):
                 class CustomFieldDefinition(FieldDefinition):
                     def delete(self, *args, **kwargs):
                         pass
-
                 class CustomFieldDefinitionProxy(CustomFieldDefinition):
                     class Meta:
                         proxy = True
                     def delete(self, *args, **kwargs):
                         pass
-
         self.assertIn('Avoid overriding the `delete` method on '
                       '`FieldDefinition` subclass `CustomFieldDefinition`',
                       w[0].message.message)
@@ -53,7 +51,6 @@ module_level_pickable_default.incr = 0
 
 
 class FieldDefaultTest(BaseModelDefinitionTestCase):
-
     def test_clean(self):
         field = IntegerFieldDefinition(name='field', model_def=self.model_def)
         # Field cleaning should work when a default value isn't provided
@@ -61,18 +58,14 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
         with self.assertRaises(ValidationError):
             field.default = 'invalid'
             field.clean()
-
         field.default = module_level_pickable_default
         field.clean()
         field.save()
-
         Model = self.model_def.model_class()
         self.assertEqual(Model.objects.create().field,
                          module_level_pickable_default.incr)
-
         field.default = NOT_PROVIDED
         field.save()
-
         with self.assertRaises(ValidationError):
             obj = Model()
             obj.field
@@ -80,7 +73,6 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
 
     def test_default_value_set(self):
         Model = self.model_def.model_class()
-
         Model.objects.create()
         IntegerFieldDefinition.objects.create(name='field',
                                               default=module_level_pickable_default,
@@ -89,75 +81,69 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
         # was set when creating the field or when fetching the instance.
         incr = module_level_pickable_default.incr
         module_level_pickable_default()
-
         before = Model.objects.get()
         self.assertEqual(before.field, incr)
-
         after = Model.objects.create()
         self.assertEqual(after.field, incr + 2)
 
     def test_create_with_default(self):
         Model = self.model_def.model_class()
-
         Model.objects.create()
         IntegerFieldDefinition.objects.create_with_default(1337, name='field',
                                                            model_def=self.model_def)
-
         before = Model.objects.get()
         self.assertEqual(before.field, 1337)
         self.assertFalse(Model().field)
 
 
 class FieldDefinitionChoiceTest(BaseModelDefinitionTestCase):
-
     def test_simple_choices(self):
         field_def = CharFieldDefinition.objects.create(name='gender',
                                                        max_length=1,
                                                        model_def=self.model_def)
         male_choice = FieldDefinitionChoice(field_def=field_def,
-                                       value='Male', label='Male')
-
+                                            value='Male', label='Male')
+        # Value is longer than the max_length
         self.assertRaises(ValidationError, male_choice.clean)
-
+        # A length of 1 should work
         male_choice.value = 'M'
         male_choice.full_clean()
         male_choice.save()
-
+        # Cleaning should raise validation error when passed invalid choice
         Model = self.model_def.model_class()
         obj = Model(gender='T')
-
         self.assertRaises(ValidationError, obj.full_clean)
-
+        # Create another allowed choice
         female_choice = FieldDefinitionChoice(field_def=field_def,
                                               value='F', label='Female')
         female_choice.value = 'F'
         female_choice.full_clean()
         female_choice.save()
-
+        # It should now be possible to create valid objects with this choice
         obj = Model(gender='F')
         obj.full_clean()
-
+        # Make sure choices are correctly set
         choices = Model._meta.get_field('gender').get_choices(include_blank=False)
-        self.assertEqual(choices, [(u'M', u'Male'), (u'F', u'Female')])
+        self.assertEqual(choices, [('M', 'Male'), ('F', 'Female')])
 
     def test_grouped_choices(self):
         field_def = CharFieldDefinition.objects.create(name='media',
                                                        max_length=5,
                                                        model_def=self.model_def)
-
+        # Create Audio choices
         FieldDefinitionChoice.objects.create(field_def=field_def, group='Audio',
                                              value='vinyl', label='Vinyl')
         FieldDefinitionChoice.objects.create(field_def=field_def, group='Audio',
                                              value='cd', label='CD')
-
+        # Create Video choices
         FieldDefinitionChoice.objects.create(field_def=field_def, group='Video',
                                              value='vhs', label='VHS Tape')
         FieldDefinitionChoice.objects.create(field_def=field_def, group='Video',
                                              value='dvd', label='DVD')
-
+        # Create Unknown choices
         FieldDefinitionChoice.objects.create(field_def=field_def,
                                              value='unknown', label='Unknown')
-
+        # Make sure choices are correctly created
         Model = self.model_def.model_class()
         choices = Model._meta.get_field('media').get_choices(include_blank=False)
         expected_choices = [

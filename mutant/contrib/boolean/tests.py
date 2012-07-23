@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,7 +9,7 @@ from .models import BooleanFieldDefinition, NullBooleanFieldDefinition
 
 
 class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Boolean')
+    field_definition_category = _('Boolean')
 
 class BooleanFieldDefinitionTest(BooleanFieldDefinitionTestMixin,
                                  BaseModelDefinitionTestCase):

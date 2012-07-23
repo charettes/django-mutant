@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -11,7 +12,7 @@ from .models import (DictFieldDefinition, EmbeddedModelFieldDefinition,
 
 
 class NonRelFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Nonrel')
+    field_definition_category = _('Nonrel')
 
 
 class DictFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
@@ -36,7 +37,7 @@ class ListFieldDefinitionTest(NonRelFieldDefinitionTestMixin,
         ['A', 'C', 'M', 'Y'],
         ['A', 'B', 'C', 1, 2, 3]
     )
-    
+
     def test_field_ordering(self):
         field = self.field
         

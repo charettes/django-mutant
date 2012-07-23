@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -9,7 +10,7 @@ from .models import (EmailFieldDefinition, IPAddressFieldDefinition,
 
 
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Web')
+    field_definition_category = _('Web')
 
 
 class EmailFieldDefinitionTest(WebFieldDefinitionTestMixin,

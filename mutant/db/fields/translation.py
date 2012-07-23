@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.db.models.fields import TextField
 from django.utils.encoding import smart_unicode
@@ -10,7 +11,6 @@ def _is_ugettext_promise(obj):
                                          obj._delegate_str)
 
 class LazilyTranslatedField(TextField):
-
     def to_python(self, value):
         if value is None or _is_ugettext_promise(value):
             return value

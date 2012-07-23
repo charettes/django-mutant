@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)
@@ -14,7 +15,7 @@ from .models import (GeoModel, GeometryCollectionFieldDefinition,
 
 
 class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
-    field_definition_category = _(u'Geometry')
+    field_definition_category = _('Geometry')
 
     def setUp(self):
         super(GeometryFieldDefinitionBaseTest, self).setUp()

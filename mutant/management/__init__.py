@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections, models, router
@@ -37,7 +38,6 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
     opts = model_class._meta
     if created:
         fields = [(field.get_attname_column()[1], field) for field in opts.fields]
-
         try:
             extra_fields = getattr(instance._state, '_create_extra_fields')
         except AttributeError:
@@ -45,7 +45,6 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
         else:
             fields.extend(extra_fields)
             delattr(instance._state, '_create_extra_fields')
-
         try:
             delayed_save = getattr(instance._state, '_create_delayed_save')
         except AttributeError:
@@ -55,7 +54,6 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
                 obj.model_def = instance
                 obj.save(force_insert=True)
             delattr(instance._state, '_create_delayed_save')
-
         perform_ddl(model_class, 'create_table', opts.db_table, fields)
     else:
         old_opts = instance._model_class._meta
@@ -164,7 +162,6 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_def.model_class()
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
-
     if created:
         if hasattr(instance._state, '_creation_default_value'):
             field.default = instance._state._creation_default_value
@@ -197,7 +194,6 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
                 action_prefix = 'create' if value else 'delete'
                 action = "%s_%s" % (action_prefix, opt)
                 perform_ddl(model_class, action, table_name, (column,))
-
         perform_ddl(model_class, 'alter_column', table_name, column, field)
 
 FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"

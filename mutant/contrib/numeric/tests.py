@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from decimal import Decimal
 
 from django.utils.translation import ugettext_lazy as _
@@ -12,7 +14,7 @@ from .models import (BigIntegerFieldDefinition, DecimalFieldDefinition,
 
 
 class NumericFieldDefinitionTestMixin(FieldDefinitionTestMixin):
-    field_definition_category = _(u'Numeric')
+    field_definition_category = _('Numeric')
 
 
 class SmallIntegerFieldDefinitionTest(NumericFieldDefinitionTestMixin,

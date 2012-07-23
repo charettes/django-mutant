@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.db import connections, router
 from django.test.testcases import _deferredSkip
@@ -35,10 +36,10 @@ def db_is_nonrel(db):
 
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
                                   VersionCompatMixinTestCase):
-
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
+
     def assertTableExists(self, db, table):
         tables = connections[db].introspection.table_names()
         msg = "Table '%s.%s' doesn't exist, existing tables are %s"
