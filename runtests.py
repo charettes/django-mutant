@@ -9,7 +9,6 @@ from django.conf import settings
 
 
 class MongoRouter(object):
-
     def _db_for(self, model, **hints):
         from mutant.db.models import MutableModel
         if issubclass(model, MutableModel):
@@ -18,11 +17,11 @@ class MongoRouter(object):
             return 'default'
 
     db_for_read = _db_for
-
     db_for_write = _db_for
 
     def allow_syncdb(self, db, model):
         return self._db_for(model) == db
+
 
 DEFAULT_SETTINGS = {
     'SECRET_KEY': 'secret',
@@ -42,6 +41,7 @@ DEFAULT_SETTINGS = {
     ],
     'SKIP_SOUTH_TESTS': False
 }
+
 
 ENGINE_SETTINGS = {
     'sqlite3': {
@@ -104,6 +104,7 @@ ENGINE_SETTINGS = {
         ]
     },
 }
+
 
 DEFAULT_TEST_LABELS = [
     'mutant',
