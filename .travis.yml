@@ -9,13 +9,13 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.3.X           TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=sqlite3
-  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo south polymodels" ENGINE=postgis    TEMPLATE=template_postgis
+  - REQUIREMENTS=1.3.X           TESTS="mutant boolean temporal file numeric related text web polymodels"           ENGINE=sqlite3
+  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web polymodels"           ENGINE=postgresql TEMPLATE=template0
+  - REQUIREMENTS=1.3.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo polymodels"       ENGINE=postgis    TEMPLATE=template_postgis
   - REQUIREMENTS=mongo           TESTS="mutant boolean temporal file numeric nonrel text web polymodels"            ENGINE=mongodb
-  - REQUIREMENTS=1.4.X           TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=sqlite3
-  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo south polymodels" ENGINE=postgis    TEMPLATE=template_postgis
+  - REQUIREMENTS=1.4.X           TESTS="mutant boolean temporal file numeric related text web polymodels"           ENGINE=sqlite3
+  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web polymodels"           ENGINE=postgresql TEMPLATE=template0
+  - REQUIREMENTS=1.4.X-postgres  TESTS="mutant boolean temporal file numeric related text web geo polymodels"       ENGINE=postgis    TEMPLATE=template_postgis
   - REQUIREMENTS=master          TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=sqlite3
   - REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web south polymodels"     ENGINE=postgresql TEMPLATE=template0
   - REQUIREMENTS=master-postgres TESTS="mutant boolean temporal file numeric related text web geo south polymodels" ENGINE=postgis    TEMPLATE=template_postgis
