@@ -1,0 +1,79 @@
+[
+{
+  "pk": 1337, 
+  "model": "contenttypes.contenttype", 
+  "fields": {
+    "model": "frommodel", 
+    "app_label": "app"
+  }
+},
+{
+  "pk": 1843, 
+  "model": "contenttypes.contenttype", 
+  "fields": {
+    "model": "tomodel", 
+    "app_label": "app"
+  }
+},
+{
+  "pk": 1337,
+  "model": "mutant.modeldefinition", 
+  "fields": {
+    "object_name": "FromModel", 
+    "verbose_name": null, 
+    "verbose_name_plural": null
+  }
+},
+{
+  "pk": 1843,
+  "model": "mutant.modeldefinition", 
+  "fields": {
+    "object_name": "ToModel", 
+    "verbose_name": null, 
+    "verbose_name_plural": null
+  }
+},
+{
+  "pk": 2, 
+  "model": "mutant.fielddefinition", 
+  "fields": {
+    "primary_key": false, 
+    "unique_for_month": null, 
+    "unique": false, 
+    "name": "fk", 
+    "model_def": [
+      "app", 
+      "frommodel"
+    ], 
+    "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==", 
+    "editable": true, 
+    "unique_for_year": null, 
+    "content_type": [
+      "mutant", 
+      "foreignkeydefinition"
+    ], 
+    "blank": false, 
+    "help_text": null, 
+    "db_column": null, 
+    "null": true, 
+    "verbose_name": null, 
+    "unique_for_date": null, 
+    "db_index": false
+  }
+},
+{
+  "pk": 2,
+  "model": "mutant.foreignkeydefinition",
+  "fields": {
+    "related_name": null,
+    "on_delete": "CASCADE",
+    "one_to_one": false, 
+    "to_field": null,
+    "to": [
+      "app", 
+      "tomodel"
+    ],
+    "on_delete_set_value": null
+  }
+}
+]

@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 
+from contextlib import contextmanager
+from copy import deepcopy
 from itertools import groupby
 from operator import itemgetter
 
 from django.db.models.loading import cache as model_cache
+from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
 
@@ -58,7 +61,6 @@ if hasattr(model_cache, 'write_lock'):
         return model_cache.write_lock
 else:
     # django >= 1.5 use imp.lock instead
-    from contextlib import contextmanager
     @contextmanager
     def model_cache_lock():
         import imp
@@ -83,6 +85,34 @@ def remove_from_model_cache(model_class):
                 model_cache._get_models_cache.clear()
                 model._is_obsolete = True
                 return model
+
+
+def _model_cache_deepcopy(obj):
+    """
+    An helper that correctly deepcopy model cache state
+    """
+    if isinstance(obj, dict):
+        return dict((_model_cache_deepcopy(key), _model_cache_deepcopy(val))
+                    for key, val in obj.iteritems())
+    elif isinstance(obj, list):
+        return list(_model_cache_deepcopy(val) for val in obj)
+    elif isinstance(obj, SortedDict):
+        return deepcopy(obj)
+    return obj
+
+
+@contextmanager
+def model_cache_restorer():
+    """
+    A context manager that restore model cache state as it was before
+    entering context.
+    """
+    state = _model_cache_deepcopy(model_cache.__dict__)
+    try:
+        yield state
+    finally:
+        with model_cache_lock():
+            model_cache.__dict__ = state
 
 
 group_item_getter = itemgetter('group')

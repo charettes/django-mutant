@@ -17,10 +17,8 @@ related_name_help_text = _('The name to use for the relation from the '
                            'related object back to this one.')
 
 class RelatedFieldDefinition(FieldDefinition):
-
     to = fields.related.ForeignKey(ContentType, verbose_name=_('to'),
-                                   related_name="%(app_label)s_%(class)s_to")
-
+                                   related_name='+')
     related_name = PythonIdentifierField(_('related name'),
                                          blank=True, null=True,
                                          help_text=related_name_help_text)
@@ -46,17 +44,32 @@ class RelatedFieldDefinition(FieldDefinition):
         try:
             model_def = self.model_def
         except ModelDefinition.DoesNotExist:
-            pass
+            return False
         else:
             return self.to_id == model_def.contenttype_ptr_id
 
     @property
+    def to_model_class(self):
+        to_model_class = self.to.model_class()
+        if to_model_class is None:
+            # The app cache might return None if it's a model definition
+            # which is not loaded yet
+            try:
+                model_definition = self.to.modeldefinition
+            except ModelDefinition.DoesNotExist:
+                # XXX: If this happen we're dealing with an app_cache issue.
+                raise
+            else:
+                to_model_class = model_definition.model_class()
+        return to_model_class
+
+    @property
     def to_model_class_is_mutable(self):
-        return issubclass(self.to.model_class(), MutableModel)
+        return issubclass(self.to_model_class, MutableModel)
 
     def clean(self):
-        if (not self.to_model_class_is_mutable and
-            self.related_name is not None):
+        if (self.related_name is not None and
+            not self.to_model_class_is_mutable):
             msg = _('Cannot assign a related manager to non-mutable model')
             raise ValidationError({'related_name': [msg]})
 
@@ -66,7 +79,7 @@ class RelatedFieldDefinition(FieldDefinition):
         if self.is_recursive_relationship:
             options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
         else:
-            opts = self.to.model_class()._meta
+            opts = self.to_model_class._meta
             options['to'] = "%s.%s" % (opts.app_label, opts.object_name)
 
         if not self.to_model_class_is_mutable:
