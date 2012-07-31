@@ -19,6 +19,11 @@ class FieldDefinitionManager(PolymorphicManager):
     def get_query_set(self):
         return FieldDefinitionQuerySet(self.model, using=self._db)
 
+    def get_by_natural_key(self, app_label, model, name):
+        qs = self.select_subclasses()
+        return qs.get(model_def__app_label=app_label,
+                      model_def__model=model, name=name)
+
     def names(self):
         qs = self.get_query_set()
         return qs.order_by('name').values_list('name', flat=True)

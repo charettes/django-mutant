@@ -104,6 +104,10 @@ class ModelDefinition(ContentType):
     def __unicode__(self):
         return '.'.join((self.app_label, self.object_name))
 
+    def natural_key(self):
+        return (self.app_label, self.model)
+    natural_key.dependencies = ('contenttypes.contenttype',)
+
     def __init__(self, *args, **kwargs):
         super(ModelDefinition, self).__init__(*args, **kwargs)
         if self.pk:

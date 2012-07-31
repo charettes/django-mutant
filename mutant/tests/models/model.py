@@ -133,7 +133,6 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
-
     def test_fields_creation(self):
         char_field = CharFieldDefinition(name='name', max_length=10)
         ct_ct = ContentType.objects.get_for_model(ContentType)
@@ -147,7 +146,6 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
         column = model_cls._meta.get_field('name').get_attname_column()[1]
         # Make sure column was created
         self.assertColumnExists(db, table, column)
-
         # Make sure field definitions were created
         self.assertIsNotNone(char_field.pk)
         self.assertIsNotNone(fk_field.pk)
@@ -164,6 +162,11 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
         table = model_cls._meta.db_table
         column = model_cls._meta.get_field('field').get_attname_column()[1]
         self.assertColumnExists(db, table, column)
+
+    def test_natural_key(self):
+        natural_key = self.model_def.natural_key()
+        self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
+                         self.model_def)
 
 
 class ModelValidationTest(BaseModelDefinitionTestCase):

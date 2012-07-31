@@ -160,3 +160,12 @@ class FieldDefinitionChoiceTest(BaseModelDefinitionTestCase):
             ('unknown', 'Unknown')
         ]
         self.assertEqual(choices, expected_choices)
+
+
+class FieldDefinitionManagerTest(BaseModelDefinitionTestCase):
+    def test_natural_key(self):
+        fd = CharFieldDefinition.objects.create(name='name', max_length=5,
+                                                model_def=self.model_def)
+        natural_key = fd.natural_key()
+        self.assertEqual(FieldDefinition.objects.get_by_natural_key(*natural_key),
+                         fd)

@@ -190,6 +190,10 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
                                  'editable', 'default', 'primary_key', 'unique',
                                  'unique_for_date', 'unique_for_month', 'unique_for_year')
 
+    def natural_key(self):
+        return self.model_def.natural_key() + (self.name,)
+    natural_key.dependencies = ('mutant.modeldefinition',)
+
     def save(self, *args, **kwargs):
         if self.pk:
             self._state._pre_save_field = self.get_bound_field()
