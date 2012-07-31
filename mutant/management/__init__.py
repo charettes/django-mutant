@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 
+from functools import wraps
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections, models, router
 from django.db.models.fields import FieldDoesNotExist
-from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
+from django.db.models.signals import (m2m_changed, post_delete, post_save,
+    pre_delete)
 from south.db import dbs
 
 from mutant import logger
@@ -29,11 +32,22 @@ def perform_ddl(model, action, *args, **kwargs):
         db.execute_deferred_sql()
 
 
+def post_save_nonraw_instance(receiver):
+    """
+    A signal receiver decorator that fetch the complete instance from db when
+    it's passed as raw
+    """
+    @wraps(receiver)
+    def wrapper(sender, raw, instance, using, **kwargs):
+        if raw:
+            instance = sender._default_manager.using(using).get(pk=instance.pk)
+        return receiver(sender=sender, raw=raw, instance=instance, using=using,
+                        **kwargs)
+    return wrapper
+
+
+@post_save_nonraw_instance
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
-    if raw:
-        ct_db = instance._state.db # cts should be one the same db as mds
-        ct = ContentType.objects.using(ct_db).get(pk=instance.pk)
-        instance.app_label, instance.model = ct.app_label, ct.model
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
     if created:
@@ -154,12 +168,15 @@ m2m_changed.connect(unique_together_field_defs_changed,
                     dispatch_uid='mutant.management.unique_together_field_defs_changed')
 
 
+@post_save_nonraw_instance
 def field_definition_post_save(sender, instance, created, raw, **kwargs):
     """
     This signal is connected by all FieldDefinition subclasses
     see comment in FieldDefinitionBase for more details
     """
-    model_class = instance.model_def.model_class()
+    # If the field definition is raw we must re-create the model definition
+    # since ModelDefinitionAttribute.save won't be called
+    model_class = instance.model_def.model_class(force_create=raw)
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
     if created:
