@@ -7,6 +7,7 @@ from django.db import connections, models, router
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import (m2m_changed, post_delete, post_save,
     pre_delete)
+from django.dispatch.dispatcher import receiver
 from south.db import dbs
 
 from mutant import logger
@@ -45,7 +46,8 @@ def post_save_nonraw_instance(receiver):
                         **kwargs)
     return wrapper
 
-
+@receiver(post_save, sender=ModelDefinition,
+          dispatch_uid='mutant.management.model_definition_post_save')
 @post_save_nonraw_instance
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_class(force_create=True)
@@ -76,19 +78,17 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
             # It means that the natural key has changed
             ContentType.objects.clear_cache()
 
-post_save.connect(model_definition_post_save, ModelDefinition,
-                  dispatch_uid='mutant.management.model_definition_post_save')
 
-
+@receiver(post_delete, sender=ModelDefinition,
+          dispatch_uid='mutant.management.model_definition_post_delete')
 def model_definition_post_delete(sender, instance, **kwargs):
     model_class = instance.model_class()
     table_name = model_class._meta.db_table
     perform_ddl(model_class, 'delete_table', table_name)
 
-post_delete.connect(model_definition_post_delete, ModelDefinition,
-                    dispatch_uid='mutant.management.model_definition_post_delete')
 
-
+@receiver(post_save, sender=BaseDefinition,
+          dispatch_uid='mutant.management.base_definition_post_save')
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
     declared_fields = instance.get_declared_fields()
     if declared_fields:
@@ -119,10 +119,9 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                     perform_ddl(model_class, 'alter_column', table_name,
                                 column, field)
 
-post_save.connect(base_definition_post_save, BaseDefinition,
-                  dispatch_uid='mutant.management.base_definition_post_save')
 
-
+@receiver(pre_delete, sender=BaseDefinition,
+          dispatch_uid='mutant.management.base_definition_pre_delete')
 def base_definition_pre_delete(sender, instance, **kwargs):
     """
     This is used to pass data required for deletion to the post_delete
@@ -135,10 +134,9 @@ def base_definition_pre_delete(sender, instance, **kwargs):
             model_class._meta.db_table,
         )
 
-pre_delete.connect(base_definition_pre_delete, BaseDefinition,
-                   dispatch_uid='mutant.management.base_definition_pre_delete')
 
-
+@receiver(post_delete, sender=BaseDefinition,
+          dispatch_uid='mutant.management.base_definition_post_delete')
 def base_definition_post_delete(sender, instance, **kwargs):
     if issubclass(instance.base, models.Model):
         syncdbs, table_name = instance._state._deletion
@@ -147,10 +145,9 @@ def base_definition_post_delete(sender, instance, **kwargs):
                 db.delete_column(table_name, field.name)
         del instance._state._deletion
 
-post_delete.connect(base_definition_post_delete, BaseDefinition,
-                    dispatch_uid='mutant.management.base_definition_post_delete')
 
-
+@receiver(m2m_changed, sender=UniqueTogetherDefinition.field_defs.through,
+          dispatch_uid='mutant.management.unique_together_field_defs_changed')
 def unique_together_field_defs_changed(instance, action, model, **kwargs):
     columns = list(instance.field_defs.names())
     # If there's no columns and action is post_clear there's nothing to do
@@ -162,10 +159,6 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
         # Safe guard against m2m_changed.action API change
         elif action in ('post_add', 'post_remove'):
             perform_ddl(model_class, 'create_unique', table_name, columns)
-
-m2m_changed.connect(unique_together_field_defs_changed,
-                    UniqueTogetherDefinition.field_defs.through,
-                    dispatch_uid='mutant.management.unique_together_field_defs_changed')
 
 
 @post_save_nonraw_instance
@@ -216,6 +209,8 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
 FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
 
 
+@receiver(pre_delete, sender=FieldDefinition,
+          dispatch_uid='mutant.management.field_definition_pre_delete')
 def field_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_def.model_class()
     opts = model_class._meta
@@ -225,15 +220,11 @@ def field_definition_pre_delete(sender, instance, **kwargs):
         opts.get_field(instance.name).column
     )
 
-pre_delete.connect(field_definition_pre_delete, sender=FieldDefinition,
-                   dispatch_uid='mutant.management.field_definition_pre_delete')
 
-
+@receiver(post_delete, sender=FieldDefinition,
+          dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
     syncdbs, table_name, name = instance._state._deletion
     for db in syncdbs:
         db.delete_column(table_name, name)
     del instance._state._deletion
-
-post_delete.connect(field_definition_post_delete, sender=FieldDefinition,
-                    dispatch_uid='mutant.management.field_definition_post_delete')
