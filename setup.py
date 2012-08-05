@@ -16,7 +16,7 @@ setup(
     author_email='charette.s@gmail.com',
     install_requires=(
         'django>=1.3,<=1.5',
-        'south>=0.7.5',
+        'south>=0.7.6',
         'django-orderable==1.2.1',
         'django-picklefield==0.2.0',
         'django-polymodels',
