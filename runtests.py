@@ -81,22 +81,19 @@ ENGINE_SETTINGS = {
                 'NAME': ':memory:',
             },
             'mongo': {
-                'ENGINE' : 'django_mongodb_engine',
-                'NAME' : 'mutant',
+                'ENGINE': 'django_mongodb_engine',
+                'NAME': 'mutant',
                 'OPTIONS': {
                     'OPERATIONS': {
-                        'save' : {'safe' : True},
+                        'save': {'safe': True},
                     }
                 }
             }
         },
-        'DATABASE_ROUTERS': (
-            'runtests.MongoRouter',
-        ),
+        'DATABASE_ROUTERS': ('runtests.MongoRouter',),
         'SOUTH_DATABASE_ADAPTERS': {
             'mongo': 'django_mongodb_engine.south_adapter'
         },
-        # FK and M2M are not supported for nonrel db
         'INSTALLED_APPS': DEFAULT_SETTINGS['INSTALLED_APPS'][0:-1] + [
             'django_mongodb_engine',
             'djangotoolbox',
@@ -131,13 +128,15 @@ def main(engine, user, verbosity, failfast, test_labels):
             test_labels.append('geo')
         elif engine == 'mongodb':
             test_labels.remove('related')
+            test_labels.append('nonrel')
     options = dict(DEFAULT_SETTINGS, **engine_settings)
     if user:
         options['DATABASES']['default']['USER'] = user
     settings.configure(**options)
     from django.test.utils import get_runner
     TestRunner = get_runner(settings)
-    test_runner = TestRunner(verbosity=verbosity, interactive=False, failfast=failfast)
+    test_runner = TestRunner(verbosity=verbosity, interactive=False,
+                             failfast=failfast)
     failures = test_runner.run_tests(test_labels)
     sys.exit(failures)
 
@@ -150,4 +149,5 @@ if __name__ == '__main__':
     parser.add_argument('--verbosity', default=1)
     parser.add_argument('test_labels', nargs='*')
     args = parser.parse_args()
-    main(args.engine, args.user, args.verbosity, args.failfast, args.test_labels)
+    main(args.engine, args.user, args.verbosity,
+         args.failfast, args.test_labels)
