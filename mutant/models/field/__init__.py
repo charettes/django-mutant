@@ -155,7 +155,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
 
     FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
 
-    content_type_field_name = 'content_type'
+    CONTENT_TYPE_FIELD = 'content_type'
     content_type = FieldDefinitionTypeField()
 
     name = PythonIdentifierField(_('name'))

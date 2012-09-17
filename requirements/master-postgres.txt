@@ -1,4 +1,5 @@
 https://github.com/django/django/tarball/master
 https://bitbucket.org/andrewgodwin/south/get/tip.tar.gz
 https://github.com/gintas/django-picklefield/tarball/master
+https://github.com/charettes/django-polymodels/tarball/master
 psycopg2
