@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import pickle
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -67,7 +69,7 @@ class MutableModelSubclass(MutableModel):
     pass
 
 
-class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
+class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_model_class_creation_cache(self):
         Model = self.model_def.model_class()
         self.assertEqual(Model, self.model_def.model_class())
@@ -125,10 +127,8 @@ class ModelDefinitionManipulationTest(BaseModelDefinitionTestCase):
         """
         other_model_def = ModelDefinition.objects.create(app_label='app',
                                                          object_name='OtherModel')
-
         self.assertNotEqual(other_model_def.model_class(),
                             self.model_def.model_class())
-
         self.assertNotEqual(other_model_def.model_ct, self.model_def.model_ct)
 
 
@@ -179,7 +179,16 @@ class ModelValidationTest(BaseModelDefinitionTestCase):
         self.assertRaises(ValidationError, self.model_def.clean)
 
 
-class ModelClassProxyProxyTests(BaseModelDefinitionTestCase):
+class ModelClassProxyTest(BaseModelDefinitionTestCase):
+    def test_pickling(self):
+        """
+        Make sure _ModelClassProxy can be pickled correctly. This is required
+        to allow a model definition to subclass a MutableModel.
+        """
+        Model = self.model_def.model_class()
+        pickled = pickle.dumps(Model)
+        self.assertEqual(pickle.loads(pickled), Model)
+
     def test_proxy_interactions(self):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)

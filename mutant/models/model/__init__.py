@@ -21,6 +21,14 @@ from ...db.models import MutableModel
 from ...utils import get_db_table, remove_from_model_cache
 
 
+def _model_class_from_pk(definition_cls, definition_pk):
+    """
+    Helper used to unpickle MutableModel model class from their definition
+    pk.
+    """
+    return definition_cls.objects.get(pk=definition_pk).model_class()
+
+
 class _ModelClassProxy(object):
     def __init__(self, model_class):
         self.__dict__['model_class'] = model_class
@@ -85,6 +93,10 @@ class _ModelClassProxy(object):
             return self.model_class == other_model_class
         else:
             return NotImplemented
+
+    def __reduce__(self):
+        model_class = self.__get_model_class()
+        return (_model_class_from_pk, model_class._definition)
 
     def __str__(self):
         model_class = self.__get_model_class()
