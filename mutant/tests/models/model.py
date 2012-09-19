@@ -465,6 +465,7 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         self.assertRaisesMessage(ValidationError,
                                  _("Base can't be a proxy model."), bd.clean)
 
+    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_mutable_model_base(self):
         another_model_def = ModelDefinition.objects.create(app_label='app',
                                                            object_name='AnotherModel')
