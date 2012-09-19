@@ -146,7 +146,7 @@ if __name__ == '__main__':
                         dest='failfast')
     parser.add_argument('--engine', default='sqlite3')
     parser.add_argument('--user')
-    parser.add_argument('--verbosity', default=1)
+    parser.add_argument('--verbosity', default=1, type=int)
     parser.add_argument('test_labels', nargs='*')
     args = parser.parse_args()
     main(args.engine, args.user, args.verbosity,
