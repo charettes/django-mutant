@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models.utils import BaseModelDefinitionTestCase
 
-from .models import (EmailFieldDefinition, IPAddressFieldDefinition,
-    SlugFieldDefinition, URLFieldDefinition)
+from .models import (EmailFieldDefinition, GenericIPAddressFieldDefinition,
+    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition)
 
 
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):
@@ -44,15 +44,10 @@ class URLFieldDefinitionTest(WebFieldDefinitionTestMixin,
     )
 
 
-try:
-    from .models import GenericIPAddressFieldDefinition
-except ImportError:
-    pass
-else:
-    class GenericIPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
-                                              BaseModelDefinitionTestCase):
-        field_definition_cls = GenericIPAddressFieldDefinition
-        field_values = (
-            '127.0.0.1',
-            '2001:db8:85a3::8a2e:370:7334'
-        )
+class GenericIPAddressFieldDefinitionTest(WebFieldDefinitionTestMixin,
+                                          BaseModelDefinitionTestCase):
+    field_definition_cls = GenericIPAddressFieldDefinition
+    field_values = (
+        '127.0.0.1',
+        '2001:db8:85a3::8a2e:370:7334'
+    )

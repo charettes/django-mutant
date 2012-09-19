@@ -9,9 +9,6 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.3.X           ENGINE=sqlite3
-  - REQUIREMENTS=1.3.X-postgres  ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=1.3.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
   - REQUIREMENTS=mongo           ENGINE=mongodb
   - REQUIREMENTS=1.4.X           ENGINE=sqlite3
   - REQUIREMENTS=1.4.X-postgres  ENGINE=postgresql TEMPLATE=template0
