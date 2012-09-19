@@ -127,6 +127,11 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
                             self.model_def.model_class())
         self.assertNotEqual(other_model_def.model_ct, self.model_def.model_ct)
 
+    def test_natural_key(self):
+        natural_key = self.model_def.natural_key()
+        self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
+                         self.model_def)
+
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
     def test_fields_creation(self):
@@ -159,10 +164,12 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
         column = model_cls._meta.get_field('field').get_attname_column()[1]
         self.assertColumnExists(db, table, column)
 
-    def test_natural_key(self):
-        natural_key = self.model_def.natural_key()
-        self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
-                         self.model_def)
+    def test_primary_key_override(self):
+        field = CharFieldDefinition(name='name', max_length=32, primary_key=True)
+        model_def = ModelDefinition.objects.create(fields=(field,),
+                                                   app_label='app',
+                                                   object_name='OtherModel')
+        self.assertEqual(model_def.model_class()._meta.pk.name, 'name')
 
 
 class ModelValidationTest(BaseModelDefinitionTestCase):

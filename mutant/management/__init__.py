@@ -53,14 +53,21 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
     if created:
-        fields = [(field.get_attname_column()[1], field) for field in opts.fields]
+        primary_key = opts.pk
+        fields = [(field.get_attname_column()[1], field) for field in opts.fields
+                  if field is not primary_key]
         try:
             extra_fields = getattr(instance._state, '_create_extra_fields')
         except AttributeError:
             pass
         else:
-            fields.extend(extra_fields)
+            for column, field in extra_fields:
+                if field.primary_key:
+                    primary_key = field
+                else:
+                    fields.append((column, field))
             delattr(instance._state, '_create_extra_fields')
+        fields.insert(0, (primary_key.get_attname_column()[1], primary_key))
         try:
             delayed_save = getattr(instance._state, '_create_delayed_save')
         except AttributeError:
@@ -218,17 +225,24 @@ FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
 def field_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_def.model_class()
     opts = model_class._meta
+    field = opts.get_field(instance.name)
     instance._state._deletion = (
         allow_syncdbs(model_class),
         opts.db_table,
-        opts.get_field(instance.name).column
+        field
     )
 
 
 @receiver(post_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
-    syncdbs, table_name, name = instance._state._deletion
-    for db in syncdbs:
-        db.delete_column(table_name, name)
+    syncdbs, table_name, field = instance._state._deletion
+    column = field.get_attname_column()[1]
+    if field.primary_key:
+        primary_key = models.AutoField(name='id', primary_key=True)
+        for db in syncdbs:
+            db.alter_column(table_name, column, primary_key)
+    else:
+        for db in syncdbs:
+            db.delete_column(table_name, column)
     del instance._state._deletion
