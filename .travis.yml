@@ -32,6 +32,8 @@ postgres:
   database: mutant
   username: postgres
 
+services: mongodb
+
 install:
   - pip install argparse --use-mirrors
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
