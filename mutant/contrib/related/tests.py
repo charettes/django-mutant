@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from ...models.model import ModelDefinition
 from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models.utils import BaseModelDefinitionTestCase
-from ...utils import model_cache_restorer
+from ...utils import app_cache_restorer
 
 from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
@@ -82,7 +82,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         obj1.save()
 
     def test_fixture_loading(self):
-        with model_cache_restorer():
+        with app_cache_restorer():
             call_command('loaddata', 'test_fk_to_loading.json', verbosity=0,
                          commit=False)
         from_model_def = ModelDefinition.objects.get_by_natural_key('app',

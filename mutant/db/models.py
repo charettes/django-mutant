@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from ..utils import remove_from_app_cache
+
 
 class MutableModel(models.Model):
     """
@@ -20,6 +22,18 @@ class MutableModel(models.Model):
     @classmethod
     def is_obsolete(cls):
         return cls._is_obsolete
+
+    @classmethod
+    def mark_as_obsolete(cls):
+        remove_from_app_cache(cls)
+        cls._is_obsolete = True
+        for definition_cls, definition_pk in cls._dependencies:
+            try:
+                definition = definition_cls.objects.get(pk=definition_pk)
+            except definition_cls.DoesNotExist:
+                pass
+            else:
+                definition.model_class(force_create=True)
 
     def clean(self):
         if self.is_obsolete():

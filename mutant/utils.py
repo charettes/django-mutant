@@ -5,7 +5,7 @@ from copy import deepcopy
 from itertools import groupby
 from operator import itemgetter
 
-from django.db.models.loading import cache as model_cache
+from django.db.models.loading import cache as app_cache
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
@@ -56,13 +56,13 @@ def get_db_table(app_label, model):
     return "mutant_%s_%s" % (app_label, model)
 
 
-if hasattr(model_cache, 'write_lock'):
-    def model_cache_lock():
-        return model_cache.write_lock
+if hasattr(app_cache, 'write_lock'):
+    def app_cache_lock():
+        return app_cache.write_lock
 else:
     # django >= 1.5 use imp.lock instead
     @contextmanager
-    def model_cache_lock():
+    def app_cache_lock():
         import imp
         try:
             imp.acquire_lock()
@@ -71,48 +71,44 @@ else:
             imp.release_lock()
 
 
-def remove_from_model_cache(model_class):
-    try:
-        opts = model_class._meta
-    except AttributeError:
-        return
+def remove_from_app_cache(model_class):
+    opts = model_class._meta
     app_label, model_name = opts.app_label, opts.object_name.lower()
-    with model_cache_lock():
-        app_models = model_cache.app_models.get(app_label, False)
+    with app_cache_lock():
+        app_models = app_cache.app_models.get(app_label, False)
         if app_models:
             model = app_models.pop(model_name, False)
             if model:
-                model_cache._get_models_cache.clear()
-                model._is_obsolete = True
+                app_cache._get_models_cache.clear()
                 return model
 
 
-def _model_cache_deepcopy(obj):
+def _app_cache_deepcopy(obj):
     """
     An helper that correctly deepcopy model cache state
     """
     if isinstance(obj, dict):
-        return dict((_model_cache_deepcopy(key), _model_cache_deepcopy(val))
+        return dict((_app_cache_deepcopy(key), _app_cache_deepcopy(val))
                     for key, val in obj.iteritems())
     elif isinstance(obj, list):
-        return list(_model_cache_deepcopy(val) for val in obj)
+        return list(_app_cache_deepcopy(val) for val in obj)
     elif isinstance(obj, SortedDict):
         return deepcopy(obj)
     return obj
 
 
 @contextmanager
-def model_cache_restorer():
+def app_cache_restorer():
     """
     A context manager that restore model cache state as it was before
     entering context.
     """
-    state = _model_cache_deepcopy(model_cache.__dict__)
+    state = _app_cache_deepcopy(app_cache.__dict__)
     try:
         yield state
     finally:
-        with model_cache_lock():
-            model_cache.__dict__ = state
+        with app_cache_lock():
+            app_cache.__dict__ = state
 
 
 group_item_getter = itemgetter('group')

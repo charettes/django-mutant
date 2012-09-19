@@ -127,7 +127,8 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     This is used to pass data required for deletion to the post_delete
     signal that is no more available thereafter.
     """
-    if issubclass(instance.base, models.Model):
+    if (instance.base and issubclass(instance.base, models.Model) and
+        instance.base._meta.abstract):
         model_class = instance.model_def.model_class()
         instance._state._deletion = (
             allow_syncdbs(model_class),
@@ -138,7 +139,10 @@ def base_definition_pre_delete(sender, instance, **kwargs):
 @receiver(post_delete, sender=BaseDefinition,
           dispatch_uid='mutant.management.base_definition_post_delete')
 def base_definition_post_delete(sender, instance, **kwargs):
-    if issubclass(instance.base, models.Model):
+    """
+    Make sure to delete fields inherited from an abstract model base.
+    """
+    if hasattr(instance._state, '_deletion'):
         syncdbs, table_name = instance._state._deletion
         for field in instance.base._meta.fields:
             for db in syncdbs:

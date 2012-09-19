@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
+from django.db.models.signals import class_prepared
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import PickledObjectField
@@ -18,7 +19,7 @@ except ImportError:
 from .managers import ModelDefinitionManager
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
-from ...utils import get_db_table, remove_from_model_cache
+from ...utils import get_db_table
 
 
 def _model_class_from_pk(definition_cls, definition_pk):
@@ -26,7 +27,10 @@ def _model_class_from_pk(definition_cls, definition_pk):
     Helper used to unpickle MutableModel model class from their definition
     pk.
     """
-    return definition_cls.objects.get(pk=definition_pk).model_class()
+    try:
+        return definition_cls.objects.get(pk=definition_pk).model_class()
+    except definition_cls.DoesNotExist:
+        pass
 
 
 class _ModelClassProxy(object):
@@ -130,7 +134,7 @@ class ModelDefinition(ContentType):
             self._model_class = super(ModelDefinition, self).model_class()
 
     def get_model_bases(self):
-        return tuple(bd.base for bd in self.basedefinitions.all())
+        return tuple(bd.get_model_class() for bd in self.basedefinitions.all())
 
     def get_model_opts(self):
         attrs = {
@@ -163,6 +167,7 @@ class ModelDefinition(ContentType):
             '__module__': str("mutant.apps.%s.models" % self.app_label),
             '_definition': (self.__class__, self.pk),
             '_is_obsolete': False,
+            '_dependencies': set(),
         }
         attrs.update(dict((f.name, f.field_instance())
                             for f in self.fielddefinitions.select_subclasses()))
@@ -170,11 +175,17 @@ class ModelDefinition(ContentType):
 
     def _create_model_class(self, existing_model_class=None):
         bases = self.get_model_bases()
-        bases += (MutableModel,)
+        has_mutable_base = False
+        for base in bases:
+            if issubclass(base, MutableModel):
+                has_mutable_base = True
+                base._dependencies.add((self.__class__, self.pk))
+        if not has_mutable_base:
+            bases += (MutableModel,)
         attrs = self.get_model_attrs(existing_model_class)
-        remove_from_model_cache(existing_model_class)
-        model = type(str(self.object_name), bases, attrs)
-        return model
+        if existing_model_class:
+            existing_model_class.mark_as_obsolete()
+        return type(str(self.object_name), bases, attrs)
 
     def model_class(self, force_create=False):
         existing_model_class = super(ModelDefinition, self).model_class()
@@ -209,8 +220,7 @@ class ModelDefinition(ContentType):
         except ImproperlyConfigured:
             pass
         else:
-            msg = _('Cannot cloak an installed app')
-            raise ValidationError({'label': [msg]})
+            raise ValidationError(_('Cannot cloak an installed app'))
 
     def save(self, *args, **kwargs):
         self.model = self.object_name.lower()
@@ -220,12 +230,10 @@ class ModelDefinition(ContentType):
 
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
-        delete = super(ModelDefinition, self).delete(*args, **kwargs)
-        # Clear ct cache
+        model_class.mark_as_obsolete()
         ContentType.objects.clear_cache()
-        remove_from_model_cache(model_class)
         del self._model_class
-        return delete
+        return super(ModelDefinition, self).delete(*args, **kwargs)
 
 
 class ModelDefinitionAttribute(models.Model):
@@ -260,26 +268,31 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         ordering = ('order',)
         unique_together = (('model_def', 'order'),)
 
+    def get_model_class(self):
+        if isinstance(self.base, _ModelClassProxy):
+            return self.base.__get__(None, None)
+        return self.base
+
     def get_declared_fields(self):
-        if isinstance(self.base, models.base.ModelBase):
-            return self.base._meta.fields
+        if issubclass(self.base, models.Model):
+            if self.base._meta.abstract:
+                return self.base._meta.fields
+            elif not self.base._meta.proxy:
+                attr_name = '%s_ptr' % self.base._meta.module_name
+                return (models.OneToOneField(self.base, name=attr_name, null=True,
+                                             auto_created=True, parent_link=True),)
         return ()
 
     def clean(self):
-        # TODO: Validate the whole inheritance field clashes
-        base = self.base
-        msg = None
-        if isclass(base):
-            if issubclass(base, models.Model):
-                opts = base._meta
-                if not opts.abstract:
-                    msg = _('Model base must be abstract')
-                elif issubclass(base, MutableModel):
-                    msg = _('Base cannot be a subclass of MutableModel')
-        else:
-            msg = _('Base must be a class')
-        if msg:
-            raise ValidationError({'base': [msg]})
+        try:
+            if issubclass(self.base, models.Model):
+                if self.base._meta.proxy:
+                    raise ValidationError(_("Base can't be a proxy model."))
+                elif (issubclass(self.base, MutableModel) and
+                      self.base.definition() == self.model_def):
+                    raise ValidationError(_("A model definition can't be a base of itself."))
+        except TypeError:
+            raise ValidationError(_('Base must be a class.'))
         return super(BaseDefinition, self).clean()
 
 

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import models, router
 from django.db.utils import IntegrityError
-from django.utils.translation import ugettext
+from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
@@ -47,14 +47,14 @@ class ModelProxy(CharFieldDefinition):
         proxy = True
 
 
-class ModelSubclass(models.Model):
+class AbstractModelSubclass(models.Model):
     field = models.CharField(max_length=5)
 
     class Meta:
         abstract = True
 
     def method(self):
-        return 'ModelSubclass'
+        return 'AbstractModelSubclass'
 
 
 class ModelSubclassWithTextField(models.Model):
@@ -63,10 +63,6 @@ class ModelSubclassWithTextField(models.Model):
 
     class Meta:
         abstract = True
-
-
-class MutableModelSubclass(MutableModel):
-    pass
 
 
 class ModelDefinitionTest(BaseModelDefinitionTestCase):
@@ -118,8 +114,8 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.model_def.verbose_name_plural = 'MyMoDeLZ0Rs'
         self.model_def.save()
 
-        self.assertEqual(Model._meta.verbose_name, ugettext('MyMoDeL'))
-        self.assertEqual(Model._meta.verbose_name_plural, ugettext('MyMoDeLZ0Rs'))
+        self.assertEqual(Model._meta.verbose_name, _('MyMoDeL'))
+        self.assertEqual(Model._meta.verbose_name_plural, _('MyMoDeLZ0Rs'))
 
     def test_multiple_model_definition(self):
         """
@@ -152,7 +148,7 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
 
     def test_bases_creation(self):
         mixin_base = BaseDefinition(base=Mixin)
-        concrete_base = BaseDefinition(base=ModelSubclass)
+        concrete_base = BaseDefinition(base=AbstractModelSubclass)
         model_def = ModelDefinition.objects.create(bases=(mixin_base,
                                                           concrete_base),
                                                    app_label='app',
@@ -429,26 +425,63 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.field_defs.clear()
         self.Model.objects.create(f1='a', f2='b')
 
+
 class BaseDefinitionTest(BaseModelDefinitionTestCase):
     def test_clean(self):
-        bd = BaseDefinition()
+        """
+        Ensure `BaseDefinition.clean` works correctly.
+        """
+        bd = BaseDefinition(model_def=self.model_def)
         # Base must be a class
         bd.base = BaseDefinitionTest.test_clean
-        self.assertRaises(ValidationError, bd.clean)
-        # Subclasses of MutableModel are not valid bases
-        bd.base = MutableModelSubclass
-        self.assertRaises(ValidationError, bd.clean)
+        self.assertRaisesMessage(ValidationError,
+                                 _('Base must be a class.'), bd.clean)
+        # Subclasses of MutableModel are valid bases
+        bd.base = ModelDefinition.objects.create(app_label='app',
+                                                 object_name='AnotherModel').model_class()
+        try:
+            bd.clean()
+        except ValidationError:
+            self.fail('MutableModel subclasses are valid bases.')
+        # But model definition can't be bases of themselves
+        bd.base = self.model_def.model_class()
+        self.assertRaisesMessage(ValidationError,
+                                 _("A model definition can't be a base of "
+                                   "itself."), bd.clean)
         # Mixin objets are valid bases
         bd.base = Mixin
-        bd.clean()
-        # Model subclasses are valid bases if they are abstract
-        bd.base = ModelSubclass
-        bd.clean()
-        # Model subclasses that are not abstract are invalid
-        bd.base = CharFieldDefinition
-        self.assertRaises(ValidationError, bd.clean)
+        try:
+            bd.clean()
+        except ValidationError:
+            self.fail('Mixin objets are valid bases.')
+        # Abstract model subclasses are valid bases
+        bd.base = AbstractModelSubclass
+        try:
+            bd.clean()
+        except ValidationError:
+            self.fail('Abstract Model are valid bases')
+        # Proxy model are not valid bases
         bd.base = ModelProxy
-        self.assertRaises(ValidationError, bd.clean)
+        self.assertRaisesMessage(ValidationError,
+                                 _("Base can't be a proxy model."), bd.clean)
+
+    def test_mutable_model_base(self):
+        another_model_def = ModelDefinition.objects.create(app_label='app',
+                                                           object_name='AnotherModel')
+        AnotherModel = another_model_def.model_class()
+        CharFieldDefinition.objects.create(model_def=self.model_def,
+                                           name='f1', max_length=25)
+        base_definition = BaseDefinition(model_def=another_model_def)
+        base_definition.base = self.model_def.model_class()
+        base_definition.save()
+        another_model = AnotherModel.objects.create(f1='Martinal')
+        self.assertTrue(AnotherModel.objects.exists())
+        CharFieldDefinition.objects.create(model_def=self.model_def,
+                                           name='f2', max_length=25, null=True)
+        another_model = AnotherModel.objects.get(pk=another_model.pk)
+        self.assertIsNone(another_model.f2)
+        another_model.f2 = 'Placebo'
+        another_model.save()
 
     def test_base_inheritance(self):
         Model = self.model_def.model_class()
@@ -456,19 +489,19 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
                                       base=Mixin)
         self.assertTrue(issubclass(Model, Mixin))
         BaseDefinition.objects.create(model_def=self.model_def,
-                                      base=ModelSubclass)
+                                      base=AbstractModelSubclass)
         self.assertTrue(issubclass(Model, Mixin) and
-                        issubclass(Model, ModelSubclass))
+                        issubclass(Model, AbstractModelSubclass))
 
     def test_base_ordering(self):
         Model = self.model_def.model_class()
         BaseDefinition.objects.create(model_def=self.model_def,
                                       base=Mixin, order=2)
         model_subclass_def = BaseDefinition.objects.create(model_def=self.model_def,
-                                                           base=ModelSubclass,
+                                                           base=AbstractModelSubclass,
                                                            order=1)
         instance = Model()
-        self.assertEqual('ModelSubclass', instance.method())
+        self.assertEqual('AbstractModelSubclass', instance.method())
         model_subclass_def.order = 3
         model_subclass_def.save()
         instance = Model()
@@ -476,7 +509,7 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_abstract_field_inherited(self):
         bd = BaseDefinition.objects.create(model_def=self.model_def,
-                                           base=ModelSubclass)
+                                           base=AbstractModelSubclass)
         Model = self.model_def.model_class()
         Model.objects.create(field='value')
         # Test column alteration and addition by replacing the base with

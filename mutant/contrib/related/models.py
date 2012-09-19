@@ -49,23 +49,24 @@ class RelatedFieldDefinition(FieldDefinition):
             return self.to_id == model_def.contenttype_ptr_id
 
     @property
-    def to_model_class(self):
+    def to_model_class_is_mutable(self):
         to_model_class = self.to.model_class()
         if to_model_class is None:
-            # The app cache might return None if it's a model definition
-            # which is not loaded yet
             try:
-                model_definition = self.to.modeldefinition
+                getattr(self.to, 'modeldefinition')
             except ModelDefinition.DoesNotExist:
-                # XXX: If this happen we're dealing with an app_cache issue.
-                raise
+                return False
             else:
-                to_model_class = model_definition.model_class()
-        return to_model_class
+                return True
+        else:
+            return issubclass(to_model_class, MutableModel)
 
     @property
-    def to_model_class_is_mutable(self):
-        return issubclass(self.to_model_class, MutableModel)
+    def to_model_class(self):
+        if self.to_model_class_is_mutable:
+            return self.to.modeldefinition.model_class()
+        else:
+            return self.to.model_class()
 
     def clean(self):
         if (self.related_name is not None and
