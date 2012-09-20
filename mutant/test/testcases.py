@@ -46,20 +46,6 @@ class ModelDefinitionDDLTestCase(DDLTestCase):
         ContentType.objects.clear_cache()
 
 
-class VersionCompatMixinTestCase(TestCase):
-    # Django < 1.4 doesn't have assertIsIntance and `ordered` kwarg for assertQuerysetEqual
-    if django.VERSION < (1, 4):
-        def assertRaisesMessage(self, expected_exception, expected_message,
-                                callable_obj=None, *args, **kwargs):
-            return self.assertRaisesRegexp(expected_exception,
-                    re.escape(expected_message), callable_obj, *args, **kwargs)
-            
-        def assertQuerysetEqual(self, qs, values, transform=repr, ordered=True):
-            if not ordered:
-                return self.assertEqual(set(map(transform, qs)), set(values))
-            return self.assertEqual(map(transform, qs), values)
-
-
 class FieldDefinitionTestMixin(object):
     field_definition_init_kwargs = {}
     field_values = ()

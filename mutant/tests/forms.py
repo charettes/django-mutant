@@ -6,10 +6,9 @@ from django.test.testcases import TestCase
 from mutant.models.field import FieldDefinition
 
 from ..forms import FieldDefinitionTypeField
-from ..test.testcases import VersionCompatMixinTestCase
 
 
-class FieldDefinitionTypeFieldTest(VersionCompatMixinTestCase, TestCase):
+class FieldDefinitionTypeFieldTest(TestCase):
     def test_invalid_fd(self):
         with self.assertRaisesMessage(TypeError,
                                       'is not a subclass of FieldDefinitionBase'):

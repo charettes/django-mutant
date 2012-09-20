@@ -5,8 +5,7 @@ from django.test.testcases import _deferredSkip
 
 from mutant.db.models import MutableModel
 from mutant.models.model import ModelDefinition
-from mutant.test.testcases import (ModelDefinitionDDLTestCase,
-    VersionCompatMixinTestCase)
+from mutant.test.testcases import ModelDefinitionDDLTestCase
 
 
 def table_columns_iterator(db, table_name):
@@ -34,8 +33,7 @@ def db_is_nonrel(db):
         return isinstance(connections[db], NonrelDatabaseWrapper)
 
 
-class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase,
-                                  VersionCompatMixinTestCase):
+class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(app_label='app',
                                                         object_name='Model')
