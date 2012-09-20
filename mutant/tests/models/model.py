@@ -246,8 +246,6 @@ class ModelClassProxyTest(BaseModelDefinitionTestCase):
         with self.assertRaises(ValidationError):
             instance.delete()
 
-        self.setUp() # Recreate the model definition to delete it in tearDown
-
 
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     def setUp(self):

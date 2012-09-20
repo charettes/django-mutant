@@ -5,45 +5,44 @@ import re
 import django
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections
-from django.db.utils import IntegrityError
+from django.db.utils import DEFAULT_DB_ALIAS, IntegrityError
 from django.test.testcases import TestCase
 from south.db import dbs as south_dbs
 
 from ..models.model import ModelDefinition
 
 
-def connections_have_ddl_transactions():
-    """
-    Returns True if all connections have ddl transactions
-    """
-    return all(south_dbs[name].has_ddl_transactions for name in connections)
-
-
 class DDLTestCase(TestCase):
     """
-    A class that behaves like TestCase if all connections support ddl
-    transactions or like TransactionTestCase if it's not the case.
+    A class that behaves like `TestCase` if all connections support DDL
+    transactions or like `TransactionTestCase` if it's not the case.
     """
+    def connections_have_ddl_transactions(self):
+        """
+        Returns True if all implied connections have DDL transactions support.
+        """
+        db_names = connections if getattr(self, 'multi_db', False) else [DEFAULT_DB_ALIAS]
+        return all(south_dbs[name].has_ddl_transactions for name in db_names)
+
     def _fixture_setup(self):
-        if not connections_have_ddl_transactions():
-            return super(TestCase, self)._fixture_setup()
-        else:
+        if self.connections_have_ddl_transactions():
             return super(DDLTestCase, self)._fixture_setup()
+        else:
+            return super(TestCase, self)._fixture_setup()
 
     def _fixture_teardown(self):
-        if not connections_have_ddl_transactions():
-            return super(TestCase, self)._fixture_teardown()
-        else:
+        if self.connections_have_ddl_transactions():
             return super(DDLTestCase, self)._fixture_teardown()
+        else:
+            return super(TestCase, self)._fixture_teardown()
 
 
 class ModelDefinitionDDLTestCase(DDLTestCase):
     def tearDown(self):
-        if not connections_have_ddl_transactions():
-            # We must delete the ModelDefinition tables by ourself since
-            # they won't be removed by a rollback.
-            for md in ModelDefinition.objects.all():
-                md.delete()
+        if not self.connections_have_ddl_transactions():
+            # Remove all the extra tables since `TransactionTestCase` only
+            # truncate data on teardown.
+            ModelDefinition.objects.all().delete()
         ContentType.objects.clear_cache()
 
 
