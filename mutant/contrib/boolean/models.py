@@ -16,6 +16,7 @@ class BooleanFieldDefinition(FieldDefinition):
         proxy = True
         defined_field_class = fields.BooleanField
 
+
 class NullBooleanFieldDefinition(FieldDefinition):
     class Meta(_BooleanMeta):
         app_label = 'mutant'

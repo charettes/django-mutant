@@ -41,16 +41,25 @@ class IPAddressFieldDefinition(CharFieldDefinition):
         defined_field_class = fields.IPAddressField
 
 
-PROTOCOL_CHOICES = (('both', _('both')),
-                    ('IPv4', _('IPv4')),
-                    ('IPv6', _('IPv6')))
 protocol_help_text = _('Limits valid inputs to the specified protocol.')
 unpack_ipv4_help_text = _('Unpacks IPv4 mapped addresses like '
                           '``::ffff::192.0.2.1`` to ``192.0.2.1``')
 
 class GenericIPAddressFieldDefinition(CharFieldDefinition):
-    protocol = fields.CharField(_('protocol'), max_length=4,
-                                choices=PROTOCOL_CHOICES, default='both')
+    PROTOCOL_BOTH = 'both'
+    PROTOCOL_IPV4 = 'IPv4'
+    PROTOCOL_IPV6 = 'IPv6'
+
+    PROTOCOL_CHOICES = (
+        (PROTOCOL_BOTH, _('both')),
+        (PROTOCOL_IPV4, _('IPv4')),
+        (PROTOCOL_IPV6, _('IPv6'))
+    )
+
+    protocol = fields.CharField(
+        _('protocol'), max_length=4,
+        choices=PROTOCOL_CHOICES, default=PROTOCOL_BOTH
+    )
     unpack_ipv4 = fields.BooleanField(_('unpack ipv4'), default=False)
 
     objects = FieldDefinitionManager()

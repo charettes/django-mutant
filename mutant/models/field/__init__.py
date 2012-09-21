@@ -185,10 +185,12 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         verbose_name = _('field')
         verbose_name_plural = _('fields')
         unique_together = (('model_def', 'name'),)
-        defined_field_options = ('name', 'verbose_name', 'help_text',
-                                 'null', 'blank', 'db_column', 'db_index',
-                                 'editable', 'default', 'primary_key', 'unique',
-                                 'unique_for_date', 'unique_for_month', 'unique_for_year')
+        defined_field_options = (
+            'name', 'verbose_name', 'help_text',
+            'null', 'blank', 'db_column', 'db_index',
+            'editable', 'default', 'primary_key', 'unique',
+            'unique_for_date', 'unique_for_month', 'unique_for_year'
+        )
 
     def natural_key(self):
         return self.model_def.natural_key() + (self.name,)
@@ -326,8 +328,10 @@ class FieldDefinitionChoice(OrderableModel):
         app_label = 'mutant'
         verbose_name = _('field definition choice')
         verbose_name_plural = _('field definition choices')
-        unique_together = (('field_def', 'order'),
-                           ('field_def', 'group', 'value'))
+        unique_together = (
+            ('field_def', 'order'),
+            ('field_def', 'group', 'value')
+        )
 
     def clean(self):
         try:

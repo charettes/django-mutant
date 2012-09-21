@@ -6,11 +6,12 @@ from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
-from .managers import ForeignKeyDefinitionManager
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
 from ...management import perform_ddl
 from ...models import FieldDefinition, FieldDefinitionManager, ModelDefinition
+
+from .managers import ForeignKeyDefinitionManager
 
 
 related_name_help_text = _('The name to use for the relation from the '
@@ -76,16 +77,13 @@ class RelatedFieldDefinition(FieldDefinition):
 
     def get_field_options(self, **overrides):
         options = super(RelatedFieldDefinition, self).get_field_options(**overrides)
-
         if self.is_recursive_relationship:
             options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
         else:
             opts = self.to_model_class._meta
             options['to'] = "%s.%s" % (opts.app_label, opts.object_name)
-
         if not self.to_model_class_is_mutable:
             options['related_name'] = '+'
-
         return options
 
     def _south_ready_field_instance(self):
@@ -99,30 +97,35 @@ class RelatedFieldDefinition(FieldDefinition):
         return cls(**options)
 
 
-ON_DELETE_CHOICES = (('CASCADE', _('CASCADE')),
-                     ('PROTECT', _('PROTECT')),
-                     ('SET_NULL', _('SET_NULL')),
-                     ('SET_DEFAULT', _('SET_DEFAULT')),
-                     ('SET_VALUE', _('SET(VALUE)')),
-                     ('DO_NOTHING', _('DO_NOTHING')))
-
 to_field_help_text = _('The field on the related object that the '
                        'relation is to.')
-
 on_delete_help_text = _('Behavior when an object referenced by this field '
                         'is deleted')
 
 class ForeignKeyDefinition(RelatedFieldDefinition):
+    ON_DELETE_CASCADE = 'CASCADE'
+    ON_DELETE_PROTECT = 'PROTECT'
+    ON_DELETE_SET_NULL = 'SET_NULL'
+    ON_DELETE_SET_DEFAULT = 'SET_DEFAULT'
+    ON_DELETE_SET_VALUE = 'SET_VALUE'
+    ON_DELETE_DO_NOTHING = 'DO_NOTHING'
+
+    ON_DELETE_CHOICES = (
+        (ON_DELETE_CASCADE, _('CASCADE')),
+        (ON_DELETE_PROTECT, _('PROTECT')),
+        (ON_DELETE_SET_NULL, _('SET_NULL')),
+        (ON_DELETE_SET_DEFAULT, _('SET_DEFAULT')),
+        (ON_DELETE_SET_VALUE, _('SET(VALUE)')),
+        (ON_DELETE_DO_NOTHING, _('DO_NOTHING')),
+    )
 
     to_field = PythonIdentifierField(_('to field'), blank=True, null=True,
                                      help_text=to_field_help_text)
-
     one_to_one = fields.BooleanField(editable=False, default=False)
-
     on_delete = fields.CharField(_('on delete'), blank=True, null=True,
-                                 choices=ON_DELETE_CHOICES, default='CASCADE',
-                                 max_length=11, help_text=on_delete_help_text)
-
+                                 max_length=11, choices=ON_DELETE_CHOICES,
+                                 default=ON_DELETE_CASCADE,
+                                 help_text=on_delete_help_text)
     on_delete_set_value = PickledObjectField(_('on delete set value'), null=True)
 
     objects = ForeignKeyDefinitionManager(one_to_one=False)
@@ -139,22 +142,20 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
             messages = e.message_dict
         else:
             messages = {}
-
-        if self.on_delete == 'SET_NULL':
+        if self.on_delete == self.ON_DELETE_SET_NULL:
             if not self.null:
                 msg = _("This field can't be null")
                 messages['on_delete'] = [msg]
-        elif (self.on_delete == 'SET_DEFAULT' and
+        elif (self.on_delete == self.ON_DELETE_SET_DEFAULT and
               self.default == fields.NOT_PROVIDED):
             msg = _('This field has no default value')
             messages['on_delete'] = [msg]
-
         if messages:
             raise ValidationError(messages)
 
     def get_field_options(self, **overrides):
         options = super(ForeignKeyDefinition, self).get_field_options(**overrides)
-        if self.on_delete == 'SET_VALUE':
+        if self.on_delete == self.ON_DELETE_SET_VALUE:
             on_delete = deletion.SET(self.on_delete_set_value)
         else:
             on_delete = getattr(deletion, self.on_delete, None)
@@ -163,7 +164,6 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
 
 
 class OneToOneFieldDefinition(ForeignKeyDefinition):
-
     objects = ForeignKeyDefinitionManager(one_to_one=True)
 
     class Meta:
@@ -182,9 +182,7 @@ db_table_help_text = _('The name of the table to create for storing the '
                        'many-to-many data')
 
 class ManyToManyFieldDefinition(RelatedFieldDefinition):
-
     symmetrical = fields.NullBooleanField(_('symmetrical'))
-
     through = fields.related.ForeignKey(ContentType, blank=True, null=True,
                                         related_name="%(app_label)s_%(class)s_through",
                                         help_text=through_help_text)

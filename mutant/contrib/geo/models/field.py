@@ -6,11 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 from ....models import FieldDefinition, FieldDefinitionManager
 
 
-DIM_CHOICES = (
-    (2, _('Two-dimensional')),
-    (3, _('Three-dimensional')),
-)
-
 srid_help_text = _('Spatial Reference System Identity')
 spatial_index_help_text = _('Creates a spatial index for the given '
                             'geometry field.')
@@ -19,6 +14,13 @@ geography_help_text = _('Creates a database column of type geography, '
                         'rather than geometry.')
 
 class GeometryFieldDefinition(FieldDefinition):
+    DIM_2D = 2
+    DIM_3D = 3
+    DIM_CHOICES = (
+        (DIM_2D, _('Two-dimensional')),
+        (DIM_3D, _('Three-dimensional')),
+    )
+
     srid = models.IntegerField(_('SRID'), default=4326,
                                help_text=srid_help_text)
     spatial_index = models.BooleanField(_('spatial index'), default=True,
