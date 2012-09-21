@@ -1,10 +1,7 @@
 from __future__ import unicode_literals
 
-import re
-
-import django
 from django.contrib.contenttypes.models import ContentType
-from django.db import connections
+from django.db import connections, router, transaction
 from django.db.utils import DEFAULT_DB_ALIAS, IntegrityError
 from django.test.testcases import TestCase
 from south.db import dbs as south_dbs
@@ -17,6 +14,8 @@ class DDLTestCase(TestCase):
     A class that behaves like `TestCase` if all connections support DDL
     transactions or like `TransactionTestCase` if it's not the case.
     """
+    manual_transaction = False
+
     def connections_have_ddl_transactions(self):
         """
         Returns True if all implied connections have DDL transactions support.
@@ -25,13 +24,15 @@ class DDLTestCase(TestCase):
         return all(south_dbs[name].has_ddl_transactions for name in db_names)
 
     def _fixture_setup(self):
-        if self.connections_have_ddl_transactions():
+        if (not self.manual_transaction and
+            self.connections_have_ddl_transactions()):
             return super(DDLTestCase, self)._fixture_setup()
         else:
             return super(TestCase, self)._fixture_setup()
 
     def _fixture_teardown(self):
-        if self.connections_have_ddl_transactions():
+        if (not self.manual_transaction and
+            self.connections_have_ddl_transactions()):
             return super(DDLTestCase, self)._fixture_teardown()
         else:
             return super(TestCase, self)._fixture_teardown()
@@ -39,7 +40,8 @@ class DDLTestCase(TestCase):
 
 class ModelDefinitionDDLTestCase(DDLTestCase):
     def tearDown(self):
-        if not self.connections_have_ddl_transactions():
+        if (self.manual_transaction or
+            not self.connections_have_ddl_transactions()):
             # Remove all the extra tables since `TransactionTestCase` only
             # truncate data on teardown.
             ModelDefinition.objects.all().delete()
@@ -124,10 +126,17 @@ class FieldDefinitionTestMixin(object):
         Model = self.model_def.model_class()
         self.field.unique = True
         self.field.save()
-        # One shouldn't be able to save duplicate entries in a unique field
         Model.objects.create(field=value)
-        with self.assertRaises(IntegrityError):
+        write_db = router.db_for_write(Model)
+        sid = transaction.savepoint(using=write_db)
+        try:
             Model.objects.create(field=value)
+        except IntegrityError:
+            pass
+        else:
+            self.fail("One shouldn't be able to save duplicate entries in a unique field")
+        finally:
+            transaction.savepoint_rollback(sid, using=write_db)
 
     def test_field_cloning(self):
         clone = self.field.clone()

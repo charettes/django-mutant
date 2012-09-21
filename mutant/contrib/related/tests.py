@@ -28,6 +28,7 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
 
 class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
+    manual_transaction = True
     field_definition_cls = ForeignKeyDefinition
 
     def setUp(self):
@@ -40,14 +41,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
     def prepare_default_value(self, value):
         return value.pk
 
-    def test_field_renaming(self):
-        pass # This test must use transactions
-
-    def test_field_deletion(self):
-        pass # This test must use transactions
-
     def test_simple_foreign_key_between_mutable_models(self):
-        return # This test must use transactions
         first_model_def = self.model_def
         second_model_def = ModelDefinition.objects.create(app_label='app',
                                                           object_name='SecondModel')
