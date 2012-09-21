@@ -29,8 +29,15 @@ def perform_ddl(model, action, *args, **kwargs):
                             "since we can't assume it's safe to execute it now. "
                             "Statements was: %s", statement)
             db.clear_deferred_sql()
-        getattr(db, action)(*args, **kwargs)
-        db.execute_deferred_sql()
+        db.start_transaction()
+        try:
+            getattr(db, action)(*args, **kwargs)
+            db.execute_deferred_sql()
+        except Exception:
+            db.rollback_transaction()
+            raise
+        else:
+            db.commit_transaction()
 
 
 def post_save_nonraw_instance(receiver):
@@ -138,7 +145,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
         instance.base._meta.abstract):
         model_class = instance.model_def.model_class()
         instance._state._deletion = (
-            allow_syncdbs(model_class),
+            model_class,
             model_class._meta.db_table,
         )
 
@@ -150,10 +157,9 @@ def base_definition_post_delete(sender, instance, **kwargs):
     Make sure to delete fields inherited from an abstract model base.
     """
     if hasattr(instance._state, '_deletion'):
-        syncdbs, table_name = instance._state._deletion
+        model, table_name = instance._state._deletion
         for field in instance.base._meta.fields:
-            for db in syncdbs:
-                db.delete_column(table_name, field.name)
+            perform_ddl(model, 'delete_column', table_name, field.name)
         del instance._state._deletion
 
 
@@ -227,22 +233,20 @@ def field_definition_pre_delete(sender, instance, **kwargs):
     opts = model_class._meta
     field = opts.get_field(instance.name)
     instance._state._deletion = (
-        allow_syncdbs(model_class),
+        model_class,
         opts.db_table,
-        field
+        field,
     )
 
 
 @receiver(post_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
-    syncdbs, table_name, field = instance._state._deletion
+    model, table_name, field = instance._state._deletion
     column = field.get_attname_column()[1]
     if field.primary_key:
         primary_key = models.AutoField(name='id', primary_key=True)
-        for db in syncdbs:
-            db.alter_column(table_name, column, primary_key)
+        perform_ddl(model, 'alter_column', table_name, column, primary_key)
     else:
-        for db in syncdbs:
-            db.delete_column(table_name, column)
+        perform_ddl(model, 'delete_column', table_name, column)
     del instance._state._deletion
