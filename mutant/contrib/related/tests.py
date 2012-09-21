@@ -154,6 +154,7 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
             to=self.model_def.model_ct,
             on_delete=ForeignKeyDefinition.ON_DELETE_SET_VALUE
         )
+        self.assertRaises(ValidationError, fk.clean)
         fk.on_delete_set_value = default
         fk.save()
         obj1 = Model.objects.create()

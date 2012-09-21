@@ -150,6 +150,10 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
               self.default == fields.NOT_PROVIDED):
             msg = _('This field has no default value')
             messages['on_delete'] = [msg]
+        elif (self.on_delete == self.ON_DELETE_SET_VALUE and
+              self.on_delete_set_value is None):
+            msg = _('You must specify a value to set on deletion')
+            messages['on_delete'] = [msg]
         if messages:
             raise ValidationError(messages)
 
