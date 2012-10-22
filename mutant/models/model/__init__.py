@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from inspect import isclass
+from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
@@ -274,14 +275,29 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         return self.base
 
     def get_declared_fields(self):
+        fields = []
         if issubclass(self.base, models.Model):
-            if self.base._meta.abstract:
-                return self.base._meta.fields
-            elif not self.base._meta.proxy:
-                attr_name = '%s_ptr' % self.base._meta.module_name
-                return (models.OneToOneField(self.base, name=attr_name, null=True,
-                                             auto_created=True, parent_link=True),)
-        return ()
+            opts = self.base._meta
+            if opts.abstract:
+                # Add fields inherited from base's abstract parent and
+                # local fields.
+                base_fields = chain(
+                    opts.get_fields_with_model(),
+                    opts.get_m2m_with_model()
+                )
+                for field, model in base_fields:
+                    if model is None or model._meta.abstract:
+                        fields.append(field)
+            elif not opts.proxy:
+                # This is a concrete model base, we must declare a o2o
+                attr_name = '%s_ptr' % opts.module_name
+                fields.append(
+                    models.OneToOneField(
+                        self.base, name=attr_name, null=True,
+                        auto_created=True, parent_link=True
+                    )
+                )
+        return tuple(fields)
 
     def clean(self):
         try:

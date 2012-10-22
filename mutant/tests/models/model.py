@@ -42,23 +42,37 @@ class Mixin(object):
         return 'Mixin'
 
 
-class ModelProxy(CharFieldDefinition):
+class ConcreteModel(models.Model):
+    concrete_model_field = models.NullBooleanField()
+
+    class Meta:
+        app_label = 'mutant'
+
+
+class ProxyModel(ConcreteModel):
     class Meta:
         proxy = True
 
 
-class AbstractModelSubclass(models.Model):
-    field = models.CharField(max_length=5)
+class AbstractModel(models.Model):
+    abstract_model_field = models.CharField(max_length=5)
 
     class Meta:
         abstract = True
 
     def method(self):
-        return 'AbstractModelSubclass'
+        return 'AbstractModel'
+
+
+class AbstractConcreteModelSubclass(ConcreteModel):
+    abstract_concrete_model_subclass_field = models.CharField(max_length=5)
+
+    class Meta:
+        abstract = True
 
 
 class ModelSubclassWithTextField(models.Model):
-    field = models.TextField()
+    abstract_model_field = models.TextField()
     second_field = models.NullBooleanField()
 
     class Meta:
@@ -153,16 +167,17 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
 
     def test_bases_creation(self):
         mixin_base = BaseDefinition(base=Mixin)
-        concrete_base = BaseDefinition(base=AbstractModelSubclass)
-        model_def = ModelDefinition.objects.create(bases=(mixin_base,
-                                                          concrete_base),
-                                                   app_label='app',
-                                                   object_name='OtherModel')
-        model_cls = model_def.model_class()
-        db = router.db_for_write(model_cls)
-        table = model_cls._meta.db_table
-        column = model_cls._meta.get_field('field').get_attname_column()[1]
-        self.assertColumnExists(db, table, column)
+        abstract_base = BaseDefinition(base=AbstractModel)
+        abstract_concrete_base = BaseDefinition(base=AbstractConcreteModelSubclass)
+        model_def = ModelDefinition.objects.create(
+            bases=(mixin_base, abstract_base, abstract_concrete_base),
+            app_label='app',
+            object_name='OtherModel'
+        )
+        model = model_def.model_class()
+        self.assertModelTablesColumnExists(model, 'abstract_model_field')
+        self.assertModelTablesColumnDoesntExists(model, 'concrete_model_field')
+        self.assertModelTablesColumnExists(model, 'abstract_concrete_model_subclass_field')
 
     def test_primary_key_override(self):
         field = CharFieldDefinition(name='name', max_length=32, primary_key=True)
@@ -460,13 +475,13 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         except ValidationError:
             self.fail('Mixin objets are valid bases.')
         # Abstract model subclasses are valid bases
-        bd.base = AbstractModelSubclass
+        bd.base = AbstractModel
         try:
             bd.clean()
         except ValidationError:
             self.fail('Abstract Model are valid bases')
         # Proxy model are not valid bases
-        bd.base = ModelProxy
+        bd.base = ProxyModel
         self.assertRaisesMessage(ValidationError,
                                  _("Base can't be a proxy model."), bd.clean)
 
@@ -495,19 +510,19 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
                                       base=Mixin)
         self.assertTrue(issubclass(Model, Mixin))
         BaseDefinition.objects.create(model_def=self.model_def,
-                                      base=AbstractModelSubclass)
+                                      base=AbstractModel)
         self.assertTrue(issubclass(Model, Mixin) and
-                        issubclass(Model, AbstractModelSubclass))
+                        issubclass(Model, AbstractModel))
 
     def test_base_ordering(self):
         Model = self.model_def.model_class()
         BaseDefinition.objects.create(model_def=self.model_def,
                                       base=Mixin, order=2)
         model_subclass_def = BaseDefinition.objects.create(model_def=self.model_def,
-                                                           base=AbstractModelSubclass,
+                                                           base=AbstractModel,
                                                            order=1)
         instance = Model()
-        self.assertEqual('AbstractModelSubclass', instance.method())
+        self.assertEqual('AbstractModel', instance.method())
         model_subclass_def.order = 3
         model_subclass_def.save()
         instance = Model()
@@ -515,17 +530,17 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_abstract_field_inherited(self):
         bd = BaseDefinition.objects.create(model_def=self.model_def,
-                                           base=AbstractModelSubclass)
+                                           base=AbstractModel)
         Model = self.model_def.model_class()
-        Model.objects.create(field='value')
+        Model.objects.create(abstract_model_field='value')
         # Test column alteration and addition by replacing the base with
         # a new one with a field with the same name and a second field.
         bd.base = ModelSubclassWithTextField
         bd.save()
-        Model.objects.get(field='value')
+        Model.objects.get(abstract_model_field='value')
         # The original CharField should be replaced by a TextField with no
         # max_length and a second field should be added
-        Model.objects.create(field='another one bites the dust',
+        Model.objects.create(abstract_model_field='another one bites the dust',
                              second_field=True)
         # Test column deletion by deleting the base
         # This should cause the model to loose all it's fields and the table
