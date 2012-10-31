@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from functools import wraps
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import connections, models, router
+from django.db import models, router
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import (m2m_changed, post_delete, post_save,
     pre_delete)
@@ -16,9 +16,9 @@ from mutant.models import (ModelDefinition, BaseDefinition, FieldDefinition,
 
 
 def allow_syncdbs(model):
-    for db in connections:
-        if router.allow_syncdb(db, model):
-            yield dbs[db]
+    for alias, db in dbs.iteritems():
+        if router.allow_syncdb(alias, model):
+            yield db
 
 
 def perform_ddl(model, action, *args, **kwargs):
