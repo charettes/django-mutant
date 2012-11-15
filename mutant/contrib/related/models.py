@@ -70,7 +70,7 @@ class RelatedFieldDefinition(FieldDefinition):
             return self.to.model_class()
 
     def clean(self):
-        if (self.related_name is not None and
+        if (None not in (self.related_name, self.to_id) and
             not self.to_model_class_is_mutable):
             msg = _('Cannot assign a related manager to non-mutable model')
             raise ValidationError({'related_name': [msg]})

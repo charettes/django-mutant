@@ -25,6 +25,14 @@ class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
         }
         super(RelatedFieldDefinitionTestMixin, self).setUp()
 
+    def test_field_clean(self):
+        # Refs charettes/django-mutant#5
+        try:
+            self.field_definition_cls(related_name='related').clean()
+        except Exception as e:
+            if not isinstance(e, ValidationError):
+                self.fail('`clean` method should only raise `ValidationError`')
+
 
 class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
