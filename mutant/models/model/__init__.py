@@ -192,10 +192,10 @@ class ModelDefinition(ContentType):
         existing_model_class = super(ModelDefinition, self).model_class()
         if force_create:
             model_class = self._create_model_class(existing_model_class)
+        elif existing_model_class is None:
+            model_class = self._create_model_class()
         else:
             model_class = existing_model_class
-            if model_class is None:
-                model_class = self._create_model_class()
         return _ModelClassProxy(model_class)
 
     @property
