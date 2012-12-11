@@ -85,31 +85,45 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model, self.model_def.model_class())
         self.assertNotEqual(Model, self.model_def.model_class(force_create=True))
 
+    def get_model_db_table(self):
+        return self.model_def.model_class()._meta.db_table
+
     def test_rename_model(self):
         """
         Make sure changing the app_label or object_name renames the associated
         table
         """
-        def get_table_name():
-            return self.model_def.model_class()._meta.db_table
-
         db = router.db_for_read(self.model_def.model_class())
-
-        table_name = get_table_name()
+        table_name = self.get_model_db_table()
         self.model_def.app_label = 'myapp'
         self.model_def.save()
         self.assertTableDoesntExists(db, table_name)
-        table_name = get_table_name()
+        table_name = self.get_model_db_table()
         self.assertTableExists(db, table_name)
 
         self.model_def.object_name = 'MyModel'
         self.model_def.save()
         self.assertTableDoesntExists(db, table_name)
-        table_name = get_table_name()
+        table_name = self.get_model_db_table()
         self.assertTableExists(db, table_name)
 
         self.model_def.delete()
         self.assertTableDoesntExists(db, table_name)
+
+    def test_db_table(self):
+        """
+        Asserts that the db_table field is correctly handled
+        """
+        db = router.db_for_read(self.model_def.model_class())
+        generated_table_name = self.get_model_db_table()
+        self.model_def.db_table = 'test_db_table'
+        self.model_def.save()
+        self.assertTableDoesntExists(db, generated_table_name)
+        self.assertTableExists(db, 'test_db_table')
+        self.model_def.db_table = None
+        self.model_def.save()
+        self.assertTableDoesntExists(db, 'test_db_table')
+        self.assertTableExists(db, generated_table_name)
 
     def test_fixture_loading(self):
         call_command('loaddata', 'fixture_loading_test', verbosity=0, commit=False)

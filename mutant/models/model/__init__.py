@@ -110,6 +110,8 @@ class _ModelClassProxy(object):
 
 class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
+    db_table = models.CharField(_('database table'), max_length=63,
+                                blank=True, null=True)
     verbose_name = LazilyTranslatedField(_('verbose name'),
                                          blank=True, null=True)
     verbose_name_plural = LazilyTranslatedField(_('verbose name plural'),
@@ -138,10 +140,12 @@ class ModelDefinition(ContentType):
         return tuple(bd.get_model_class() for bd in self.basedefinitions.all())
 
     def get_model_opts(self):
-        attrs = {
-            'app_label': self.app_label,
-            'db_table': get_db_table(*self.natural_key()),
-        }
+        attrs = {'app_label': self.app_label}
+        # Database table
+        db_table = self.db_table
+        if db_table is None:
+            db_table = get_db_table(*self.natural_key())
+        attrs['db_table'] = db_table
         # Verbose names
         if self.verbose_name is not None:
             attrs['verbose_name'] = self.verbose_name
