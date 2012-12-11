@@ -166,7 +166,12 @@ def base_definition_post_delete(sender, instance, **kwargs):
 @receiver(m2m_changed, sender=UniqueTogetherDefinition.field_defs.through,
           dispatch_uid='mutant.management.unique_together_field_defs_changed')
 def unique_together_field_defs_changed(instance, action, model, **kwargs):
-    columns = list(instance.field_defs.names())
+    # Here we can't use kwargs['pk_set'] since we need a reference to columns
+    # *before* they're actually saved for unique deletion.
+    columns = tuple(
+        field_def._south_ready_field_instance().get_attname_column()[1]
+        for field_def in instance.field_defs.select_subclasses()
+    )
     # If there's no columns and action is post_clear there's nothing to do
     if columns and action != 'post_clear':
         model_class = instance.model_def.model_class()

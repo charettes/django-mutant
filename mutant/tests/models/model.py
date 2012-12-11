@@ -397,10 +397,22 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
                                                          object_name='OtherModel')
         f2 = CharFieldDefinition.objects.create(model_def=other_model_def,
                                                 name='f2', max_length=25)
-        self.ut.field_defs.add(self.f1, f2)
+        self.ut.field_defs = (self.f1, f2)
         with self.assertRaises(ValidationError):
             self.ut.clean()
         other_model_def.delete()
+
+    def test_db_column(self):
+        """
+        Make sure a unique index creation works correctly when using a custom
+        `db_column`. This is needed for unique FK's columns.
+        """
+        self.f2.db_column = 'f2_column'
+        self.f2.save()
+        self.ut.field_defs = (self.f1, self.f2)
+        self.f2.db_column = 'f2'
+        self.f2.save()
+        self.ut.delete()
 
     def test_cannot_create_unique(self):
         """
@@ -411,14 +423,14 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.Model.objects.create(f1='a', f2='b')
         with captured_stderr():
             with self.assertRaises(IntegrityError):
-                self.ut.field_defs.add(self.f1, self.f2)
+                self.ut.field_defs = (self.f1, self.f2)
 
     def test_cannot_insert_duplicate_row(self):
         """
         Inserting a duplicate rows shouldn't work
         """
         self.Model.objects.create(f1='a', f2='b')
-        self.ut.field_defs.add(self.f1, self.f2)
+        self.ut.field_defs = (self.f1, self.f2)
         with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.Model.objects.create(f1='a', f2='b')
@@ -428,7 +440,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         Removing a unique constraint that cause 
         duplicate rows shouldn't work
         """
-        self.ut.field_defs.add(self.f1, self.f2)
+        self.ut.field_defs = (self.f1, self.f2)
         self.Model.objects.create(f1='a', f2='b')
         self.Model.objects.create(f1='a', f2='c')
         with captured_stderr():
@@ -441,7 +453,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         validation
         """
         self.Model.objects.create(f1='a', f2='b')
-        self.ut.field_defs.add(self.f1, self.f2)
+        self.ut.field_defs = self.f1, self.f2
         self.ut.field_defs.clear()
         self.Model.objects.create(f1='a', f2='b')
 
