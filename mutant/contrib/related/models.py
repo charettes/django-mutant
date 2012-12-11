@@ -8,7 +8,6 @@ from picklefield.fields import PickledObjectField
 
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
-from ...management import perform_ddl
 from ...models import FieldDefinition, FieldDefinitionManager, ModelDefinition
 
 from .managers import ForeignKeyDefinitionManager
@@ -188,7 +187,7 @@ db_table_help_text = _('The name of the table to create for storing the '
 class ManyToManyFieldDefinition(RelatedFieldDefinition):
     symmetrical = fields.NullBooleanField(_('symmetrical'))
     through = fields.related.ForeignKey(ContentType, blank=True, null=True,
-                                        related_name="%(app_label)s_%(class)s_through",
+                                        related_name='+',
                                         help_text=through_help_text)
     # TODO: This should not be a SlugField
     db_table = fields.SlugField(max_length=30, blank=True, null=True,
@@ -197,7 +196,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
     class Meta:
         app_label = 'mutant'
         defined_field_class = fields.related.ManyToManyField
-        defined_field_options = ('symmetrical', 'through', 'db_table')
+        defined_field_options = ('symmetrical', 'db_table')
 
     def clean(self):
         try:
@@ -256,22 +255,14 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         if messages:
             raise ValidationError(messages)
 
-    def save(self, *args, **kwargs):
-        # TODO: This should be moved to signals
-        create = not self.pk
+    def get_field_options(self, **overrides):
+        options = super(ManyToManyFieldDefinition, self).get_field_options(**overrides)
+        if self.through:
+            options['through'] = self.through.model_class()
+        return options
 
-        save = super(ManyToManyFieldDefinition, self).save(*args, **kwargs)
-        model = self.model_def.model_class()
-        field = model._meta.get_field(str(self.name))
-        intermediary_model = field.rel.through
-
-        if create:
-            if self.through is None:
-                opts = intermediary_model._meta
-                fields = tuple((field.name, field) for field in opts.fields)
-                perform_ddl(model, 'create_table', opts.db_table, fields)
-        else:
-            #TODO: look for db_table rename
-            pass
-
-        return save
+    def get_bound_field(self):
+        opts = self.model_def.model_class(force_create=True)._meta
+        for field in opts.many_to_many:
+            if getattr(field, self.FIELD_DEFINITION_PK_ATTR, None) == self.pk:
+                return field
