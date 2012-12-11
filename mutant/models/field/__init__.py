@@ -98,8 +98,7 @@ class FieldDefinitionBase(models.base.ModelBase):
 
             from ...management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
-            object_name = definition._meta.object_name.lower()
-            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % object_name
+            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % definition._meta.module_name
             signals.post_save.connect(field_definition_post_save, definition,
                                       dispatch_uid=post_save_dispatch_uid)
 
