@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-
 from functools import wraps
 
 from django.contrib.contenttypes.models import ContentType
@@ -168,10 +167,12 @@ def base_definition_post_delete(sender, instance, **kwargs):
 def unique_together_field_defs_changed(instance, action, model, **kwargs):
     # Here we can't use kwargs['pk_set'] since we need a reference to columns
     # *before* they're actually saved for unique deletion.
-    columns = tuple(
+    # Note that we use a list and not a tuple for columns since SQLite
+    # `delete_unique` chokes if we don't.
+    columns = [
         field_def._south_ready_field_instance().get_attname_column()[1]
         for field_def in instance.field_defs.select_subclasses()
-    )
+    ]
     # If there's no columns and action is post_clear there's nothing to do
     if columns and action != 'post_clear':
         model_class = instance.model_def.model_class()
