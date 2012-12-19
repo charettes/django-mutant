@@ -32,7 +32,7 @@ postgres:
 services: mongodb
 
 install:
-  - pip install argparse --use-mirrors
+  - pip install argparse coverage django-coverage --use-mirrors
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
   - python setup.py install
 
@@ -43,5 +43,4 @@ before_script:
   - if echo $ENGINE | grep -E '(postgresql|postgis)'; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres; fi
 
 script:
-  - python runtests.py --engine=$ENGINE
-
+  - python runtests.py --engine=$ENGINE --coverage

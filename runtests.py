@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
-
 import argparse
 import os
 import sys
@@ -116,7 +115,7 @@ DEFAULT_TEST_LABELS = [
     'polymodels',
 ]
 
-def main(engine, user, verbosity, failfast, test_labels):
+def main(engine, user, verbosity, failfast, test_labels, coverage):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'runtests'
     try:
         engine_settings = ENGINE_SETTINGS[engine]
@@ -132,6 +131,29 @@ def main(engine, user, verbosity, failfast, test_labels):
     options = dict(DEFAULT_SETTINGS, **engine_settings)
     if user:
         options['DATABASES']['default']['USER'] = user
+    if coverage:
+        try:
+            import django_coverage
+        except ImportError:
+            sys.stderr.write('`django-coverage` must be installed in order to '
+                             'generate coverage reports.')
+        else:
+            COVERAGE_MODULE_EXCLUDES = [
+                'tests$',
+                'locale$',
+                'fixtures$',
+                'hacks',
+                '^polymodels',
+                '^south'
+            ]
+            if engine == 'mongodb':
+                COVERAGE_MODULE_EXCLUDES.append('mutant.contrib.related')
+            else:
+                COVERAGE_MODULE_EXCLUDES.append('mutant.contrib.nonrel')
+            options.update(
+                TEST_RUNNER='django_coverage.coverage_runner.CoverageRunner',
+                COVERAGE_MODULE_EXCLUDES=COVERAGE_MODULE_EXCLUDES
+            )
     settings.configure(**options)
     from django.test.utils import get_runner
     TestRunner = get_runner(settings)
@@ -144,10 +166,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--failfast', action='store_true', default=False,
                         dest='failfast')
+    parser.add_argument('--coverage', action='store_true', default=False,
+                        dest='coverage')
     parser.add_argument('--engine', default='sqlite3')
     parser.add_argument('--user')
     parser.add_argument('--verbosity', default=1, type=int)
     parser.add_argument('test_labels', nargs='*')
     args = parser.parse_args()
     main(args.engine, args.user, args.verbosity,
-         args.failfast, args.test_labels)
+         args.failfast, args.test_labels, args.coverage)
