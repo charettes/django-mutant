@@ -1,4 +1,4 @@
-https://github.com/django/django/tarball/master
+https://github.com/django/django/archive/master.tar.gz
 https://bitbucket.org/andrewgodwin/south/get/tip.tar.gz
-https://github.com/gintas/django-picklefield/tarball/master
-https://github.com/charettes/django-polymodels/tarball/master
+https://github.com/gintas/django-picklefield/archive/master.tar.gz
+https://github.com/charettes/django-polymodels/archive/master.tar.gz
