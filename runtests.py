@@ -150,6 +150,8 @@ def main(engine, user, verbosity, failfast, test_labels, coverage):
                 COVERAGE_MODULE_EXCLUDES.append('mutant.contrib.related')
             else:
                 COVERAGE_MODULE_EXCLUDES.append('mutant.contrib.nonrel')
+            if engine != 'postgis':
+                COVERAGE_MODULE_EXCLUDES.append('mutant.contrib.geo')
             options.update(
                 TEST_RUNNER='django_coverage.coverage_runner.CoverageRunner',
                 COVERAGE_MODULE_EXCLUDES=COVERAGE_MODULE_EXCLUDES
