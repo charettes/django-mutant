@@ -9,9 +9,10 @@ from django.db.models.signals import (m2m_changed, post_delete, post_save,
 from django.dispatch.dispatcher import receiver
 from south.db import dbs
 
-from mutant import logger
-from mutant.models import (ModelDefinition, BaseDefinition, FieldDefinition,
+from .. import logger
+from ..models import (ModelDefinition, BaseDefinition, FieldDefinition,
     UniqueTogetherDefinition)
+from ..utils import popattr
 
 
 def allow_syncdbs(model):
@@ -92,11 +93,20 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
             ContentType.objects.clear_cache()
 
 
+@receiver(pre_delete, sender=ModelDefinition,
+          dispatch_uid='mutant.management.model_definition_pre_delete')
+def model_definition_pre_delete(sender, instance, **kwargs):
+    model_class = instance.model_class()
+    instance._state._deletion = (
+        model_class,
+        model_class._meta.db_table
+    )
+
+
 @receiver(post_delete, sender=ModelDefinition,
           dispatch_uid='mutant.management.model_definition_post_delete')
 def model_definition_post_delete(sender, instance, **kwargs):
-    model_class = instance.model_class()
-    table_name = model_class._meta.db_table
+    model_class, table_name = popattr(instance._state, '_deletion')
     perform_ddl(model_class, 'delete_table', table_name)
 
 
@@ -156,10 +166,9 @@ def base_definition_post_delete(sender, instance, **kwargs):
     Make sure to delete fields inherited from an abstract model base.
     """
     if hasattr(instance._state, '_deletion'):
-        model, table_name = instance._state._deletion
+        model, table_name = popattr(instance._state, '_deletion')
         for field in instance.base._meta.fields:
             perform_ddl(model, 'delete_column', table_name, field.name)
-        del instance._state._deletion
 
 
 @receiver(m2m_changed, sender=UniqueTogetherDefinition.field_defs.through,
@@ -248,11 +257,10 @@ def field_definition_pre_delete(sender, instance, **kwargs):
 @receiver(post_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
-    model, table_name, field = instance._state._deletion
+    model, table_name, field = popattr(instance._state, '_deletion')
     column = field.get_attname_column()[1]
     if field.primary_key:
         primary_key = models.AutoField(name='id', primary_key=True)
         perform_ddl(model, 'alter_column', table_name, column, primary_key)
     else:
         perform_ddl(model, 'delete_column', table_name, column)
-    del instance._state._deletion

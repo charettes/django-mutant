@@ -22,7 +22,10 @@ def get_concrete_model(model):
     return getattr(model._meta, 'concrete_model', model._meta.proxy_for_model)
 
 
-def popattr(obj, attr, default):
+NOT_PROVIDED = object()
+
+
+def popattr(obj, attr, default=NOT_PROVIDED):
     """
     Useful for retrieving an object attr and removing it if it's part of it's 
     dict while allowing retrieving from subclass.
@@ -40,7 +43,8 @@ def popattr(obj, attr, default):
     try:
         delattr(obj, attr)
     except AttributeError:
-        pass
+        if default is NOT_PROVIDED:
+            raise
     return val
 
 
