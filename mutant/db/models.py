@@ -33,7 +33,7 @@ class MutableModel(models.Model):
             except definition_cls.DoesNotExist:
                 pass
             else:
-                definition.model_class(force_create=True)
+                definition.model_class().mark_as_obsolete()
 
     def clean(self):
         if self.is_obsolete():

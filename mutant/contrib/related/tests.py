@@ -12,7 +12,7 @@ from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models.utils import BaseModelDefinitionTestCase
 from ...utils import app_cache_restorer
 
-from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
+from .models import ForeignKeyDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
@@ -92,21 +92,22 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                 'loaddata', 'test_fk_to_loading.json',
                 verbosity=0, commit=False
             )
-        from_model_def = ModelDefinition.objects.get_by_natural_key(
-            'app', 'frommodel'
-        )
-        from_model_class = from_model_def.model_class()
-        try:
-            fk_field = from_model_class._meta.get_field('fk')
-        except FieldDoesNotExist:
-            self.fail('The fk field should be created')
         to_model_def = ModelDefinition.objects.get_by_natural_key(
             'app', 'tomodel'
         )
         to_model_class = to_model_def.model_class()
+        # Make sure the origin's model class was created
+        self.assertTrue(hasattr(to_model_class, 'froms'))
+        from_model_class = to_model_class.froms.related.model
+        try:
+            fk_field = from_model_class._meta.get_field('fk')
+        except FieldDoesNotExist:
+            self.fail('The fk field should be created')
+        to_model_class = to_model_def.model_class()
         self.assertEqual(fk_field.rel.to, to_model_class)
         to_instance = to_model_class.objects.create()
         from_instance = from_model_class.objects.create(fk=to_instance)
+        self.assertEqual(to_instance.froms.get(), from_instance)
         to_instance.delete()
         with self.assertRaises(from_model_class.DoesNotExist):
             from_model_class.objects.get(pk=from_instance.pk)

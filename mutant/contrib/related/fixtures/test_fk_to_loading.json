@@ -65,7 +65,7 @@
   "pk": 2,
   "model": "mutant.foreignkeydefinition",
   "fields": {
-    "related_name": null,
+    "related_name": "froms",
     "on_delete": "CASCADE",
     "one_to_one": false, 
     "to_field": null,

@@ -20,6 +20,7 @@ except ImportError:
 from .managers import ModelDefinitionManager
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
+from ...signals import mutable_class_prepared
 from ...utils import get_db_table
 
 
@@ -213,7 +214,9 @@ class ModelDefinition(ContentType):
         attrs = self.get_model_attrs(existing_model_class)
         if existing_model_class:
             existing_model_class.mark_as_obsolete()
-        return type(str(self.object_name), bases, attrs)
+        model_class = type(str(self.object_name), bases, attrs)
+        mutable_class_prepared.send(sender=model_class, definition=self)
+        return model_class
 
     def model_class(self, force_create=False):
         existing_model_class = super(ModelDefinition, self).model_class()
@@ -258,10 +261,11 @@ class ModelDefinition(ContentType):
 
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
+        delete = super(ModelDefinition, self).delete(*args, **kwargs)
         model_class.mark_as_obsolete()
         ContentType.objects.clear_cache()
         del self._model_class
-        return super(ModelDefinition, self).delete(*args, **kwargs)
+        return delete
 
 
 class ModelDefinitionAttribute(models.Model):
