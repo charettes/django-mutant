@@ -11,7 +11,7 @@ from ..models import ManyToManyFieldDefinition
 
 
 @receiver(mutable_class_prepared)
-def mutable_model_prepared(signal, sender, definition):
+def mutable_model_prepared(signal, sender, definition, **kwargs):
     """
     Make sure all related model class are created and marked as dependency
     when a mutable model class is prepared
