@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-
 from inspect import isclass
 from itertools import chain
 
@@ -188,7 +187,7 @@ class ModelDefinition(ContentType):
             # prevent the model from inheriting it's possible base ordering.
             # Kinda related to django #17429
             attrs['ordering'] = ordering
-        return type(b'Meta', (), attrs)
+        return type(str('Meta'), (), attrs)
 
     def get_model_attrs(self, existing_model_class=None):
         attrs = {
