@@ -56,20 +56,41 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         )
         FirstModel = first_model_def.model_class()
         SecondModel = second_model_def.model_class()
-        ForeignKeyDefinition.objects.create(model_def=first_model_def,
-                                            name='second', null=True,
-                                            to=second_model_def.model_ct)
+        ForeignKeyDefinition.objects.create(
+            model_def=first_model_def,
+            name='second',
+            null=True,
+            to=second_model_def
+        )
+        # Make sure dependencies were set correctly
+        self.assertSetEqual(
+            SecondModel._dependencies,
+            set([(ModelDefinition, first_model_def.pk)])
+        )
         second = SecondModel.objects.create()
         first = FirstModel.objects.create(second=second)
-        ForeignKeyDefinition.objects.create(model_def=second_model_def,
-                                            name='first', null=True,
-                                            to=first_model_def.model_ct)
+        ForeignKeyDefinition.objects.create(
+            model_def=second_model_def,
+            name='first',
+            null=True,
+            to=first_model_def
+        )
+        # Make sure dependencies were set correctly
+        self.assertSetEqual(
+            FirstModel._dependencies,
+            set([(ModelDefinition, second_model_def.pk)])
+        )
+        self.assertSetEqual(
+            SecondModel._dependencies,
+            set([(ModelDefinition, first_model_def.pk)])
+        )
         second.first = first
         self.assertRaisesMessage(
             ValidationError, 'Cannot save an obsolete model', second.save
         )
+        self.assertTrue(first.is_obsolete())
         second = SecondModel.objects.get()
-        second.first = first
+        second.first = FirstModel.objects.get()
         second.save()
         second_model_def.delete()
 

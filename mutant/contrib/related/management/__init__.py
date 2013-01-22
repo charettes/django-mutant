@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
 from django.db.models import Q, signals
+from django.db.models.fields.related import RelatedField
 from django.dispatch.dispatcher import receiver
 
+from ....db.models import MutableModel
 from ....management import allow_syncdbs, perform_ddl
 from ....models import ModelDefinition
 from ....signals import mutable_class_prepared
@@ -16,6 +18,14 @@ def mutable_model_prepared(signal, sender, definition, **kwargs):
     Make sure all related model class are created and marked as dependency
     when a mutable model class is prepared
     """
+    # Add sender as a dependency of all mutable models it refers to
+    for field in sender._meta.local_fields:
+        if isinstance(field, RelatedField):
+            to = field.rel.to
+            if not isinstance(to, basestring) and issubclass(to, MutableModel):
+                if to._definition != sender._definition:
+                    to._dependencies.add(sender._definition)
+    # Mark all model referring to this one as dependencies
     related_model_defs = ModelDefinition.objects.filter(
         Q(fielddefinitions__foreignkeydefinition__to=definition) |
         Q(fielddefinitions__manytomanyfielddefinition__to=definition)
