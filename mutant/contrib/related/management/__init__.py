@@ -22,8 +22,8 @@ def mutable_model_prepared(signal, sender, definition, **kwargs):
     ).distinct()
     for model_def in related_model_defs:
         if model_def != definition:
-            sender._dependencies.add((ModelDefinition, model_def.pk))
-            model_def.model_class()
+            # Generate model class from definition and add it as a dependency
+            sender._dependencies.add(model_def.model_class()._definition)
 
 
 #def many_to_many_field_definition_post_save(sender, instance, created, **kwargs):
