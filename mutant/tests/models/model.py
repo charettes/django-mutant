@@ -314,34 +314,39 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         Model.objects.create(f1='Simon', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=model_ct)
         # Instances should be sorted by id
-        self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 ['Simon', 'Alexander'],
-                                 transform=lambda x: x['f1'], ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', flat=True),
+            ('Simon', 'Alexander')
+        )
         # Instances should be sorted by f1 and not id
         f1_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f1')
-        self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 ['Alexander', 'Simon'],
-                                 transform=lambda x: x['f1'], ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', flat=True),
+            ('Alexander', 'Simon')
+        )
         # Swap the ordering to descending
         f1_ordering.descending = True
         f1_ordering.save()
-        self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 ['Simon', 'Alexander'],
-                                 transform=lambda x: x['f1'], ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', flat=True),
+            ('Simon', 'Alexander')
+        )
         f1_ordering.delete()
         # Order by f2__app_label
         f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f2__app_label')
-        self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 ['Alexander', 'Simon'],
-                                 transform=lambda x: x['f1'], ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', flat=True),
+            ('Alexander', 'Simon')
+        )
         # Swap the ordering to descending
         f2_ordering.descending = True
         f2_ordering.save()
-        self.assertQuerysetEqual(Model.objects.values('f1'),
-                                 ['Simon', 'Alexander'],
-                                 transform=lambda x: x['f1'], ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', flat=True),
+            ('Simon', 'Alexander')
+        )
         f2_ordering.delete()
 
     @skipUnlessMutantModelDBFeature('supports_joins')
@@ -358,36 +363,48 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
                                                              lookup='f1')
         f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
                                                              lookup='f2__app_label')
-        self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [('Alexander', 'app'), ('Alexander', 'contenttypes'),
-                                  ('Julia', 'contenttypes'), ('Simon', 'contenttypes')],
-                                 transform=lambda x: (x['f1'], x['f2__app_label']),
-                                 ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', 'f2__app_label'), (
+                ('Alexander', 'app'),
+                ('Alexander', 'contenttypes'),
+                ('Julia', 'contenttypes'),
+                ('Simon', 'contenttypes')
+            )
+        )
         # Swap the ordering to descending
         f2_ordering.descending = True
         f2_ordering.save()
-        self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [('Alexander', 'contenttypes'), ('Alexander', 'app'),
-                                  ('Julia', 'contenttypes'), ('Simon', 'contenttypes')],
-                                 transform=lambda x: (x['f1'], x['f2__app_label']),
-                                 ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', 'f2__app_label'), (
+                ('Alexander', 'contenttypes'),
+                ('Alexander', 'app'),
+                ('Julia', 'contenttypes'),
+                ('Simon', 'contenttypes')
+            )
+        )
         # Swap order
         f1_ordering.order, f2_ordering.order = f2_ordering.order, f1_ordering.order
         f1_ordering.save()
         f2_ordering.save()
-        self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [('Alexander', 'contenttypes'), ('Julia', 'contenttypes'),
-                                  ('Simon', 'contenttypes'), ('Alexander', 'app')],
-                                 transform=lambda x: (x['f1'], x['f2__app_label']),
-                                 ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', 'f2__app_label'), (
+                ('Alexander', 'contenttypes'),
+                ('Julia', 'contenttypes'),
+                ('Simon', 'contenttypes'),
+                ('Alexander', 'app')
+            )
+        )
         # Swap the ordering to descending
         f1_ordering.descending = True
         f1_ordering.save()
-        self.assertQuerysetEqual(Model.objects.values('f1', 'f2__app_label'),
-                                 [('Simon', 'contenttypes'), ('Julia', 'contenttypes'),
-                                  ('Alexander', 'contenttypes'), ('Alexander', 'app')],
-                                 transform=lambda x: (x['f1'], x['f2__app_label']),
-                                 ordered=True)
+        self.assertSequenceEqual(
+            Model.objects.values_list('f1', 'f2__app_label'), (
+                ('Simon', 'contenttypes'),
+                ('Julia', 'contenttypes'),
+                ('Alexander', 'contenttypes'),
+                ('Alexander', 'app')
+            )
+        )
         f1_ordering.delete()
         f2_ordering.delete()
 
