@@ -278,13 +278,15 @@ class ModelDefinitionAttribute(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
+        force_create = kwargs.pop('force_create_model_class', True)
         save = super(ModelDefinitionAttribute, self).save(*args, **kwargs)
-        self.model_def.model_class(force_create=True)
+        self.model_def.model_class(force_create=force_create)
         return save
 
     def delete(self, *args, **kwargs):
+        force_create = kwargs.pop('force_create_model_class', True)
         delete = super(ModelDefinitionAttribute, self).delete(*args, **kwargs)
-        self.model_def.model_class(force_create=True)
+        self.model_def.model_class(force_create=force_create)
         return delete
 
 

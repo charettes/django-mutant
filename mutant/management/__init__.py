@@ -82,9 +82,10 @@ def model_definition_post_save(sender, instance, created, raw, **kwargs):
         else:
             for obj in delayed_save:
                 obj.model_def = instance
-                obj.save(force_insert=True)
+                obj.save(force_insert=True, force_create_model_class=False)
             delattr(instance._state, '_create_delayed_save')
         perform_ddl(model_class, 'create_table', opts.db_table, fields)
+        instance.model_class(force_create=True)
     else:
         old_opts = instance._model_class._meta
         if old_opts.db_table != opts.db_table:
