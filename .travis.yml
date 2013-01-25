@@ -37,8 +37,8 @@ services: mongodb
 
 install:
   - pip install argparse coverage django-coverage --use-mirrors
-  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
   - python setup.py install
+  - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
 
 before_script:
   - if [ -d '/usr/share/postgresql/8.4/' ]; then PG='8.4'; else PG='9.1'; fi
