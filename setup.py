@@ -20,7 +20,7 @@ setup(
         'south>=0.7.6',
         'django-orderable==1.2.1',
         'django-picklefield==0.2.0',
-        'django-polymodels==1.0.1',
+        'django-polymodels==1.1.0',
     ),
     dependency_links=(
         'https://github.com/tkaemming/django-orderable/tarball/master#egg=django-orderable-1.2.1',
