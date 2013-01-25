@@ -33,8 +33,6 @@ postgres:
   database: mutant
   username: postgres
 
-services: mongodb
-
 install:
   - pip install argparse coverage django-coverage --use-mirrors
   - python setup.py install
