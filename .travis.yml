@@ -9,22 +9,22 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.4.X           ENGINE=sqlite3
+  - REQUIREMENTS=1.4.X           ENGINE=sqlite
   - REQUIREMENTS=1.4.X-postgres  ENGINE=postgresql TEMPLATE=template0
   - REQUIREMENTS=1.4.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
-  - REQUIREMENTS=1.5.X           ENGINE=sqlite3
+  - REQUIREMENTS=1.5.X           ENGINE=sqlite
   - REQUIREMENTS=1.5.X-postgres  ENGINE=postgresql TEMPLATE=template0
   - REQUIREMENTS=1.5.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
-  - REQUIREMENTS=master          ENGINE=sqlite3
+  - REQUIREMENTS=master          ENGINE=sqlite
   - REQUIREMENTS=master-postgres ENGINE=postgresql TEMPLATE=template0
   - REQUIREMENTS=master-postgres ENGINE=postgis    TEMPLATE=template_postgis
 
 matrix:
   allow_failures:
-    - env: REQUIREMENTS=1.5.X           ENGINE=sqlite3
+    - env: REQUIREMENTS=1.5.X           ENGINE=sqlite
     - env: REQUIREMENTS=1.5.X-postgres  ENGINE=postgresql TEMPLATE=template0
     - env: REQUIREMENTS=1.5.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
-    - env: REQUIREMENTS=master          ENGINE=sqlite3
+    - env: REQUIREMENTS=master          ENGINE=sqlite
     - env: REQUIREMENTS=master-postgres ENGINE=postgresql TEMPLATE=template0
     - env: REQUIREMENTS=master-postgres ENGINE=postgis    TEMPLATE=template_postgis
 
@@ -45,4 +45,4 @@ before_script:
   - if echo $ENGINE | grep -E '(postgresql|postgis)'; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres; fi
 
 script:
-  - python runtests.py --engine=$ENGINE --coverage
+  - django-admin.py test_coverage --pythonpath=`pwd` --settings=tests.test_$ENGINE
