@@ -35,7 +35,6 @@ postgres:
 
 install:
   - pip install argparse coverage django-coverage --use-mirrors
-  - python setup.py install
   - pip install -r requirements/$REQUIREMENTS.txt --use-mirrors
 
 before_script:

@@ -1,0 +1,4 @@
+south>=0.7.6
+https://github.com/tkaemming/django-orderable/archive/master.tar.gz#egg=django-orderable-1.2.1
+django-picklefield>=0.3.0
+django-polymodels>=1.1.0

@@ -1,1 +1,2 @@
+-r base.txt
 https://github.com/django/django/archive/stable/1.5.x.tar.gz
