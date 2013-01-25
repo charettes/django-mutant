@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 
 from mutant import __version__
 
+
 github_url = 'https://github.com/charettes/django-mutant'
 long_desc = open('README.md').read()
 
