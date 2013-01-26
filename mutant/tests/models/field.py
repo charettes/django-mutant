@@ -71,21 +71,6 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
             obj.field
             obj.full_clean()
 
-    def test_default_value_set(self):
-        Model = self.model_def.model_class()
-        Model.objects.create()
-        IntegerFieldDefinition.objects.create(name='field',
-                                              default=module_level_pickable_default,
-                                              model_def=self.model_def)
-        # Call after field creation so we can identify if the default value
-        # was set when creating the field or when fetching the instance.
-        incr = module_level_pickable_default.incr
-        module_level_pickable_default()
-        before = Model.objects.get()
-        self.assertEqual(before.field, incr)
-        after = Model.objects.create()
-        self.assertEqual(after.field, incr + 2)
-
     def test_create_with_default(self):
         Model = self.model_def.model_class()
         Model.objects.create()
