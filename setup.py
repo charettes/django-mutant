@@ -1,16 +1,33 @@
 #!/usr/bin/env python
 import os
 import re
-from setuptools import setup, find_packages
+from setuptools import Command, find_packages, setup
+from subprocess import call
 
 from mutant import __version__
 
 
 MODULE_PATH = os.path.abspath(os.path.dirname(__file__))
 
+
+class TestCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        call(['django-admin.py', 'test', '--pythonpath', MODULE_PATH,
+              '--settings', 'tests.test_sqlite'])
+
+
 LINK_REQUIREMENT = re.compile(
     r'^https://.+#egg=(?P<package>.+)-(?P<version>\d(?:\.\d)*)$'
 )
+
 
 install_requires = ['django>=1.4']
 dependency_links = []
@@ -22,6 +39,7 @@ for requirement in (l.strip() for l in open(os.path.join(MODULE_PATH, 'requireme
         dependency_links.append(match.group())
     else:
         install_requires.append(requirement)
+
 
 setup(
     name='django-mutant',
@@ -46,4 +64,5 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
+    cmdclass={'test': TestCommand}
 )
