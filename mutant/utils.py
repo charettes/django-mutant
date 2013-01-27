@@ -65,9 +65,9 @@ if hasattr(app_cache, 'write_lock'):
         return app_cache.write_lock
 else:
     # django >= 1.5 use imp.lock instead
+    import imp
     @contextmanager
     def app_cache_lock():
-        import imp
         try:
             imp.acquire_lock()
             yield
