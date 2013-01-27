@@ -12,6 +12,16 @@ from ....signals import mutable_class_prepared
 from ..models import ManyToManyFieldDefinition
 
 
+def clear_opts_related_cache(model_class):
+    opts = model_class._meta
+    try:
+        del opts._related_objects_cache
+        del opts._related_many_to_many_cache
+        del opts._name_map
+    except AttributeError:
+        pass
+
+
 @receiver(mutable_class_prepared)
 def mutable_model_prepared(signal, sender, definition, **kwargs):
     """
@@ -25,6 +35,7 @@ def mutable_model_prepared(signal, sender, definition, **kwargs):
             if not isinstance(to, basestring) and issubclass(to, MutableModel):
                 if to._definition != sender._definition:
                     to._dependencies.add(sender._definition)
+                    clear_opts_related_cache(to)
     # Mark all model referring to this one as dependencies
     related_model_defs = ModelDefinition.objects.filter(
         Q(fielddefinitions__foreignkeydefinition__to=definition) |

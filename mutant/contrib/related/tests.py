@@ -60,7 +60,8 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
             model_def=first_model_def,
             name='second',
             null=True,
-            to=second_model_def
+            to=second_model_def,
+            related_name='first_set'
         )
         # Make sure dependencies were set correctly
         self.assertSetEqual(
@@ -69,11 +70,16 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         )
         second = SecondModel.objects.create()
         first = FirstModel.objects.create(second=second)
+        # Make sure related managers are correctly assigned
+        self.assertEqual(second.first_set.get(), first)
+        # Make sure we can filter by a related field
+        self.assertEqual(SecondModel.objects.get(first_set=first), second)
         ForeignKeyDefinition.objects.create(
             model_def=second_model_def,
             name='first',
             null=True,
-            to=first_model_def
+            to=first_model_def,
+            related_name='second_set'
         )
         # Make sure dependencies were set correctly
         self.assertSetEqual(
@@ -90,8 +96,13 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         )
         self.assertTrue(first.is_obsolete())
         second = SecondModel.objects.get()
-        second.first = FirstModel.objects.get()
+        first = FirstModel.objects.get()
+        second.first = first
         second.save()
+        # Make sure related managers are correctly assigned
+        self.assertEqual(first.second_set.get(), second)
+        # Make sure we can filter by a related field
+        self.assertEqual(FirstModel.objects.get(second_set=second), first)
         second_model_def.delete()
 
     def test_recursive_relationship(self):
