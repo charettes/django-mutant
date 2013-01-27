@@ -16,11 +16,13 @@ try:
 except ImportError:
     from django.db.models.sql.constants import LOOKUP_SEP
 
-from .managers import ModelDefinitionManager
+from ... import logger
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...utils import get_db_table
+
+from .managers import ModelDefinitionManager
 
 
 def _model_class_from_pk(definition_cls, definition_pk):
@@ -215,6 +217,7 @@ class ModelDefinition(ContentType):
             existing_model_class.mark_as_obsolete()
         model_class = type(str(self.object_name), bases, attrs)
         mutable_class_prepared.send(sender=model_class, definition=self)
+        logger.debug("Created model class %s", model_class)
         return model_class
 
     def model_class(self, force_create=False):
