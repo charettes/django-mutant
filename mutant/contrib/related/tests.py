@@ -49,7 +49,15 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
     def prepare_default_value(self, value):
         return value.pk
 
-    def test_simple_foreign_key_between_mutable_models(self):
+    def test_field_deletion(self):
+        def is_related_object_of_ct(model_class):
+            return any(related_obj.model == model_class
+                       for related_obj in ContentType._meta.get_all_related_objects(include_hidden=True))
+        self.assertTrue(is_related_object_of_ct(self.model_def.model_class()))
+        super(ForeignKeyDefinitionTest, self).test_field_deletion()
+        self.assertFalse(is_related_object_of_ct(self.model_def.model_class()))
+
+    def test_foreign_key_between_mutable_models(self):
         first_model_def = self.model_def
         second_model_def = ModelDefinition.objects.create(
             app_label='app', object_name='SecondModel'
@@ -108,7 +116,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
     def test_recursive_relationship(self):
         fk = ForeignKeyDefinition.objects.create(
             model_def=self.model_def, name='f1', null=True, blank=True,
-            to=self.model_def.model_ct
+            to=self.model_def
         )
         self.assertTrue(fk.is_recursive_relationship)
         Model = self.model_def.model_class()

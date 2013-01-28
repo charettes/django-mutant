@@ -216,7 +216,8 @@ class ModelDefinition(ContentType):
         if existing_model_class:
             existing_model_class.mark_as_obsolete()
         model_class = type(str(self.object_name), bases, attrs)
-        mutable_class_prepared.send(sender=model_class, definition=self)
+        mutable_class_prepared.send(sender=model_class, definition=self,
+                                    existing_model_class=existing_model_class)
         logger.debug("Created model class %s", model_class)
         return model_class
 
