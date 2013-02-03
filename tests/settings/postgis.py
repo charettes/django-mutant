@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from . import *
+from .postgresql_psycopg2 import *
 
 
 DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
