@@ -21,9 +21,6 @@ env:
 
 matrix:
   allow_failures:
-    - env: REQUIREMENTS=1.5.X           ENGINE=sqlite
-    - env: REQUIREMENTS=1.5.X-postgres  ENGINE=postgresql TEMPLATE=template0
-    - env: REQUIREMENTS=1.5.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
     - env: REQUIREMENTS=master          ENGINE=sqlite
     - env: REQUIREMENTS=master-postgres ENGINE=postgresql TEMPLATE=template0
     - env: REQUIREMENTS=master-postgres ENGINE=postgis    TEMPLATE=template_postgis
