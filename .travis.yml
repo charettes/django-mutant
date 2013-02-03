@@ -30,9 +30,9 @@ install:
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
 
 before_script:
-  - if echo $SETTINGS | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis; fi
-  - if echo $SETTINGS | grep 'postgis' -q; then sudo su postgres -c './create_template_postgis-debian.sh'; fi
-  - if echo $SETTINGS | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres; fi
+  - if echo $SETTINGS | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis -q > /dev/null; fi
+  - if echo $SETTINGS | grep 'postgis' -q; then sudo su postgres -c './create_template_postgis-debian.sh' > /dev/null; fi
+  - if echo $SETTINGS | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres -q; fi
 
 script:
   - django-admin.py test_coverage --pythonpath=`pwd` --settings=tests.settings.$SETTINGS
