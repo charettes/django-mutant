@@ -9,30 +9,30 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.4.X           ENGINE=sqlite
-  - REQUIREMENTS=1.4.X-postgres  ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=1.4.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
-  - REQUIREMENTS=1.5.X           ENGINE=sqlite
-  - REQUIREMENTS=1.5.X-postgres  ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=1.5.X-postgres  ENGINE=postgis    TEMPLATE=template_postgis
-  - REQUIREMENTS=master          ENGINE=sqlite
-  - REQUIREMENTS=master-postgres ENGINE=postgresql TEMPLATE=template0
-  - REQUIREMENTS=master-postgres ENGINE=postgis    TEMPLATE=template_postgis
+  - REQUIREMENTS=1.4.X SETTINGS=sqlite3
+  - REQUIREMENTS=1.4.X-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
+  - REQUIREMENTS=1.4.X-postgres SETTINGS=postgis TEMPLATE=template_postgis
+  - REQUIREMENTS=1.5.X SETTINGS=sqlite3
+  - REQUIREMENTS=1.5.X-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
+  - REQUIREMENTS=1.5.X-postgres SETTINGS=postgis TEMPLATE=template_postgis
+  - REQUIREMENTS=master SETTINGS=sqlite3
+  - REQUIREMENTS=master-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
+  - REQUIREMENTS=master-postgres SETTINGS=postgis TEMPLATE=template_postgis
 
 matrix:
   allow_failures:
-    - env: REQUIREMENTS=master          ENGINE=sqlite
-    - env: REQUIREMENTS=master-postgres ENGINE=postgresql TEMPLATE=template0
-    - env: REQUIREMENTS=master-postgres ENGINE=postgis    TEMPLATE=template_postgis
+    - env: REQUIREMENTS=master SETTINGS=sqlite3
+    - env: REQUIREMENTS=master-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
+    - env: REQUIREMENTS=master-postgres SETTINGS=postgis TEMPLATE=template_postgis
 
 install:
   - pip install argparse coverage django-coverage -q --use-mirrors
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
 
 before_script:
-  - if echo $ENGINE | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis; fi
-  - if echo $ENGINE | grep 'postgis' -q; then sudo su postgres -c './create_template_postgis-debian.sh'; fi
-  - if echo $ENGINE | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres; fi
+  - if echo $SETTINGS | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis; fi
+  - if echo $SETTINGS | grep 'postgis' -q; then sudo su postgres -c './create_template_postgis-debian.sh'; fi
+  - if echo $SETTINGS | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres; fi
 
 script:
-  - django-admin.py test_coverage --pythonpath=`pwd` --settings=tests.test_$ENGINE
+  - django-admin.py test_coverage --pythonpath=`pwd` --settings=tests.settings.$SETTINGS

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .test_base import *
+from . import *
 
 
 DATABASES = {
