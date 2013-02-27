@@ -166,6 +166,9 @@ def base_definition_post_delete(sender, instance, **kwargs):
     """
     Make sure to delete fields inherited from an abstract model base.
     """
+    # see CASCADE_MARK_ORIGIN's docstring
+    if getattr(instance._state, 'cascade_deletion_origin', None) == 'model_def':
+        return
     if hasattr(instance._state, '_deletion'):
         model, table_name = popattr(instance._state, '_deletion')
         for field in instance.base._meta.fields:
@@ -258,6 +261,10 @@ def field_definition_pre_delete(sender, instance, **kwargs):
 @receiver(post_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
+    # see CASCADE_MARK_ORIGIN's docstring
+    if getattr(instance._state, 'cascade_deletion_origin', None) == 'model_def':
+        return
+    
     model, table_name, field = popattr(instance._state, '_deletion')
     column = field.get_attname_column()[1]
     if field.primary_key:
