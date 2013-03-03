@@ -17,7 +17,7 @@ except ImportError:
     from django.db.models.sql.constants import LOOKUP_SEP
 
 from ... import logger
-from ...db import CASCADE_MARK_ORIGIN
+from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
