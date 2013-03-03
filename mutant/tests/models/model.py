@@ -5,7 +5,7 @@ import pickle
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.db import models, router
+from django.db import connections, models, router
 from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
@@ -16,6 +16,7 @@ from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
     UniqueTogetherDefinition, BaseDefinition)
 from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
     skipUnlessMutantModelDBFeature)
+from mutant.test.utils import CaptureQueriesContext    
 
 
 try:
@@ -159,6 +160,13 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         natural_key = self.model_def.natural_key()
         self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
                          self.model_def)
+    
+    def test_model_def_deletion(self):
+        model_cls = self.model_def.model_class()
+        connection = connections[router.db_for_write(model_cls)]
+        with CaptureQueriesContext(connection) as captured_queries:
+            self.model_def.delete()
+        self.assertFalse(any('ALTER' in query for query in captured_queries))
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
