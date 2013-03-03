@@ -164,20 +164,16 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_model_def_deletion(self):
         model_cls = self.model_def.model_class()
         self.assertModelTablesExist(model_cls)
-
-        _model_dbs = model_dbs(model_cls)
-        _model_tables = model_cls._meta.db_table
-
+        db = router.db_for_read(self.model_def.model_class())
+        table_name = self.get_model_db_table()
         connection = connections[router.db_for_write(model_cls)]
         with CaptureQueriesContext(connection) as captured_queries:
             self.model_def.delete()
         # ensure that no ALTER queries where issues during deletion of model_def,
-        # that is, check that the table was not deleted one column at a time before
+        # that is, check that the table was not deleted on column at a time before
         # the entire table was dropped.
         self.assertFalse(any('ALTER' in query for query in captured_queries))
-
-        for db in _model_dbs:
-            self.assertTableDoesntExists(db, _model_tables)
+        self.assertTableDoesntExists(db, table_name)
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
