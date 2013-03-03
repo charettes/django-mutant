@@ -172,7 +172,7 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         with CaptureQueriesContext(connection) as captured_queries:
             self.model_def.delete()
         # ensure that no ALTER queries where issues during deletion of model_def,
-        # that is, check that the table was not deleted on column at a time before
+        # that is, check that the table was not deleted one column at a time before
         # the entire table was dropped.
         self.assertFalse(any('ALTER' in query for query in captured_queries))
 
