@@ -1,2 +1,2 @@
 -r base.txt
-https://github.com/django/django/archive/stable/1.5.x.tar.gz
+django>=1.5,<1.6
