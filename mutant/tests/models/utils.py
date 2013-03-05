@@ -35,8 +35,10 @@ def db_is_nonrel(db):
 
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
     def setUp(self):
-        self.model_def = ModelDefinition.objects.create(app_label='app',
-                                                        object_name='Model')
+        self.model_def = ModelDefinition.objects.create(
+            app_label='app',
+            object_name='Model'
+        )
 
     def assertTableExists(self, db, table):
         tables = connections[db].introspection.table_names()

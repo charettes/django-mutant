@@ -151,6 +151,10 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     This is used to pass data required for deletion to the post_delete
     signal that is no more available thereafter.
     """
+    # see CASCADE_MARK_ORIGIN's docstring
+    if hasattr(instance._state, '_cascade_deletion_origin'):
+        if popattr(instance._state, '_cascade_deletion_origin') == 'model_def':
+            return
     if (instance.base and issubclass(instance.base, models.Model) and
         instance.base._meta.abstract):
         model_class = instance.model_def.model_class()
@@ -245,6 +249,10 @@ FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
 @receiver(pre_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_pre_delete')
 def field_definition_pre_delete(sender, instance, **kwargs):
+    # see CASCADE_MARK_ORIGIN's docstring
+    if hasattr(instance._state, '_cascade_deletion_origin'):
+        if popattr(instance._state, '_cascade_deletion_origin') == 'model_def':
+            return
     model_class = instance.model_def.model_class()
     opts = model_class._meta
     field = opts.get_field(instance.name)
@@ -258,10 +266,11 @@ def field_definition_pre_delete(sender, instance, **kwargs):
 @receiver(post_delete, sender=FieldDefinition,
           dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
-    model, table_name, field = popattr(instance._state, '_deletion')
-    column = field.get_attname_column()[1]
-    if field.primary_key:
-        primary_key = models.AutoField(name='id', primary_key=True)
-        perform_ddl(model, 'alter_column', table_name, column, primary_key)
-    else:
-        perform_ddl(model, 'delete_column', table_name, column)
+    if hasattr(instance._state, '_deletion'):
+        model, table_name, field = popattr(instance._state, '_deletion')
+        column = field.get_attname_column()[1]
+        if field.primary_key:
+            primary_key = models.AutoField(name='id', primary_key=True)
+            perform_ddl(model, 'alter_column', table_name, column, primary_key)
+        else:
+            perform_ddl(model, 'delete_column', table_name, column)

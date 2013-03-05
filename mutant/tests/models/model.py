@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
-
 import pickle
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.db import models, router
+from django.db import connections, models, router
 from django.db.utils import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 
@@ -16,6 +15,7 @@ from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
     UniqueTogetherDefinition, BaseDefinition)
 from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
     skipUnlessMutantModelDBFeature)
+from mutant.test.utils import CaptureQueriesContext
 
 
 try:
@@ -159,6 +159,31 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         natural_key = self.model_def.natural_key()
         self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
                          self.model_def)
+
+    def test_deletion(self):
+        # Add a an extra field to make sure no alter statements are issued
+        CharFieldDefinition.objects.create(
+            model_def=self.model_def,
+            name='field',
+            max_length=10
+        )
+        # Add a base with a field to make sure no alter statements are issued
+        BaseDefinition.objects.create(
+            model_def=self.model_def,
+            base=AbstractModel
+        )
+        model_cls = self.model_def.model_class()
+        self.assertModelTablesExist(model_cls)
+        db = router.db_for_write(model_cls)
+        table_name = self.get_model_db_table()
+        connection = connections[db]
+        with CaptureQueriesContext(connection) as captured_queries:
+            self.model_def.delete()
+        # ensure that no ALTER queries where issues during deletion of model_def,
+        # that is, check that the table was not deleted on column at a time before
+        # the entire table was dropped.
+        self.assertFalse(any('ALTER' in query['sql'] for query in captured_queries))
+        self.assertTableDoesntExists(db, table_name)
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
