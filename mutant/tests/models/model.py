@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+﻿from __future__ import unicode_literals
 import pickle
 
 from django.contrib.contenttypes.models import ContentType
@@ -184,6 +184,44 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         # the entire table was dropped.
         self.assertFalse(any('ALTER' in query['sql'] for query in captured_queries))
         self.assertTableDoesntExists(db, table_name)
+
+    def test_batch_field_alterations(self):
+        # TODO also check that no redundant calls to `model_class() `are made
+        initial_field_alterations_mode = self.model_def.field_alterations_mode
+        to_alter = CharFieldDefinition.objects.create(
+            model_def=self.model_def,
+            name='to_alter',
+            max_length=10
+        )
+        to_delete = CharFieldDefinition.objects.create(
+            model_def=self.model_def,
+            name='to_delete',
+            max_length=10
+        )
+
+        with self.model_def.batch_field_alterations():
+            to_alter.max_length = 20
+            to_alter.save()
+            to_delete.delete()
+            CharFieldDefinition.objects.create(
+                model_def=self.model_def,
+                name='to_add',
+                max_length=10
+            )
+
+        try:
+            to_alter = CharFieldDefinition.objects.get(name='to_alter', model_def = self.model_def)
+            to_add = CharFieldDefinition.objects.get(name='to_add', model_def = self.model_def)
+        except CharFieldDefinition.DoesNotExist:
+            self.fail('test_batch_field_alterations removed fields it should have')
+
+        with self.assertRaises(CharFieldDefinition.DoesNotExist):
+            CharFieldDefinition.objects.get(name='to_alter', model_def = self.model_def)
+
+        self.assertEqual(to_alter.max_length, 20)
+
+        self.assertEqual(initial_field_alterations_mode,
+                                                    self.model_def.field_alterations_mode)
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
