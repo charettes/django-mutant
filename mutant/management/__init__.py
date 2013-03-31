@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+﻿from __future__ import unicode_literals
 from functools import wraps
 
 from django.contrib.contenttypes.models import ContentType
@@ -57,6 +57,11 @@ def post_save_nonraw_instance(receiver):
           dispatch_uid='mutant.management.model_definition_post_save')
 @post_save_nonraw_instance
 def model_definition_post_save(sender, instance, created, raw, **kwargs):
+    # this is used in `BathFieldAlterationContext` when we just change
+    # `model_def.field_alterations_mode`
+    if popattr(instance._state, 'skip_management', False):
+        return
+
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
     if created:

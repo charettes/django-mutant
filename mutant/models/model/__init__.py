@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+﻿from __future__ import unicode_literals
 from inspect import isclass
 from itertools import chain
 
@@ -111,10 +111,21 @@ class _ModelClassProxy(object):
         return str(model_class)
 
 
+FIELD_ALTERATIONS_NORMAL = 0
+FIELD_ALTERATIONS_BATCH = 1
+FIELD_ALTERATIONS_CHOICES = (
+    (FIELD_ALTERATIONS_NORMAL, 'normal'),
+    (FIELD_ALTERATIONS_BATCH, 'batch'),
+)
+
 class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
     db_table = models.CharField(_('database table'), max_length=63,
                                 blank=True, null=True)
+
+    field_alterations_mode = models.IntegerField(
+        default=FIELD_ALTERATIONS_NORMAL,  choices=FIELD_ALTERATIONS_CHOICES)
+
     verbose_name = LazilyTranslatedField(_('verbose name'),
                                          blank=True, null=True)
     verbose_name_plural = LazilyTranslatedField(_('verbose name plural'),
@@ -271,6 +282,40 @@ class ModelDefinition(ContentType):
         del self._model_class
         return delete
 
+    def batch_field_alterations(self):
+        """
+        Returns a context manager used for batch field alterations.
+        For example:
+
+        with model_def.batch_field_alterations():
+            model_def_first_field.delete()
+            model_def_char_field.max_length = 34
+            model_def_char_field.save()
+        """
+        return BathFieldAlterationContext(self)
+
+
+class BathFieldAlterationContext(object):
+    """
+    Context manager used for batch field alterations. When in context, no calls
+    to `model_def.model_class()`will be made after alterations of fields of
+    `model_def`. Only one call is made when exiting the context.
+    """
+    def __init__(self, model_def):
+        self.model_def = model_def
+
+    def __enter__(self):
+        self.field_alterations_mode = self.model_def.field_alterations_mode
+        self.model_def.field_alterations_mode = FIELD_ALTERATIONS_BATCH
+        self.model_def._state.skip_management = True
+        self.model_def.save()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.model_def.field_alterations_mode = self.field_alterations_mode
+        self.model_def._state.skip_management = True
+        self.model_def.save()
+        self.model_def.model_class(force_create=True)
+
 
 class ModelDefinitionAttribute(models.Model):
     """
@@ -286,13 +331,15 @@ class ModelDefinitionAttribute(models.Model):
     def save(self, *args, **kwargs):
         force_create = kwargs.pop('force_create_model_class', True)
         save = super(ModelDefinitionAttribute, self).save(*args, **kwargs)
-        self.model_def.model_class(force_create=force_create)
+        if self.model_def.field_alterations_mode != FIELD_ALTERATIONS_BATCH:
+            self.model_def.model_class(force_create=force_create)
         return save
 
     def delete(self, *args, **kwargs):
         force_create = kwargs.pop('force_create_model_class', True)
         delete = super(ModelDefinitionAttribute, self).delete(*args, **kwargs)
-        self.model_def.model_class(force_create=force_create)
+        if self.model_def.field_alterations_mode != FIELD_ALTERATIONS_BATCH:
+            self.model_def.model_class(force_create=force_create)
         return delete
 
 
