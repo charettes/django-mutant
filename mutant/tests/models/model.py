@@ -85,26 +85,26 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model, self.model_def.model_class())
         self.assertNotEqual(Model, self.model_def.model_class(force_create=True))
 
-    def get_model_db_table(self):
-        return self.model_def.model_class()._meta.db_table
+    def get_model_db_table_name(self, model_def):
+        model_class = model_def.model_class()
+        return router.db_for_write(model_class), model_class._meta.db_table
 
     def test_rename_model(self):
         """
         Make sure changing the app_label or object_name renames the associated
         table
         """
-        db = router.db_for_read(self.model_def.model_class())
-        table_name = self.get_model_db_table()
+        db, table_name = self.get_model_db_table_name(self.model_def)
         self.model_def.app_label = 'myapp'
         self.model_def.save()
         self.assertTableDoesntExists(db, table_name)
-        table_name = self.get_model_db_table()
+        db, table_name = self.get_model_db_table_name(self.model_def)
         self.assertTableExists(db, table_name)
 
         self.model_def.object_name = 'MyModel'
         self.model_def.save()
         self.assertTableDoesntExists(db, table_name)
-        table_name = self.get_model_db_table()
+        db, table_name = self.get_model_db_table_name(self.model_def)
         self.assertTableExists(db, table_name)
 
         self.model_def.delete()
@@ -114,16 +114,15 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         """
         Asserts that the db_table field is correctly handled
         """
-        db = router.db_for_read(self.model_def.model_class())
-        generated_table_name = self.get_model_db_table()
+        db, table_name = self.get_model_db_table_name(self.model_def)
         self.model_def.db_table = 'test_db_table'
         self.model_def.save()
-        self.assertTableDoesntExists(db, generated_table_name)
+        self.assertTableDoesntExists(db, table_name)
         self.assertTableExists(db, 'test_db_table')
         self.model_def.db_table = None
         self.model_def.save()
         self.assertTableDoesntExists(db, 'test_db_table')
-        self.assertTableExists(db, generated_table_name)
+        self.assertTableExists(db, table_name)
 
     def test_fixture_loading(self):
         call_command('loaddata', 'fixture_loading_test', verbosity=0, commit=False)
@@ -174,16 +173,48 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         )
         model_cls = self.model_def.model_class()
         self.assertModelTablesExist(model_cls)
-        db = router.db_for_write(model_cls)
-        table_name = self.get_model_db_table()
+        db, table_name = self.get_model_db_table_name(self.model_def)
         connection = connections[db]
         with CaptureQueriesContext(connection) as captured_queries:
             self.model_def.delete()
-        # ensure that no ALTER queries where issues during deletion of model_def,
-        # that is, check that the table was not deleted on column at a time before
-        # the entire table was dropped.
+        # Ensure no ALTER queries were issued during deletion of model_def,
+        # that is, check that the columns were not deleted on table one at a
+        # time before the entire table was dropped.
         self.assertFalse(any('ALTER' in query['sql'] for query in captured_queries))
         self.assertTableDoesntExists(db, table_name)
+
+    def test_model_management(self):
+        """
+        Make sure no DDL is executed when a model is marked as managed.
+        """
+        model_def = self.model_def
+        CharFieldDefinition.objects.create(
+            model_def=model_def,
+            name='field',
+            max_length=10
+        )
+        model_cls = model_def.model_class()
+        model_cls.objects.create(field='test')
+        # Mark the existing model definition as `managed`.
+        model_def.managed = True
+        model_def.save()
+        # Deleting a managed model shouldn't issue a DROP TABLE.
+        db, table_name = self.get_model_db_table_name(self.model_def)
+        model_def.delete()
+        self.assertTableExists(db, table_name)
+        # Attach a new model definition to the existing table
+        new_model_def = ModelDefinition.objects.create(
+            app_label=model_def.app_label,
+            object_name=model_def.object_name,
+            managed=True,
+            fields=(CharFieldDefinition(name='field', max_length=10),)
+        )
+        # Make sure old data can be retrieved
+        self.assertEqual(1, new_model_def.model_class().objects.count())
+        # Mark the new model as unmanaged to make sure it's associated
+        # table is deleted on tear down.
+        new_model_def.managed = False
+        new_model_def.save()
 
 
 class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):

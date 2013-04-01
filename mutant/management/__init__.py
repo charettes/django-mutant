@@ -22,6 +22,8 @@ def allow_syncdbs(model):
 
 
 def perform_ddl(model, action, *args, **kwargs):
+    if model._meta.managed:
+        return
     for db in allow_syncdbs(model):
         if db.deferred_sql:
             for statement in db.deferred_sql:
@@ -40,23 +42,24 @@ def perform_ddl(model, action, *args, **kwargs):
             db.commit_transaction()
 
 
-def post_save_nonraw_instance(receiver):
+def nonraw_instance(receiver):
     """
     A signal receiver decorator that fetch the complete instance from db when
     it's passed as raw
     """
     @wraps(receiver)
-    def wrapper(sender, raw, instance, using, **kwargs):
+    def wrapper(sender, instance, raw, using, **kwargs):
         if raw:
             instance = sender._default_manager.using(using).get(pk=instance.pk)
         return receiver(sender=sender, raw=raw, instance=instance, using=using,
                         **kwargs)
     return wrapper
 
+
 @receiver(post_save, sender=ModelDefinition,
           dispatch_uid='mutant.management.model_definition_post_save')
-@post_save_nonraw_instance
-def model_definition_post_save(sender, instance, created, raw, **kwargs):
+@nonraw_instance
+def model_definition_post_save(sender, instance, created, **kwargs):
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
     if created:
@@ -198,7 +201,7 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
             perform_ddl(model_class, 'create_unique', table_name, columns)
 
 
-@post_save_nonraw_instance
+@nonraw_instance
 def field_definition_post_save(sender, instance, created, raw, **kwargs):
     """
     This signal is connected by all FieldDefinition subclasses

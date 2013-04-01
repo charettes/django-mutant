@@ -115,6 +115,7 @@ class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
     db_table = models.CharField(_('database table'), max_length=63,
                                 blank=True, null=True)
+    managed = models.BooleanField(_('managed'), default=False)
     verbose_name = LazilyTranslatedField(_('verbose name'),
                                          blank=True, null=True)
     verbose_name_plural = LazilyTranslatedField(_('verbose name plural'),
@@ -166,7 +167,7 @@ class ModelDefinition(ContentType):
         return tuple(bd.get_model_class() for bd in self.basedefinitions.all())
 
     def get_model_opts(self):
-        attrs = {'app_label': self.app_label}
+        attrs = {'app_label': self.app_label, 'managed': self.managed}
         # Database table
         db_table = self.db_table
         if db_table is None:
