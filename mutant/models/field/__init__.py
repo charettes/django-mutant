@@ -235,7 +235,9 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     def get_field_class(cls):
         field_class = getattr(cls._meta, FieldDefinitionBase.FIELD_CLASS_ATTR)
         if not field_class:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "%s didn't define any `field_class`." % cls.__name__
+            )
         return field_class
 
     @classmethod
