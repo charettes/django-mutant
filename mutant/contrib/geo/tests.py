@@ -8,8 +8,9 @@ from ...models import BaseDefinition
 from ...test.testcases import FieldDefinitionTestMixin
 from ...tests.models import BaseModelDefinitionTestCase
 
-from .models import (GeoModel, GeometryCollectionFieldDefinition,
-    LineStringFieldDefinition, PointFieldDefinition, PolygonFieldDefinition,
+from .models import (GeoModel, GeometryFieldDefinition,
+    GeometryCollectionFieldDefinition, LineStringFieldDefinition,
+    PointFieldDefinition, PolygonFieldDefinition,
     MultiLineStringFieldDefinition, MultiPointFieldDefinition,
     MultiPolygonFieldDefinition)
 
@@ -20,6 +21,15 @@ class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
     def setUp(self):
         super(GeometryFieldDefinitionBaseTest, self).setUp()
         BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
+
+
+class GeometryFieldDefinitionTest(FieldDefinitionTestMixin,
+                                  GeometryFieldDefinitionBaseTest):
+    field_definition_cls = GeometryFieldDefinition
+    field_values = (
+        LineString((1, 2), (3, 4), (5, 6), (7, 8), (9, 10)),
+        Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) )
+    )
 
 
 class PointFieldDefinitionTest(FieldDefinitionTestMixin,

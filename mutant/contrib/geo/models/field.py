@@ -37,6 +37,7 @@ class GeometryFieldDefinition(FieldDefinition):
         app_label = 'mutant'
         defined_field_options = ('srid', 'spatial_index', 'dim', 'geography')
         defined_field_category = _('Geometry')
+        defined_field_class = models.GeometryField
 
 
 class PointFieldDefinition(GeometryFieldDefinition):
