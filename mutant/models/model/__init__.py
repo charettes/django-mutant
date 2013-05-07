@@ -21,7 +21,7 @@ from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
-from ...utils import get_db_table
+from ...utils import get_db_table, model_name
 
 from .managers import ModelDefinitionManager
 
@@ -246,7 +246,7 @@ class ModelDefinition(ContentType):
         Ensure app_label doesn't override an installed app one
         since model collision could occur and would cause a lot of
         side effects, i. e.:
-        
+
         Defining a new auth.User, while not tested, could override
         the existing one and create a beautiful mess in django's
         internals
@@ -329,7 +329,7 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
                         fields.append(field)
             elif not opts.proxy:
                 # This is a concrete model base, we must declare a o2o
-                attr_name = '%s_ptr' % opts.module_name
+                attr_name = '%s_ptr' % model_name(opts)
                 fields.append(
                     models.OneToOneField(
                         self.base, name=attr_name, null=True,
@@ -357,14 +357,14 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
 
     class Meta(OrderableModel.Meta):
         app_label = 'mutant'
-        # TODO: Should be unique both it bugs order swapping 
-        #unique_together = (('model_def', 'order'),)
+        # TODO: Should be unique both it bugs order swapping
+        # unique_together = (('model_def', 'order'),)
 
     def clean(self):
         """
         Make sure the lookup makes sense
         """
-        if self.lookup == '?': # Randomly sort
+        if self.lookup == '?':  # Randomly sort
             return
         #TODO: Support order_with_respect_to...
         else:
@@ -380,7 +380,7 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
                 else:
                     if isinstance(field, models.ForeignKey):
                         opts = field.rel.to._meta
-                    elif len(lookups): # Cannot go any deeper
+                    elif len(lookups):  # Cannot go any deeper
                         valid = False
                 finally:
                     if not valid:

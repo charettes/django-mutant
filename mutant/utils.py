@@ -5,6 +5,7 @@ from copy import deepcopy
 from itertools import groupby
 from operator import itemgetter
 
+import django
 from django.db.models.loading import cache as app_cache
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
@@ -116,6 +117,8 @@ def app_cache_restorer():
 
 
 group_item_getter = itemgetter('group')
+
+
 def choices_from_dict(choices):
     for grp, choices in groupby(choices, key=group_item_getter):
         if grp is None:
@@ -124,3 +127,12 @@ def choices_from_dict(choices):
         else:
             yield (grp, tuple((choice['value'], choice['label'])
                                 for choice in choices))
+
+
+# TODO: Remove when support for 1.5 is dropped
+if django.VERSION >= (1, 6):  # pragma: no cover
+    def model_name(opts):
+        return opts.model_name
+else:  # pragma: no cover
+    def model_name(opts):
+        return opts.module_name

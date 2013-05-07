@@ -16,13 +16,15 @@ from ..model import ModelDefinitionAttribute
 from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
 from ...hacks import patch_model_option_verbose_name_raw
-from ...utils import get_concrete_model, lazy_string_format, popattr
+from ...utils import (get_concrete_model, lazy_string_format, model_name,
+    popattr)
 
 
 patch_model_option_verbose_name_raw()
 
 
 NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
+
 
 class FieldDefinitionBase(models.base.ModelBase):
     FIELD_CLASS_ATTR = 'defined_field_class'
@@ -94,11 +96,11 @@ class FieldDefinitionBase(models.base.ModelBase):
                     if field_category is None:
                         field_category = getattr(parent_opts, cls.FIELD_CATEGORY_ATTR, None)
                     if parent is not base_definition:
-                        parents = list(parent.__bases__) + parents # mimic mro
+                        parents = list(parent.__bases__) + parents  # mimic mro
 
             from ...management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
-            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % definition._meta.module_name
+            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % model_name(definition._meta)
             signals.post_save.connect(field_definition_post_save, definition,
                                       dispatch_uid=post_save_dispatch_uid)
 
@@ -263,12 +265,12 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         model_opts = self._meta
         options = {}
         for name in self.get_field_option_names():
-            if name in overrides: # Avoid fetching if it's overridden
+            if name in overrides:  # Avoid fetching if it's overridden
                 continue
             value = getattr(self, name)
             if value != model_opts.get_field(name).get_default():
                 options[name] = value
-        if 'choices' not in overrides: # Avoid fetching if it's overridden
+        if 'choices' not in overrides:  # Avoid fetching if it's overridden
             choices = self.get_field_choices()
             if choices:
                 options['choices'] = choices
@@ -300,7 +302,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         try:
             field = self.field_instance()
         except NotImplementedError:
-            pass # `get_field_class` is not implemented
+            pass  # `get_field_class` is not implemented
         except Exception as e:
             raise ValidationError(e)
         else:
