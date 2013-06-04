@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import groupby
+import imp
 from operator import itemgetter
 
 import django
@@ -50,19 +51,13 @@ def get_db_table(app_label, model):
     return "mutant_%s_%s" % (app_label, model)
 
 
-if hasattr(app_cache, 'write_lock'):
-    def app_cache_lock():
-        return app_cache.write_lock
-else:
-    # django >= 1.5 use imp.lock instead
-    import imp
-    @contextmanager
-    def app_cache_lock():
-        try:
-            imp.acquire_lock()
-            yield
-        finally:
-            imp.release_lock()
+@contextmanager
+def app_cache_lock():
+    try:
+        imp.acquire_lock()
+        yield
+    finally:
+        imp.release_lock()
 
 
 def remove_from_app_cache(model_class):
