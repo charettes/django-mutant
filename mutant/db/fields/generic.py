@@ -5,12 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
-from polymodels.utils import get_content_type
 
 
 class FieldDefinitionTypeField(fields.related.ForeignKey):
     def __init__(self, *args, **kwargs):
-        defaults={'to': ContentType}
+        defaults = {'to': ContentType}
         defaults.update(kwargs)
         super(FieldDefinitionTypeField, self).__init__(*args, **defaults)
 
@@ -41,6 +40,8 @@ class ProxyAwareGenericForeignKey(GenericForeignKey):
     """
     def get_content_type(self, obj=None, **kwargs):
         if obj:
-            return get_content_type(obj.__class__, obj._state.db)
+            return ContentType.objects.db_manager(obj._state.db.get_for_model(
+                obj.__class__, for_concrete_model=False)
+            )
         else:
             return super(ProxyAwareGenericForeignKey, self).get_content_type(obj, **kwargs)

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import warnings
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
@@ -9,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
-from polymodels.utils import copy_fields, get_content_type
+from polymodels.utils import copy_fields
 
 from .managers import FieldDefinitionManager, FieldDefinitionChoiceManager
 from ..model import ModelDefinitionAttribute
@@ -256,7 +257,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
 
     @classmethod
     def get_content_type(cls):
-        return get_content_type(cls)
+        return ContentType.objects.get_for_model(cls, for_concrete_model=False)
 
     def get_field_choices(self):
         return tuple(self.choices.as_choices())
