@@ -9,9 +9,6 @@ python:
   - 2.7
 
 env:
-  - REQUIREMENTS=1.4.X SETTINGS=sqlite3
-  - REQUIREMENTS=1.4.X-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
-  - REQUIREMENTS=1.4.X-postgres SETTINGS=postgis TEMPLATE=template_postgis
   - REQUIREMENTS=1.5.X SETTINGS=sqlite3
   - REQUIREMENTS=1.5.X-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
   - REQUIREMENTS=1.5.X-postgres SETTINGS=postgis TEMPLATE=template_postgis
@@ -24,9 +21,6 @@ env:
 
 matrix:
   allow_failures:
-    - env: REQUIREMENTS=1.6.X SETTINGS=sqlite3
-    - env: REQUIREMENTS=1.6.X-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
-    - env: REQUIREMENTS=1.6.X-postgres SETTINGS=postgis TEMPLATE=template_postgis
     - env: REQUIREMENTS=master SETTINGS=sqlite3
     - env: REQUIREMENTS=master-postgres SETTINGS=postgresql_psycopg2 TEMPLATE=template0
     - env: REQUIREMENTS=master-postgres SETTINGS=postgis TEMPLATE=template_postgis
