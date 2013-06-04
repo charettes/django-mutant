@@ -31,15 +31,8 @@ def perform_ddl(model, action, *args, **kwargs):
                             "since we can't assume it's safe to execute it now. "
                             "Statements was: %s", statement)
             db.clear_deferred_sql()
-        db.start_transaction()
-        try:
-            getattr(db, action)(*args, **kwargs)
-            db.execute_deferred_sql()
-        except Exception:
-            db.rollback_transaction()
-            raise
-        else:
-            db.commit_transaction()
+        getattr(db, action)(*args, **kwargs)
+        db.execute_deferred_sql()
 
 
 def nonraw_instance(receiver):
