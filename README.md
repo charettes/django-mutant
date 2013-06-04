@@ -25,8 +25,6 @@ The project is still in an early phase but a couple of complex things already wo
             defined_field_options = ('auto_now', 'auto_now_add',)
             defined_field_category = _(u'datetime')
 
-This approach also allows projects such as [django-non-rel](https://github.com/django-nonrel/django-nonrel) to be truly useful since both your schema and your ORM wrapper around it are flexible.
-
 ## Get in touch and contribute
 
 From now on I think the best way to contribute and get in touch is using github messaging system (issues and pull requests)
