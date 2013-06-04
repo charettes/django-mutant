@@ -16,8 +16,7 @@ from ..model import ModelDefinitionAttribute
 from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
     PythonIdentifierField)
 from ...hacks import patch_model_option_verbose_name_raw
-from ...utils import (get_concrete_model, lazy_string_format, model_name,
-    popattr)
+from ...utils import lazy_string_format, model_name, popattr
 
 
 patch_model_option_verbose_name_raw()
@@ -74,12 +73,12 @@ class FieldDefinitionBase(models.base.ModelBase):
             has_verbose_name_plural = False
 
         definition = super(FieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
+        opts = definition._meta
 
         # Store the FieldDefinition cls
         if cls._base_definition is None:
             cls._base_definition = definition
         else:
-            opts = definition._meta
             base_definition = cls._base_definition
             parents = [definition]
             while parents:
@@ -108,7 +107,7 @@ class FieldDefinitionBase(models.base.ModelBase):
             # overriding the delete methods since it might not be called
             # when deleting the associated model definition.
             if definition.delete != base_definition.delete:
-                concrete_model = get_concrete_model(definition)
+                concrete_model = opts.concrete_model
                 if (opts.proxy and
                     concrete_model.delete != base_definition.delete):
                     # Because of the workaround for django #18083 in
@@ -203,7 +202,8 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         return super(FieldDefinition, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self._meta.proxy:
+        opts = self._meta
+        if opts.proxy:
             # TODO: #18083
             # Ok so this is a big issue: proxy model deletion is completely
             # broken. When you delete a inherited model proxy only the proxied
@@ -211,7 +211,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
             # proxied model and it's subclasses. Here we attempt to fix this by
             # getting the concrete model instance of the proxy and deleting it
             # while sending proxy model signals.
-            concrete_model = get_concrete_model(self)
+            concrete_model = opts.concrete_model
             concrete_model_instance = copy_fields(self, concrete_model)
 
             # Send proxy pre_delete
