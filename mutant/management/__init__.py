@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from functools import wraps
 
+import django
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, router
 from django.db.models.fields import FieldDoesNotExist
@@ -24,6 +25,7 @@ def allow_syncdbs(model):
 def perform_ddl(model, action, *args, **kwargs):
     if model._meta.managed:
         return
+
     for db in allow_syncdbs(model):
         if db.deferred_sql:
             for statement in db.deferred_sql:
@@ -31,8 +33,20 @@ def perform_ddl(model, action, *args, **kwargs):
                             "since we can't assume it's safe to execute it now. "
                             "Statements was: %s", statement)
             db.clear_deferred_sql()
-        getattr(db, action)(*args, **kwargs)
-        db.execute_deferred_sql()
+
+        if django.VERSION >= (1, 6):
+            getattr(db, action)(*args, **kwargs)
+            db.execute_deferred_sql()
+        else:
+            db.start_transaction()
+            try:
+                getattr(db, action)(*args, **kwargs)
+                db.execute_deferred_sql()
+            except Exception:
+                db.rollback_transaction()
+                raise
+            else:
+                db.commit_transaction()
 
 
 def nonraw_instance(receiver):
