@@ -34,6 +34,7 @@ matrix:
 install:
   - pip install argparse coverage django-coverage -q --use-mirrors
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
+  - pip freeze
 
 before_script:
   - if echo $SETTINGS | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis -q > /dev/null; fi
