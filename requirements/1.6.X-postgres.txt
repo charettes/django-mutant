@@ -1,0 +1,2 @@
+-r 1.6.X.txt
+psycopg2==2.5
