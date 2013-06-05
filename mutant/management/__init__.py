@@ -140,14 +140,14 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                 if add_columns:
                     for field in declared_fields:
                         perform_ddl(model_class, 'add_column', table_name,
-                                    field.name, field, keep_default=False)
+                                    field.name, field)
         else:
             for field in declared_fields:
                 try:
                     old_field = opts.get_field(field.name)
                 except FieldDoesNotExist:
                     perform_ddl(model_class, 'add_column', table_name,
-                                field.name, field, keep_default=False)
+                                field.name, field)
                 else:
                     column = old_field.get_attname_column()[1]
                     perform_ddl(model_class, 'alter_column', table_name,
@@ -223,9 +223,6 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         if hasattr(instance._state, '_creation_default_value'):
             field.default = instance._state._creation_default_value
             delattr(instance._state, '_creation_default_value')
-            keep_default = False
-        else:
-            keep_default = True
         try:
             add_column = getattr(instance._state, '_add_column')
         except AttributeError:
@@ -235,7 +232,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         finally:
             if add_column:
                 perform_ddl(model_class, 'add_column', table_name,
-                            instance.name, field, keep_default=keep_default)
+                            instance.name, field)
     else:
         column = field.get_attname_column()[1]
         old_field = instance._state._pre_save_field
