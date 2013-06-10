@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from ...models import FieldDefinitionManager
-from ..text.models import CharFieldDefinition
 from ...db.fields.python import DirectoryPathField, RegExpStringField
+from ...models.field.managers import FieldDefinitionManager
+
+from ..text.models import CharFieldDefinition
 
 
 path_help_text = _('The absolute filesystem path to a directory from which '

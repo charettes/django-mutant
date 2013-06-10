@@ -54,7 +54,7 @@ class FieldDefinitionTestMixin(object):
 
     def setUp(self):
         super(FieldDefinitionTestMixin, self).setUp()
-        self.field = self.field_definition_cls.objects.create(
+        self.field = self.field_definition_cls._default_manager.create(
             model_def=self.model_def,
             name='field',
             **self.field_definition_init_kwargs
@@ -78,6 +78,27 @@ class FieldDefinitionTestMixin(object):
         instance = Model.objects.create()
         created_default = self.prepare_default_value(self.get_field_value(instance))
         self.assertEqual(created_default, default)
+
+    def test_create_with_default(self):
+        """
+        Makes sure a field definition manager is attached to the model and
+        `create_with_default` works correctly.
+        """
+        Model = self.model_def.model_class()
+        field_value = self.field_values[0]
+        instance = Model.objects.create(field=field_value)
+        # Add the field with a default.
+        create_default = self.prepare_default_value(field_value)
+        options = dict(**self.field_definition_init_kwargs)
+        options['default'] = create_default
+        self.field_definition_cls._default_manager.create_with_default(
+            model_def=self.model_def, name='field_created_with_default',
+            **options
+        )
+        created_value = self.prepare_default_value(
+            Model.objects.get(pk=instance.pk).field_created_with_default
+        )
+        self.assertEqual(created_value, create_default)
 
     def test_model_save(self):
         first_value, second_value = self.field_values

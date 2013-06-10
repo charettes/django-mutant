@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.db.models import fields
 from django.utils.translation import ugettext_lazy as _
 
-from ...models import FieldDefinition
+from ...models.field import FieldDefinition
 
 
 class _BooleanMeta:

@@ -21,7 +21,7 @@ class FilePathFieldDefinitionTest(testcases.FieldDefinitionTestMixin,
     field_definition_cls = models.FilePathFieldDefinition
     field_definition_init_kwargs = {'path': PACKAGE_PATH}
     field_values = (MODULE_PATH, MODELS_MODULE_PATH)
-    
+
     def test_formfield(self):
         self.field.match = r'\.pyc?$'
         self.field.save()
