@@ -36,4 +36,4 @@ before_script:
   - if echo $SETTINGS | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres -q; fi
 
 script:
-  - python -Wonce `which django-admin.py` test_coverage --pythonpath=`pwd` --settings=tests.settings.$SETTINGS -v2
+  - python -Wonce `which django-admin.py` test_coverage --pythonpath=`pwd` --settings=mutant.tests.settings.$SETTINGS -v2

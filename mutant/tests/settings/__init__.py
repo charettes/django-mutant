@@ -28,7 +28,7 @@ else:
     INSTALLED_APPS.append('django_coverage')
 
 
-TEST_RUNNER = 'tests.runners.MutantTestSuiteRunner'
+TEST_RUNNER = 'mutant.tests.runners.MutantTestSuiteRunner'
 
 TEST_DEFAULT_LABELS = [
     'mutant',
