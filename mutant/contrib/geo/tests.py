@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from unittest.case import expectedFailure
+
 from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)
 from django.utils.translation import ugettext_lazy as _
@@ -15,16 +17,21 @@ from .models import (GeoModel, GeometryFieldDefinition,
     MultiPolygonFieldDefinition)
 
 
-class GeometryFieldDefinitionBaseTest(BaseModelDefinitionTestCase):
+class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _('Geometry')
 
     def setUp(self):
-        super(GeometryFieldDefinitionBaseTest, self).setUp()
+        super(GeometryFieldDefinitionTestMixin, self).setUp()
         BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
 
+    @expectedFailure
+    def test_create_with_default(self):
+        """'Geometry field defaults are not correctly handled by South.'"""
+        super(GeometryFieldDefinitionTestMixin, self).test_create_with_default()
 
-class GeometryFieldDefinitionTest(FieldDefinitionTestMixin,
-                                  GeometryFieldDefinitionBaseTest):
+
+class GeometryFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                  BaseModelDefinitionTestCase):
     field_definition_cls = GeometryFieldDefinition
     field_values = (
         LineString((1, 2), (3, 4), (5, 6), (7, 8), (9, 10)),
@@ -32,14 +39,14 @@ class GeometryFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class PointFieldDefinitionTest(FieldDefinitionTestMixin,
-                               GeometryFieldDefinitionBaseTest):
+class PointFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                               BaseModelDefinitionTestCase):
     field_definition_cls = PointFieldDefinition
     field_values = (Point(5, 23), Point(13, 37))
 
 
-class LineStringFieldDefinitionTest(FieldDefinitionTestMixin,
-                                    GeometryFieldDefinitionBaseTest):
+class LineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                    BaseModelDefinitionTestCase):
     field_definition_cls = LineStringFieldDefinition
     field_values = (
         LineString((0, 0), (0, 50), (50, 50), (50, 0), (0, 0)),
@@ -47,8 +54,8 @@ class LineStringFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class PolygonFieldDefinitionTest(FieldDefinitionTestMixin,
-                                 GeometryFieldDefinitionBaseTest):
+class PolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                 BaseModelDefinitionTestCase):
     field_definition_cls = PolygonFieldDefinition
     field_values = (
         Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0)) ),
@@ -56,8 +63,8 @@ class PolygonFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class MultiLineStringFieldDefinitionTest(FieldDefinitionTestMixin,
-                                         GeometryFieldDefinitionBaseTest):
+class MultiLineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                         BaseModelDefinitionTestCase):
     field_definition_cls = MultiLineStringFieldDefinition
     field_values = (
         MultiLineString(
@@ -72,8 +79,8 @@ class MultiLineStringFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class MultiPointFieldDefinitionTest(FieldDefinitionTestMixin,
-                                    GeometryFieldDefinitionBaseTest):
+class MultiPointFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                    BaseModelDefinitionTestCase):
     field_definition_cls = MultiPointFieldDefinition
     field_values = (
         MultiPoint(Point(0, 0), Point(1, 1)),
@@ -81,8 +88,8 @@ class MultiPointFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class MultiPolygonFieldDefinitionTest(FieldDefinitionTestMixin,
-                                      GeometryFieldDefinitionBaseTest):
+class MultiPolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                      BaseModelDefinitionTestCase):
     field_definition_cls = MultiPolygonFieldDefinition
     field_values = (
         MultiPolygon(
@@ -97,8 +104,8 @@ class MultiPolygonFieldDefinitionTest(FieldDefinitionTestMixin,
     )
 
 
-class GeometryCollectionFieldDefinitionTest(FieldDefinitionTestMixin,
-                                            GeometryFieldDefinitionBaseTest):
+class GeometryCollectionFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
+                                            BaseModelDefinitionTestCase):
     field_definition_cls = GeometryCollectionFieldDefinition
     field_values = (
         GeometryCollection(
