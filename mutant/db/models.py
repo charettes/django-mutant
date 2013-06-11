@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from .. import logger
 from ..utils import remove_from_app_cache
 
 
@@ -14,7 +15,7 @@ class MutableModel(models.Model):
     class Meta:
         abstract = True
 
-    @classmethod 
+    @classmethod
     def definition(cls):
         definition_cls, definition_pk = cls._definition
         return definition_cls.objects.get(pk=definition_pk)
@@ -27,6 +28,10 @@ class MutableModel(models.Model):
     def mark_as_obsolete(cls):
         remove_from_app_cache(cls)
         cls._is_obsolete = True
+        logger.debug(
+            "Marking model %s and it dependencies (%s) as obsolete.",
+            cls, cls._dependencies
+        )
         for definition_cls, definition_pk in cls._dependencies:
             try:
                 definition = definition_cls.objects.get(pk=definition_pk)

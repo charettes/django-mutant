@@ -220,7 +220,7 @@ class ModelDefinition(ContentType):
         model_class = type(str(self.object_name), bases, attrs)
         mutable_class_prepared.send(sender=model_class, definition=self,
                                     existing_model_class=existing_model_class)
-        logger.debug("Created model class %s", model_class)
+        logger.debug("Created model class %s.", model_class)
         return model_class
 
     def model_class(self, force_create=False):
