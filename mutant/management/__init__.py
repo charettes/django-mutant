@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 from functools import wraps
 
 import django
@@ -162,9 +163,8 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     signal that is no more available thereafter.
     """
     # see CASCADE_MARK_ORIGIN's docstring
-    if hasattr(instance._state, '_cascade_deletion_origin'):
-        if popattr(instance._state, '_cascade_deletion_origin') == 'model_def':
-            return
+    if popattr(instance._state, '_cascade_deletion_origin', None) == 'model_def':
+        return
     if (instance.base and issubclass(instance.base, models.Model) and
         instance.base._meta.abstract):
         model_class = instance.model_def.model_class()
@@ -257,9 +257,8 @@ FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
           dispatch_uid='mutant.management.field_definition_pre_delete')
 def field_definition_pre_delete(sender, instance, **kwargs):
     # see CASCADE_MARK_ORIGIN's docstring
-    if hasattr(instance._state, '_cascade_deletion_origin'):
-        if popattr(instance._state, '_cascade_deletion_origin') == 'model_def':
-            return
+    if popattr(instance._state, '_cascade_deletion_origin', None) == 'model_def':
+        return
     model_class = instance.model_def.model_class()
     opts = model_class._meta
     field = opts.get_field(instance.name)
