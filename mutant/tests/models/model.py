@@ -125,11 +125,23 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.assertTableExists(db, table_name)
 
     def test_fixture_loading(self):
-        call_command('loaddata', 'fixture_loading_test', verbosity=0, commit=False)
-        model_def = ModelDefinition.objects.get(app_label='myfixtureapp',
-                                                object_name='MyFixtureModel')
-        Model = model_def.model_class()
-        Model.objects.create()
+        """
+        Make model and field definitions can be loaded from fixtures.
+        """
+        call_command(
+            'loaddata', 'fixture_loading_test', verbosity=0, commit=False
+        )
+        self.assertTrue(
+            ModelDefinition.objects.filter(
+                app_label='myfixtureapp', object_name='MyFixtureModel'
+            ).exists()
+        )
+        model_def = ModelDefinition.objects.get(
+            app_label='myfixtureapp', object_name='MyFixtureModel'
+        )
+        MyFixtureModel = model_def.model_class()
+        self.assertModelTablesExist(MyFixtureModel)
+        self.assertModelTablesColumnExists(MyFixtureModel, 'fixture_column')
 
     def test_verbose_name(self):
         Model = self.model_def.model_class()

@@ -1,20 +1,56 @@
 [
     {
-        "pk": 9999, 
-        "model": "contenttypes.contenttype", 
+        "pk": 9999,
+        "model": "contenttypes.contenttype",
         "fields": {
-            "model": "myfixturemodel", 
-            "name": "my fixture model", 
+            "model": "myfixturemodel",
+            "name": "my fixture model",
             "app_label": "myfixtureapp"
         }
     },
     {
-        "pk": 9999, 
-        "model": "mutant.modeldefinition", 
+        "pk": 9999,
+        "model": "mutant.modeldefinition",
         "fields": {
-            "object_name": "MyFixtureModel", 
-            "verbose_name": null, 
-            "verbose_name_plural": null
+            "object_name": "MyFixtureModel",
+            "verbose_name": null,
+            "verbose_name_plural": null,
+            "db_table": "fixture_model_table"
+        }
+    },
+    {
+        "pk": 9999,
+        "model": "mutant.fielddefinition",
+        "fields": {
+            "primary_key": false,
+            "unique_for_month": null,
+            "unique": false,
+            "name": "fixture_field",
+            "model_def": [
+                "myfixtureapp",
+                "myfixturemodel"
+            ],
+            "default": "",
+            "editable": true,
+            "unique_for_year": null,
+            "content_type": [
+                "mutant",
+                "charfielddefinition"
+            ],
+            "blank": true,
+            "help_text": null,
+            "db_column": "fixture_column",
+            "null": true,
+            "verbose_name": "",
+            "unique_for_date": null,
+            "db_index": false
+        }
+    },
+    {
+        "pk": 9999,
+        "model": "mutant.charfielddefinition",
+        "fields": {
+            "max_length": 255
         }
     }
 ]
