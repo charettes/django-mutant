@@ -1,2 +1,2 @@
 -r base.txt
-https://github.com/django/django/archive/1.6a1.tar.gz
+https://github.com/django/django/archive/1.6b1.tar.gz
