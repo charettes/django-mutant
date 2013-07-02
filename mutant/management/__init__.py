@@ -97,7 +97,7 @@ def model_definition_post_save(sender, instance, created, **kwargs):
             delattr(instance._state, '_create_delayed_save')
         perform_ddl(model_class, 'create_table', opts.db_table, fields)
         instance.model_class(force_create=True)
-    else:
+    elif instance._model_class:
         old_opts = instance._model_class._meta
         if old_opts.db_table != opts.db_table:
             perform_ddl(model_class, 'rename_table', old_opts.db_table, opts.db_table)
@@ -208,13 +208,31 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
             perform_ddl(model_class, 'create_unique', table_name, columns)
 
 
+@receiver(post_save, sender=FieldDefinition,
+          dispatch_uid='mutant.management.raw_field_definition_proxy_post_save')
+def raw_field_definition_proxy_post_save(sender, instance, raw, **kwargs):
+    """
+    When proxy field definitions are loaded from a fixture they're not
+    passing through the `field_definition_post_save` signal. Make sure they
+    are.
+    """
+    if raw:
+        model_class = instance.content_type.model_class()
+        opts = model_class._meta
+        if opts.proxy and opts.concrete_model is sender:
+            field_definition_post_save(
+                sender=model_class, instance=instance.type_cast(), raw=raw,
+                **kwargs
+            )
+
+
 @nonraw_instance
 def field_definition_post_save(sender, instance, created, raw, **kwargs):
     """
     This signal is connected by all FieldDefinition subclasses
     see comment in FieldDefinitionBase for more details
     """
-    # If the field definition is raw we must re-create the model definition
+    # If the field definition is raw we must re-create the model class
     # since ModelDefinitionAttribute.save won't be called
     model_class = instance.model_def.model_class(force_create=raw)
     table_name = model_class._meta.db_table

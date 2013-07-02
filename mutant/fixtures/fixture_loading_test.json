@@ -25,7 +25,7 @@
             "primary_key": false,
             "unique_for_month": null,
             "unique": false,
-            "name": "fixture_field",
+            "name": "fixture_charfield",
             "model_def": [
                 "myfixtureapp",
                 "myfixturemodel"
@@ -39,7 +39,7 @@
             ],
             "blank": true,
             "help_text": null,
-            "db_column": "fixture_column",
+            "db_column": "fixture_charfieldcolumn",
             "null": true,
             "verbose_name": "",
             "unique_for_date": null,
@@ -51,6 +51,34 @@
         "model": "mutant.charfielddefinition",
         "fields": {
             "max_length": 255
+        }
+    },
+    {
+        "pk": 9998,
+        "model": "mutant.fielddefinition",
+        "fields": {
+            "primary_key": false,
+            "unique_for_month": null,
+            "unique": false,
+            "name": "fixture_integerfield",
+            "model_def": [
+                "myfixtureapp",
+                "myfixturemodel"
+            ],
+            "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==",
+            "editable": true,
+            "unique_for_year": null,
+            "content_type": [
+                "mutant",
+                "integerfielddefinition"
+            ],
+            "blank": true,
+            "help_text": null,
+            "db_column": "fixture_integerfieldcolumn",
+            "null": true,
+            "verbose_name": "",
+            "unique_for_date": null,
+            "db_index": false
         }
     }
 ]

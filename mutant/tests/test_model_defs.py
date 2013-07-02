@@ -142,7 +142,22 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         )
         MyFixtureModel = model_def.model_class()
         self.assertModelTablesExist(MyFixtureModel)
-        self.assertModelTablesColumnExists(MyFixtureModel, 'fixture_column')
+        # Makes sure concrete field definition subclasses are created...
+        self.assertTrue(
+            model_def.fielddefinitions.filter(
+                name='fixture_charfield'
+            ).exists()
+        )
+        # and their column is created.
+        self.assertModelTablesColumnExists(MyFixtureModel, 'fixture_charfieldcolumn')
+        # Makes sure proxy field definition subclasses are created...
+        self.assertTrue(
+            model_def.fielddefinitions.filter(
+                name='fixture_integerfield'
+            ).exists()
+        )
+        # and their column is created.
+        self.assertModelTablesColumnExists(MyFixtureModel, 'fixture_integerfieldcolumn')
 
     def test_verbose_name(self):
         Model = self.model_def.model_class()
