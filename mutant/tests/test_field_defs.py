@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 
+try:
+    from unittest.case import TestCase
+except ImportError:  # TODO: Remove when support for Python 2.6 is dropped
+    from django.utils.unittest.case import TestCase
 import warnings
 
 from django.core.exceptions import ValidationError
-from django.utils.unittest.case import TestCase
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
