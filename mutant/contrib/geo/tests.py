@@ -6,9 +6,9 @@ from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)
 from django.utils.translation import ugettext_lazy as _
 
-from ...models import BaseDefinition
-from ...test.testcases import FieldDefinitionTestMixin
-from ...tests.models import BaseModelDefinitionTestCase
+from mutant.models import BaseDefinition
+from mutant.test.testcases import FieldDefinitionTestMixin
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 from .models import (GeoModel, GeometryFieldDefinition,
     GeometryCollectionFieldDefinition, LineStringFieldDefinition,
@@ -35,7 +35,9 @@ class GeometryFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     field_definition_cls = GeometryFieldDefinition
     field_values = (
         LineString((1, 2), (3, 4), (5, 6), (7, 8), (9, 10)),
-        Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) )
+        Polygon(
+            ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+        )
     )
 
 
@@ -58,8 +60,12 @@ class PolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                  BaseModelDefinitionTestCase):
     field_definition_cls = PolygonFieldDefinition
     field_values = (
-        Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0)) ),
-        Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
+        Polygon(
+            ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0))
+        ),
+        Polygon(
+            ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+        ),
     )
 
 
@@ -93,13 +99,23 @@ class MultiPolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     field_definition_cls = MultiPolygonFieldDefinition
     field_values = (
         MultiPolygon(
-            Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0)) ),
-            Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
+            Polygon(
+                ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0))
+            ),
+            Polygon(
+                ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+            ),
         ),
         MultiPolygon(
-            Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0)) ),
-            Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
-            Polygon( ((0.0, 0.0), (0.0, 50.0), (50.0, 51.0), (50.0, 45), (0.0, 0.0)) ),
+            Polygon(
+                ((0.0, 0.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (0.0, 0.0))
+            ),
+            Polygon(
+                ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+            ),
+            Polygon(
+                ((0.0, 0.0), (0.0, 50.0), (50.0, 51.0), (50.0, 45), (0.0, 0.0))
+            ),
         ),
     )
 
@@ -110,11 +126,15 @@ class GeometryCollectionFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     field_values = (
         GeometryCollection(
             Point(0, 0),
-            Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
+            Polygon(
+                ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+            ),
         ),
         GeometryCollection(
             LineString((1, 2), (3, 4), (5, 6), (7, 8), (9, 10)),
-            Polygon( ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0)) ),
+            Polygon(
+                ((0.0, 0.0), (18, 50.0), (47.0, 55.0), (50.0, 0.0), (0.0, 0.0))
+            ),
             Point(5, 23),
             Point(13, 37),
         ),

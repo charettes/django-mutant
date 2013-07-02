@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from ...test.testcases import FieldDefinitionTestMixin
-from ...tests.models.utils import BaseModelDefinitionTestCase
+from mutant.test.testcases import FieldDefinitionTestMixin
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 from .models import (EmailFieldDefinition, GenericIPAddressFieldDefinition,
     IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition)

@@ -7,10 +7,10 @@ from django.db.models.deletion import ProtectedError
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
-from ...models.model import ModelDefinition
-from ...test.testcases import FieldDefinitionTestMixin
-from ...tests.models.utils import BaseModelDefinitionTestCase
-from ...utils import app_cache_restorer
+from mutant.models import ModelDefinition
+from mutant.test.testcases import FieldDefinitionTestMixin
+from mutant.tests.utils import BaseModelDefinitionTestCase
+from mutant.utils import app_cache_restorer
 
 from .models import ForeignKeyDefinition
 
@@ -51,8 +51,12 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
 
     def test_field_deletion(self):
         def is_related_object_of_ct(model_class):
-            return any(related_obj.model == model_class
-                       for related_obj in ContentType._meta.get_all_related_objects(include_hidden=True))
+            related_objs = ContentType._meta.get_all_related_objects(
+                include_hidden=True
+            )
+            return any(
+                related_obj.model == model_class for related_obj in related_objs
+            )
         self.assertTrue(is_related_object_of_ct(self.model_def.model_class()))
         super(ForeignKeyDefinitionTest, self).test_field_deletion()
         self.assertFalse(is_related_object_of_ct(self.model_def.model_class()))

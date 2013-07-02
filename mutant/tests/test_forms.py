@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 from django.forms.forms import Form
 from django.test.testcases import TestCase
 
+from mutant.forms import FieldDefinitionTypeField
 from mutant.models.field import FieldDefinition
-
-from ..forms import FieldDefinitionTypeField
 
 
 class FieldDefinitionTypeFieldTest(TestCase):
@@ -23,6 +22,7 @@ class FieldDefinitionTypeFieldTest(TestCase):
 
     def test_form_validation(self):
         custom_field_ct = FieldDefinition.get_content_type()
+
         class CustomModelForm(Form):
             field_type = FieldDefinitionTypeField((FieldDefinition,))
         data = {'field_type': custom_field_ct.pk}

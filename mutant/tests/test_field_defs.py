@@ -9,7 +9,7 @@ from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.models.field import (FieldDefinition, FieldDefinitionChoice,
     NOT_PROVIDED)
-from mutant.tests.models.utils import BaseModelDefinitionTestCase
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
@@ -34,11 +34,14 @@ class FieldDefinitionDeclarationTest(TestCase):
                 class CustomFieldDefinition(FieldDefinition):
                     def delete(self, *args, **kwargs):
                         pass
+
                 class CustomFieldDefinitionProxy(CustomFieldDefinition):
                     class Meta:
                         proxy = True
+
                     def delete(self, *args, **kwargs):
                         pass
+
         self.assertIn('Avoid overriding the `delete` method on '
                       '`FieldDefinition` subclass `CustomFieldDefinition`',
                       catched_warnings[0].message.args[0])
@@ -152,5 +155,6 @@ class FieldDefinitionManagerTest(BaseModelDefinitionTestCase):
         fd = CharFieldDefinition.objects.create(name='name', max_length=5,
                                                 model_def=self.model_def)
         natural_key = fd.natural_key()
-        self.assertEqual(FieldDefinition.objects.get_by_natural_key(*natural_key),
-                         fd)
+        self.assertEqual(
+            FieldDefinition.objects.get_by_natural_key(*natural_key), fd
+        )

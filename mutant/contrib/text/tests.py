@@ -7,14 +7,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.unittest.case import skipIf, skipUnless
 import south
 
-from ...test.testcases import FieldDefinitionTestMixin
-from ...tests.models.utils import BaseModelDefinitionTestCase
+from mutant.test.testcases import FieldDefinitionTestMixin
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 from .models import CharFieldDefinition, TextFieldDefinition
 
 
 class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _('Text')
+
 
 class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
                               BaseModelDefinitionTestCase):
@@ -56,12 +57,12 @@ class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,
         Par moments me trahi
         Tu restes mon bonheur
         Petite fleur
-        
+
         Sur mes vingt ans
         Je m'arrête un moment
         Pour respirer
         Le parfum que j'ai tant aimé
-        
+
         Dans mon coeur
         Tu fleuriras toujours
         Au grand jardin d'amour

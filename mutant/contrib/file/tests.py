@@ -5,8 +5,8 @@ import sys
 
 from django.utils.translation import ugettext_lazy as _
 
-from ...test import testcases
-from ...tests.models.utils import BaseModelDefinitionTestCase
+from mutant.test import testcases
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 from . import models
 
@@ -14,6 +14,7 @@ from . import models
 PACKAGE_PATH = os.path.dirname(sys.modules[__name__].__file__)
 MODULE_PATH = os.path.abspath(sys.modules[__name__].__file__)
 MODELS_MODULE_PATH = os.path.abspath(models.__file__)
+
 
 class FilePathFieldDefinitionTest(testcases.FieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):

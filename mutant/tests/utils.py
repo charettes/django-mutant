@@ -91,6 +91,7 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
 
 def skipIfMutantModelDBFeature(feature, default=False):
     dbs = tuple(model_dbs(MutableModel))
+
     def _dbs_have_feature():
         return all(getattr(connections[db].features, feature, default)
                    for db in dbs)
@@ -100,6 +101,7 @@ def skipIfMutantModelDBFeature(feature, default=False):
 
 def skipUnlessMutantModelDBFeature(feature, default=True):
     dbs = tuple(model_dbs(MutableModel))
+
     def _dbs_dont_have_feature():
         return all(not getattr(connections[db].features, feature, default)
                    for db in dbs)

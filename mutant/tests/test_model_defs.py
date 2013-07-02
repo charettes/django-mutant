@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 import pickle
 
 from django.contrib.contenttypes.models import ContentType
@@ -13,13 +14,13 @@ from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.db.models import MutableModel
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
     UniqueTogetherDefinition, BaseDefinition)
-from mutant.tests.models.utils import (BaseModelDefinitionTestCase,
-    skipUnlessMutantModelDBFeature)
 from mutant.test.utils import CaptureQueriesContext
+
+from .utils import (BaseModelDefinitionTestCase,
+    skipUnlessMutantModelDBFeature)
 
 
 try:
-    raise ImportError()
     from test.test_support import captured_stderr
 except ImportError:
     # python 2.6 doesn't provide this helper
@@ -313,8 +314,8 @@ class ModelClassProxyTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model, a.model)
         self.assertEqual(Model, A.class_model)
 
-        a.model = Model # Assign a proxy
-        a.model = a.model # Assign a Model
+        a.model = Model  # Assign a proxy
+        a.model = a.model  # Assign a Model
         a.model = 4
 
     def test_definition_deletion(self):
@@ -377,8 +378,8 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     @skipUnlessMutantModelDBFeature('supports_joins')
     def test_simple_ordering(self):
         Model = self.model_def.model_class()
-        model_ct = ContentType.objects.get_for_model(Model) #app
-        ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
+        model_ct = ContentType.objects.get_for_model(Model)  # app
+        ct_ct = ContentType.objects.get_for_model(ContentType)  # contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=model_ct)
         # Instances should be sorted by id
@@ -420,8 +421,8 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     @skipUnlessMutantModelDBFeature('supports_joins')
     def test_multiple_ordering(self):
         Model = self.model_def.model_class()
-        model_ct = ContentType.objects.get_for_model(Model) #app
-        ct_ct = ContentType.objects.get_for_model(ContentType) #contenttypes
+        model_ct = ContentType.objects.get_for_model(Model)  # app
+        ct_ct = ContentType.objects.get_for_model(ContentType)  # contenttypes
         Model.objects.create(f1='Simon', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=model_ct)
         Model.objects.create(f1='Julia', f2=ct_ct)
@@ -515,7 +516,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_cannot_create_unique(self):
         """
-        Creating a unique key on a table with duplicate 
+        Creating a unique key on a table with duplicate
         rows shouldn't work
         """
         self.Model.objects.create(f1='a', f2='b')
@@ -536,7 +537,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_cannot_remove_unique(self):
         """
-        Removing a unique constraint that cause 
+        Removing a unique constraint that cause
         duplicate rows shouldn't work
         """
         self.ut.field_defs = (self.f1, self.f2)

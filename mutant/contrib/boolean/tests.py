@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.unittest.case import skipIf
 import south
 
-from ...test.testcases import FieldDefinitionTestMixin
-from ...tests.models.utils import BaseModelDefinitionTestCase
+from mutant.test.testcases import FieldDefinitionTestMixin
+from mutant.tests.utils import BaseModelDefinitionTestCase
 
 from .models import BooleanFieldDefinition, NullBooleanFieldDefinition
 

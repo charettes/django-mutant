@@ -6,7 +6,7 @@ from optparse import make_option
 from django.conf import settings
 from django.test.simple import DjangoTestSuiteRunner
 
-from .. import logger
+from mutant import logger
 
 
 class MutantTestSuiteRunner(DjangoTestSuiteRunner):
