@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.gis.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from ....models import FieldDefinition, FieldDefinitionManager
+from mutant.models import FieldDefinition, FieldDefinitionManager
 
 
 srid_help_text = _('Spatial Reference System Identity')
@@ -12,6 +12,7 @@ spatial_index_help_text = _('Creates a spatial index for the given '
 dim_help_text = _('Coordinate dimension.')
 geography_help_text = _('Creates a database column of type geography, '
                         'rather than geometry.')
+
 
 class GeometryFieldDefinition(FieldDefinition):
     DIM_2D = 2
