@@ -46,7 +46,7 @@ class TestCommand(Command):
              '`which django-admin.py` %s '
              '--pythonpath %s '
              '--settings=mutant.tests.settings.%s '
-             '--verbosity=%s' % (
+             '--verbosity=%s --traceback' % (
                 self.warnings, cmd, MODULE_PATH, self.backend, self.verbosity
             ),
              shell=True
