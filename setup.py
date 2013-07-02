@@ -3,6 +3,7 @@ import os
 import re
 from setuptools import Command, find_packages, setup
 from subprocess import call
+import sys
 
 from mutant import __version__
 
@@ -40,7 +41,7 @@ class TestCommand(Command):
             cmd = 'test_coverage'
         else:
             cmd = 'test'
-        call(
+        sys.exit(call(
              'python -W%s '
              '`which django-admin.py` %s '
              '--pythonpath %s '
@@ -49,7 +50,7 @@ class TestCommand(Command):
                 self.warnings, cmd, MODULE_PATH, self.backend, self.verbosity
             ),
              shell=True
-        )
+        ))
 
 
 LINK_REQUIREMENT = re.compile(
