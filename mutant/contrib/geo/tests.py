@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 try:
-    from unittest.case import expectedFailure
+    from unittest import expectedFailure
 except ImportError:  # TODO: Remove when support for Python 2.6 is dropped
-    from django.utils.unittest.case import expectedFailure
+    from django.utils.unittest import expectedFailure
 
 from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
     Polygon, MultiLineString, MultiPoint, MultiPolygon)

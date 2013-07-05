@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 try:
-    from unittest.case import skipIf
+    from unittest import skipIf
 except ImportError:  # TODO: Remove when support for Python 2.6 is dropped
-    from django.utils.unittest.case import skipIf
+    from django.utils.unittest import skipIf
 
 from django.db import connection
 from django.utils.translation import ugettext_lazy as _
