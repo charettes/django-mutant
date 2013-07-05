@@ -1,57 +1,12 @@
 #!/usr/bin/env python
 import os
 import re
-from setuptools import Command, find_packages, setup
-from subprocess import call
-import sys
+from setuptools import find_packages, setup
 
 from mutant import __version__
 
 
 MODULE_PATH = os.path.abspath(os.path.dirname(__file__))
-
-
-class TestCommand(Command):
-    user_options = [
-        ('backend=', None, 'Database backend (defaults to sqlite3).'),
-        ('coverage', None, 'Display a coverage report.'),
-        ('warnings=', None, 'Python warning level (defaults to once).'),
-        ('verbosity=', None, 'Test output verbosity.')
-    ]
-
-    def initialize_options(self):
-        self.backend = 'sqlite3'
-        self.coverage = False
-        self.verbosity = 1
-        self.warnings = 'once'
-
-    def finalize_options(self):
-        if not self.verbose:
-            self.verbosity = 0
-
-    def run(self):
-        if self.coverage:
-            try:
-                import coverage
-                import django_coverage
-            except ImportError:
-                raise ValueError(
-                    'You must install `coverage` and `django_coverage`.'
-                )
-            cmd = 'test_coverage'
-        else:
-            cmd = 'test'
-        sys.exit(call(
-             'python -W%s '
-             '`which django-admin.py` %s '
-             '--pythonpath %s '
-             '--settings=mutant.tests.settings.%s '
-             '--verbosity=%s --traceback' % (
-                self.warnings, cmd, MODULE_PATH, self.backend, self.verbosity
-            ),
-             shell=True
-        ))
-
 
 LINK_REQUIREMENT = re.compile(
     r'^https://.+#egg=(?P<package>.+)-(?P<version>\d(?:\.\d)*)$'
@@ -92,6 +47,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
-    ],
-    cmdclass={'test': TestCommand}
+    ]
 )

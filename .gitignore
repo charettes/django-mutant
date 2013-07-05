@@ -1,10 +1,4 @@
-
-syntax:glob
-*.db
-*.pyc
-*.orig
-.pydevproject
-.settings/*
-.DS_Store
+*.py[co]
 dist/
 django_mutant.egg-info/*
+.coverage

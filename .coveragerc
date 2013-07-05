@@ -1,0 +1,4 @@
+[run]
+source = mutant
+branch = True
+omit = mutant/*tests*

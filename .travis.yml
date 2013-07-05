@@ -20,10 +20,6 @@ env:
   - REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
 
 matrix:
-  allow_failures:
-    - env: REQUIREMENTS=master BACKEND=sqlite3
-    - env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
-    - env: REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
   exclude:
     - python: 2.6
       env: REQUIREMENTS=master BACKEND=sqlite3
@@ -31,10 +27,14 @@ matrix:
       env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
     - python: 2.6
       env: REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
+  allow_failures:
+    - env: REQUIREMENTS=master BACKEND=sqlite3
+    - env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
+    - env: REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
 
 install:
-  - pip install argparse coverage django-coverage -q --use-mirrors
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
+  - pip install coveralls -q --use-mirrors
   - pip freeze
 
 before_script:
@@ -44,4 +44,8 @@ before_script:
   - if echo $BACKEND | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres -q; fi
 
 script:
-  - ./setup.py test --backend=$BACKEND --coverage --verbosity=2
+  - python -Wonce `which coverage` run `which django-admin.py` test --pythonpath=`pwd` --settings=mutant.tests.settings.$BACKEND -v2
+
+after_success:
+  - coverage report -m
+  - coveralls
