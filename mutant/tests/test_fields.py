@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
-try:
+import sys
+# TODO: Remove when support for Python 2.6 is dropped
+if sys.version_info >= (2, 7):
     from unittest import TestCase
-except ImportError:  # TODO: Remove when support for Python 2.6 is dropped
+else:
     from django.utils.unittest import TestCase
 
 from django.core.exceptions import ImproperlyConfigured
