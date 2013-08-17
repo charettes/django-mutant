@@ -86,6 +86,13 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model, self.model_def.model_class())
         self.assertNotEqual(Model, self.model_def.model_class(force_create=True))
 
+    def test_repr(self):
+        """
+        Make sure ModelDefinition objects are always repr()-able.
+        """
+        repr(self.model_def)
+        repr(ModelDefinition())
+
     def get_model_db_table_name(self, model_def):
         model_class = model_def.model_class()
         return router.db_for_write(model_class), model_class._meta.db_table
@@ -502,6 +509,13 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
                                                      name='f2', max_length=25)
         self.ut = UniqueTogetherDefinition.objects.create(model_def=self.model_def)
         self.Model = self.model_def.model_class()
+
+    def test_repr(self):
+        """
+        Make sure UniqueTogetherDefinition objects are always repr()-able.
+        """
+        repr(self.ut)
+        repr(UniqueTogetherDefinition())
 
     def test_clean(self):
         """

@@ -42,7 +42,6 @@ class PythonIdentifierField(CharField):
 
     default_validators = [validate_python_identifier]
     description = _('Python identifier')
-    empty_strings_allowed = False
 
     def __init__(self, *args, **kwargs):
         defaults = {'max_length': 255}

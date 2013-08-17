@@ -393,15 +393,18 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
 
 
 class UniqueTogetherDefinition(ModelDefinitionAttribute):
-    field_defs = models.ManyToManyField('FieldDefinition',
-                                        related_name='unique_together_defs')
+    field_defs = models.ManyToManyField(
+        'FieldDefinition', related_name='unique_together_defs'
+    )
 
     class Meta:
         app_label = 'mutant'
 
     def __unicode__(self):
-        names = ', '.join(self.field_defs.names())
-        return _("Unique together of (%s)") % names
+        if self.pk:
+            names = ', '.join(self.field_defs.names())
+            return _("Unique together of (%s)") % names
+        return ''
 
     def clean(self):
         for field_def in self.field_defs.select_related('model_def'):
