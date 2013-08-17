@@ -55,8 +55,8 @@ if django.VERSION < (1, 7):
 
         def get_content_type(self, obj=None, **kwargs):
             if obj:
-                return ContentType.objects.db_manager(obj._state.db.get_for_model(
-                    obj.__class__, for_concrete_model=False)
+                return ContentType.objects.db_manager(obj._state.db).get_for_model(
+                    obj.__class__, for_concrete_model=False
                 )
             else:
                 return super(ProxyAwareGenericForeignKey, self).get_content_type(obj, **kwargs)
