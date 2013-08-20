@@ -257,9 +257,10 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
         char_field = CharFieldDefinition(name='name', max_length=10)
         ct_ct = ContentType.objects.get_for_model(ContentType)
         fk_field = ForeignKeyDefinition(name='ct', to=ct_ct)
-        model_def = ModelDefinition.objects.create(fields=(char_field, fk_field),
-                                                   app_label='app',
-                                                   object_name='OtherModel')
+        model_def = ModelDefinition.objects.create(
+            app_label='app', object_name='OtherModel',
+            fields=[char_field, fk_field]
+        )
         model_cls = model_def.model_class()
         db = router.db_for_write(model_cls)
         table = model_cls._meta.db_table
@@ -273,23 +274,45 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
     def test_bases_creation(self):
         mixin_base = BaseDefinition(base=Mixin)
         abstract_base = BaseDefinition(base=AbstractModel)
-        abstract_concrete_base = BaseDefinition(base=AbstractConcreteModelSubclass)
+        abstract_concrete_base = BaseDefinition(
+            base=AbstractConcreteModelSubclass
+        )
         model_def = ModelDefinition.objects.create(
-            bases=(mixin_base, abstract_base, abstract_concrete_base),
-            app_label='app',
-            object_name='OtherModel'
+            app_label='app', object_name='OtherModel',
+            bases=[mixin_base, abstract_base, abstract_concrete_base],
         )
         model = model_def.model_class()
-        self.assertModelTablesColumnExists(model, 'abstract_model_field')
-        self.assertModelTablesColumnDoesntExists(model, 'concrete_model_field')
-        self.assertModelTablesColumnExists(model, 'abstract_concrete_model_subclass_field')
+        self.assertModelTablesColumnExists(
+            model, 'abstract_model_field'
+        )
+        self.assertModelTablesColumnDoesntExists(
+            model, 'concrete_model_field'
+        )
+        self.assertModelTablesColumnExists(
+            model, 'abstract_concrete_model_subclass_field'
+        )
 
     def test_primary_key_override(self):
-        field = CharFieldDefinition(name='name', max_length=32, primary_key=True)
-        model_def = ModelDefinition.objects.create(fields=(field,),
-                                                   app_label='app',
-                                                   object_name='OtherModel')
-        self.assertEqual(model_def.model_class()._meta.pk.name, 'name')
+        field = CharFieldDefinition(
+            name='name', max_length=32, primary_key=True
+        )
+        model_def = ModelDefinition.objects.create(
+            fields=[field], app_label='app', object_name='OtherModel'
+        )
+        self.assertEqual(model_def.model_class()._meta.pk.name, field.name)
+
+    def test_get_or_create(self):
+        """
+        Make sure bases and fields defaults are reaching the model initializer.
+        """
+        field = CharFieldDefinition(name='name', max_length=32)
+        base = BaseDefinition(base=AbstractModel)
+        ModelDefinition.objects.get_or_create(
+            app_label='app', object_name='OtherModel',
+            defaults={'bases': [base], 'fields': [field]}
+        )
+        self.assertIsNotNone(field.pk)
+        self.assertIsNotNone(base.pk)
 
 
 class ModelValidationTest(BaseModelDefinitionTestCase):
