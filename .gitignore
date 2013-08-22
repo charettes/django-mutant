@@ -2,3 +2,4 @@
 dist/
 django_mutant.egg-info/*
 .coverage
+.tox
