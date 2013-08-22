@@ -9,13 +9,13 @@ from django.db.models import signals
 from django.utils.translation import ugettext_lazy as _
 from orderable.models import OrderableModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
+from polymodels.fields import PolymorphicTypeField
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields
 
 from .managers import FieldDefinitionManager, FieldDefinitionChoiceManager
 from ..model import ModelDefinitionAttribute
-from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    PythonIdentifierField)
+from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...hacks import patch_model_option_verbose_name_raw
 from ...utils import lazy_string_format, model_name, popattr
 
@@ -157,7 +157,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
 
     CONTENT_TYPE_FIELD = 'content_type'
-    content_type = FieldDefinitionTypeField()
+    content_type = PolymorphicTypeField('self')
 
     name = PythonIdentifierField(_('name'))
     verbose_name = LazilyTranslatedField(_('verbose name'), blank=True, null=True)
