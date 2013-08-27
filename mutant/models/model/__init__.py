@@ -225,22 +225,21 @@ class ModelDefinition(ContentType):
         return model_class
 
     def model_class(self, force_create=False):
-        existing_model_class = super(ModelDefinition, self).model_class()
-        if force_create:
-            model_class = self._create_model_class(existing_model_class)
-        elif existing_model_class is None:
-            model_class = self._create_model_class()
-        else:
-            model_class = existing_model_class
+        model_class = super(ModelDefinition, self).model_class()
+        if force_create or model_class is None:
+            model_class = self._create_model_class(model_class)
         return _ModelClassProxy(model_class)
 
     @property
     def model_ct(self):
-        content_type = getattr(self, '_contenttype_ptr_cache', None)
-        if content_type is None:
-            content_type = ContentType.objects.get(id=self.contenttype_ptr_id)
+        try:
+            content_type = self._contenttype_ptr_cache
+        except AttributeError:
+            content_type = ContentType.objects.get_for_id(
+                self.contenttype_ptr_id
+            )
             self._contenttype_ptr_cache = content_type
-        return self._contenttype_ptr_cache
+        return content_type
 
     def clean(self):
         """
