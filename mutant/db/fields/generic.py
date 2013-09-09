@@ -5,6 +5,21 @@ import warnings
 import django
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from polymodels.fields import PolymorphicTypeField
+
+from ... import forms
+
+
+class FieldDefinitionTypeField(PolymorphicTypeField):
+    def __init__(self, *args, **kwargs):
+        super(FieldDefinitionTypeField, self).__init__(
+            'mutant.FieldDefinition', *args, **kwargs
+        )
+
+    def formfield(self, **kwargs):
+        defaults = {'form_class': forms.FieldDefinitionTypeField}
+        defaults.update(kwargs)
+        return super(FieldDefinitionTypeField, self).formfield(**kwargs)
 
 
 # TODO: Remove when support for Django 1.5 is dropped.
