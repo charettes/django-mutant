@@ -16,18 +16,6 @@ def table_columns_iterator(db, table_name):
     return (row[0] for row in description)
 
 
-def db_is_nonrel(db):
-    """
-    Returns True if the db is non-relational
-    """
-    try:
-        from djangotoolbox.db.base import NonrelDatabaseWrapper
-    except ImportError:
-        return False
-    else:
-        return isinstance(connections[db], NonrelDatabaseWrapper)
-
-
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(
@@ -54,34 +42,31 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
             self.assertTableDoesntExists(db, table)
 
     def assertColumnExists(self, db, table, column):
-        if not db_is_nonrel(db):
-            columns = tuple(table_columns_iterator(db, table))
-            data = {
-                'db': db,
-                'table': table,
-                'column': column,
-                'columns': columns
-            }
-            self.assertIn(column, columns,
-                          "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
-                          "%(db)s.'%(table)s's columns are %(columns)s" % data)
+        columns = tuple(table_columns_iterator(db, table))
+        data = {
+            'db': db,
+            'table': table,
+            'column': column,
+            'columns': columns
+        }
+        self.assertIn(column, columns,
+                      "Column '%(db)s.%(table)s.%(column)s' doesn't exist, "
+                      "%(db)s.'%(table)s's columns are %(columns)s" % data)
 
     def assertColumnDoesntExists(self, db, table, column):
-        if not db_is_nonrel(db):
-            self.assertRaises(AssertionError, self.assertColumnExists,
-                              db, table, column)
+        self.assertRaises(
+            AssertionError, self.assertColumnExists, db, table, column
+        )
 
     def assertModelTablesColumnExists(self, model, column):
         table = model._meta.db_table
         for db in allow_migrate(model):
-            if not db_is_nonrel(db):
-                self.assertColumnExists(db, table, column)
+            self.assertColumnExists(db, table, column)
 
     def assertModelTablesColumnDoesntExists(self, model, column):
         table = model._meta.db_table
         for db in allow_migrate(model):
-            if not db_is_nonrel(db):
-                self.assertColumnDoesntExists(db, table, column)
+            self.assertColumnDoesntExists(db, table, column)
 
 
 def skipIfMutantModelDBFeature(feature, default=False):
