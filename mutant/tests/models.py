@@ -16,3 +16,6 @@ class CustomFieldDefinition(FieldDefinition):
 
 class FieldDefinitionModel(models.Model):
     field_type = FieldDefinitionTypeField()
+
+    class Meta:
+        app_label = 'mutant'

@@ -7,10 +7,24 @@ import imp
 from operator import itemgetter
 
 import django
+from django.db import connections, router
 from django.db.models.loading import cache as app_cache
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
 from django.utils.functional import lazy
+
+
+# TODO: Remove `allow_syncdb` alternative when support for 1.6 is dropped
+if django.VERSION >= (1, 7):
+    def allow_migrate(model):
+        for db in connections:
+            if router.allow_migrate(db, model):
+                yield db
+else:
+    def allow_migrate(model):
+        for db in connections:
+            if router.allow_syncdb(db, model):
+                yield db
 
 
 NOT_PROVIDED = object()

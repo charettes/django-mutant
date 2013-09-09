@@ -14,20 +14,15 @@ from south.db import dbs
 from .. import logger
 from ..models import (ModelDefinition, BaseDefinition, FieldDefinition,
     UniqueTogetherDefinition)
-from ..utils import popattr
-
-
-def allow_syncdbs(model):
-    for alias, db in dbs.iteritems():
-        if router.allow_syncdb(alias, model):
-            yield db
+from ..utils import allow_migrate, popattr
 
 
 def perform_ddl(model, action, *args, **kwargs):
     if model._meta.managed:
         return
 
-    for db in allow_syncdbs(model):
+    for alias in allow_migrate(model):
+        db = dbs[alias]
         if db.deferred_sql:
             for statement in db.deferred_sql:
                 logger.warn("Clearing non-executed deferred SQL statement "
