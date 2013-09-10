@@ -29,7 +29,7 @@ setup(
     name='django-mutant',
     version='.'.join(str(v) for v in __version__),
     description='Dynamic model definition and alteration (evolving schemas)',
-    long_description=open(os.path.join(MODULE_PATH, 'README.md')).read(),
+    long_description=open(os.path.join(MODULE_PATH, 'README.rst')).read(),
     url='https://github.com/charettes/django-mutant',
     author='Simon Charette',
     author_email='charette.s@gmail.com',
