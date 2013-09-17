@@ -45,7 +45,7 @@ your ``INSTALLED_APPS``
     INSTALLED_APPS += ('django.contrib.contenttypes', 'mutant')
 
 **********
-Ressources
+Resources
 **********
 - `DjangoCon Europe 2013 talk`_ about mutant and other dynamic model alternatives given by Juergen Schackmann.
 - `A getting started guide`_ with mutant guide by @integricho.
