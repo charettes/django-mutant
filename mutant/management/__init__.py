@@ -76,6 +76,11 @@ def model_definition_post_save(sender, instance, created, **kwargs):
         else:
             for column, field in extra_fields:
                 if field.primary_key:
+                    assert isinstance(primary_key, models.AutoField)
+                    primary_key = field
+                elif (field.rel and field.rel.parent_link and
+                      isinstance(primary_key, models.AutoField)):
+                    field.primary_key = True
                     primary_key = field
                 else:
                     fields.append((column, field))

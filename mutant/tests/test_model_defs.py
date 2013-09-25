@@ -282,12 +282,10 @@ class ModelDefinitionManagerTest(BaseModelDefinitionTestCase):
             bases=[mixin_base, abstract_base, abstract_concrete_base],
         )
         model = model_def.model_class()
-        self.assertModelTablesColumnExists(
-            model, 'abstract_model_field'
-        )
-        self.assertModelTablesColumnDoesntExists(
-            model, 'concrete_model_field'
-        )
+        self.assertModelTablesColumnDoesntExists(model, 'id')
+        self.assertModelTablesColumnExists(model, 'concretemodel_ptr_id')
+        self.assertModelTablesColumnExists(model, 'abstract_model_field')
+        self.assertModelTablesColumnDoesntExists(model, 'concrete_model_field')
         self.assertModelTablesColumnExists(
             model, 'abstract_concrete_model_subclass_field'
         )
