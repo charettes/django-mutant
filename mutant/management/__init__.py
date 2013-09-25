@@ -134,9 +134,26 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                 delattr(instance._state, '_add_columns')
             finally:
                 if add_columns:
+                    auto_pk = isinstance(opts.pk, models.AutoField)
                     for field in declared_fields:
-                        perform_ddl(model_class, 'add_column', table_name,
-                                    field.name, field)
+                        if auto_pk and field.rel and field.rel.parent_link:
+                            auto_pk = False
+                            field.primary_key = True
+                            auto_pk_column = opts.pk.get_attname_column()[1]
+                            perform_ddl(
+                                model_class, 'alter_column', table_name,
+                                auto_pk_column, field
+                            )
+                            column = field.get_attname_column()[1]
+                            perform_ddl(
+                                model_class, 'rename_column', table_name,
+                                auto_pk_column, column
+                            )
+                        else:
+                            perform_ddl(
+                                model_class, 'add_column', table_name,
+                                field.name, field
+                            )
         else:
             for field in declared_fields:
                 try:

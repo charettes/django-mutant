@@ -649,16 +649,18 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         self.assertRaisesMessage(ValidationError,
                                  _("Base can't be a proxy model."), bd.clean)
 
-    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_mutable_model_base(self):
         another_model_def = ModelDefinition.objects.create(app_label='app',
                                                            object_name='AnotherModel')
         AnotherModel = another_model_def.model_class()
+        auto_pk_column = AnotherModel._meta.pk.get_attname_column()[1]
+        self.assertModelTablesColumnExists(AnotherModel, auto_pk_column)
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name='f1', max_length=25)
         base_definition = BaseDefinition(model_def=another_model_def)
         base_definition.base = self.model_def.model_class()
         base_definition.save()
+        self.assertModelTablesColumnDoesntExists(AnotherModel, auto_pk_column)
         another_model = AnotherModel.objects.create(f1='Martinal')
         self.assertTrue(AnotherModel.objects.exists())
         CharFieldDefinition.objects.create(model_def=self.model_def,

@@ -332,7 +332,7 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
                 attr_name = '%s_ptr' % model_name(opts)
                 fields.append(
                     models.OneToOneField(
-                        self.base, name=attr_name, null=True,
+                        self.base, name=attr_name,
                         auto_created=True, parent_link=True
                     )
                 )
