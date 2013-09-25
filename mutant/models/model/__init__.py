@@ -103,6 +103,10 @@ class _ModelClassProxy(object):
         else:
             return NotImplemented
 
+    def __hash__(self, *args, **kwargs):
+        model_class = self.__get_model_class()
+        return hash(model_class)
+
     def __reduce__(self):
         model_class = self.__get_model_class()
         return (_model_class_from_pk, model_class._definition)

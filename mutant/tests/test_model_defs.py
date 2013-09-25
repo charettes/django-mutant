@@ -333,6 +333,11 @@ class ModelClassProxyTest(BaseModelDefinitionTestCase):
         pickled = pickle.dumps(Model)
         self.assertEqual(pickle.loads(pickled), Model)
 
+    def test_contains(self):
+        Model = self.model_def.model_class()
+        self.assertIn(Model, set([Model.model_class]))
+        self.assertIn(Model.model_class, set([Model]))
+
     def test_proxy_interactions(self):
         CharFieldDefinition.objects.create(model_def=self.model_def,
                                            name="name", max_length=10)
