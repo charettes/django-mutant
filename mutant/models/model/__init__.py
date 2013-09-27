@@ -66,7 +66,8 @@ class _ModelClassProxy(object):
             except ModelDefinition.DoesNotExist:
                 raise AttributeError('This model definition has been deleted')
             else:
-                self.__dict__['model_class'] = definition.model_class()
+                model_class_proxy = definition.model_class()
+                self.__dict__['model_class'] = model_class_proxy.model_class
         return self.model_class
 
     def __set__(self, instance, value):
