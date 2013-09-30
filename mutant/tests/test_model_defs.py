@@ -13,7 +13,7 @@ from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.db.models import MutableModel
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
-    UniqueTogetherDefinition, BaseDefinition)
+    UniqueTogetherDefinition, BaseDefinition, MutableModelProxy)
 from mutant.test.utils import CaptureQueriesContext
 
 from .utils import (BaseModelDefinitionTestCase,
@@ -323,46 +323,58 @@ class ModelValidationTest(BaseModelDefinitionTestCase):
         self.assertRaises(ValidationError, self.model_def.clean)
 
 
-class ModelClassProxyTest(BaseModelDefinitionTestCase):
+class MutableModelProxyTest(BaseModelDefinitionTestCase):
     def test_pickling(self):
         """
         Make sure _ModelClassProxy can be pickled correctly. This is required
         to allow a model definition to subclass a MutableModel.
         """
-        Model = self.model_def.model_class()
-        pickled = pickle.dumps(Model)
-        self.assertEqual(pickle.loads(pickled), Model)
+        proxy = self.model_def.model_class()
+        pickled = pickle.dumps(proxy)
+        self.assertEqual(pickle.loads(pickled), proxy)
+        self.assertEqual(pickle.loads(pickled), proxy.model)
+
+    def test_type_checks(self):
+        proxy = self.model_def.model_class()
+        self.assertTrue(issubclass(proxy, models.Model))
+        self.assertTrue(issubclass(proxy, MutableModel))
+        self.assertFalse(issubclass(proxy, MutableModelProxyTest))
+        self.assertTrue(isinstance(proxy, models.base.ModelBase))
+        self.assertTrue(isinstance(proxy, MutableModelProxy))
+        self.assertFalse(isinstance(proxy, MutableModelProxyTest))
 
     def test_contains(self):
-        Model = self.model_def.model_class()
-        self.assertIn(Model, set([Model.model_class]))
-        self.assertIn(Model.model_class, set([Model]))
+        proxy = self.model_def.model_class()
+        self.assertIn(proxy, set([proxy.model]))
+        self.assertIn(proxy.model, set([proxy]))
 
     def test_proxy_interactions(self):
-        CharFieldDefinition.objects.create(model_def=self.model_def,
-                                           name="name", max_length=10)
-        Model = self.model_def.model_class()
-        sergei = Model.objects.create(name='Sergei')
-        halak = Model(name='Halak')
+        CharFieldDefinition.objects.create(
+            model_def=self.model_def, name="name", max_length=10
+        )
+        proxy = self.model_def.model_class()
+        # Attribute access
+        sergei = proxy.objects.create(name='Sergei')
+        # Callable access
+        halak = proxy(name='Halak')
         halak.save()
-        self.assertTrue(issubclass(Model, models.Model))
-        self.assertTrue(issubclass(Model, MutableModel))
-        self.assertEqual("<class 'mutant.apps.app.models.Model'>",
-                         unicode(Model))
-        self.assertEqual(sergei, Model.objects.get(name='Sergei'))
+        self.assertEqual(
+            "<class 'mutant.apps.app.models.Model'>", unicode(proxy)
+        )
+        self.assertEqual(sergei, proxy.objects.get(name='Sergei'))
 
         class A(object):
-            class_model = Model
+            class_model = proxy
 
             def __init__(self, model):
                 self.model = model
 
-        a = A(Model)
+        a = A(proxy)
 
-        self.assertEqual(Model, a.model)
-        self.assertEqual(Model, A.class_model)
+        self.assertEqual(proxy, a.model)
+        self.assertEqual(proxy, A.class_model)
 
-        a.model = Model  # Assign a proxy
+        a.model = proxy  # Assign a proxy
         a.model = a.model  # Assign a Model
         a.model = 4
 

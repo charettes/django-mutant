@@ -38,83 +38,82 @@ def _model_class_from_pk(definition_cls, definition_pk):
         pass
 
 
-class _ModelClassProxy(object):
-    def __init__(self, model_class):
-        self.__dict__['model_class'] = model_class
+class MutableModelProxy(object):
+    __slots__ = ['model', '__weakref__']
 
-    @property
-    def __model_class_is_obsolete(self):
-        return self.model_class.is_obsolete()
+    proxied_methods = [
+        '__setattr__', '__delattr__', '__hash__', '__str__'
+    ]
 
-    @staticmethod
-    def __get_underlying_model_class(value):
-        if isinstance(value, _ModelClassProxy):
-            return value.model_class
-        elif isclass(value) and issubclass(value, MutableModel):
-            return value
+    @classmethod
+    def method_factory(cls, name):
+        def method(self, *args, **kwargs):
+            model = self.__get__()
+            return getattr(model.__class__, name)(model, *args, **kwargs)
+        method.__name__ = str(name)
+        return method
 
-    def __get_model_class(self):
-        if self.__model_class_is_obsolete:
-            return self.__get__(None, None)
-        else:
-            return self.model_class
+    @classmethod
+    def factory(cls, base):
+        attrs = dict(
+            (name, cls.method_factory(name)) for name in cls.proxied_methods
+        )
+        name = str("%s(%s)" % (cls.__name__, base.__name__))
+        return type(name, (cls,), attrs)
 
-    def __get__(self, instance, owner):
-        if self.__model_class_is_obsolete:
+    def __new__(cls, model, *args, **kwargs):
+        base = model.__class__
+        try:
+            cache = cls._proxy_class_cache
+        except AttributeError:
+            cls._proxy_class_cache = cache = {}
+        try:
+            proxy_class = cache[base]
+        except KeyError:
+            cache[base] = proxy_class = cls.factory(base)
+        proxy = super(MutableModelProxy, cls).__new__(proxy_class)
+        proxy_class.__init__(proxy, model, *args, **kwargs)
+        return proxy
+
+    def __init__(self, model):
+        assert issubclass(model, MutableModel)
+        super(MutableModelProxy, self).__setattr__('model', model)
+
+    def __get__(self, instance=None, owner=None):
+        model = self.model
+        if model.is_obsolete():
             try:
-                definition = self.model_class.definition()
+                definition = model.definition()
             except ModelDefinition.DoesNotExist:
                 raise AttributeError('This model definition has been deleted')
             else:
-                model_class_proxy = definition.model_class()
-                self.__dict__['model_class'] = model_class_proxy.model_class
-        return self.model_class
+                proxy = definition.model_class()
+                assert isinstance(proxy, MutableModelProxy)
+                model = proxy.model
+                super(MutableModelProxy, self).__setattr__('model', model)
+        return model
 
-    def __set__(self, instance, value):
-        model_class = self.__get_underlying_model_class(value)
-        if model_class is not None:
-            self.model_class = model_class
-        else:
-            raise AttributeError('Invalid value')
+    def __getattribute__(self, name):
+        if name in ('model', '__get__', '__reduce_ex__'):
+            return super(MutableModelProxy, self).__getattribute__(name)
+        model = super(MutableModelProxy, self).__getattribute__('__get__')()
+        return getattr(model, name)
 
     def __call__(self, *args, **kwargs):
-        model_class = self.__get_model_class()
-        return model_class(*args, **kwargs)
-
-    def __getattr__(self, name):
-        model_class = self.__get_model_class()
-        return getattr(model_class, name)
-
-    def __setattr__(self, name, value):
-        model_class = self.__get_model_class()
-        return setattr(model_class, name, value)
-
-    def __delattr__(self, name):
-        model_class = self.__get_model_class()
-        return delattr(model_class, name)
-
-    def __instancecheck__(self, instance):
-        model_class = self.__get_model_class()
-        return isinstance(instance, model_class)
+        model = self.__get__()
+        return model(*args, **kwargs)
 
     def __eq__(self, other):
-        other_model_class = self.__get_underlying_model_class(other)
-        if type(self.model_class) == type(other_model_class):
-            return self.model_class == other_model_class
-        else:
-            return NotImplemented
+        model = self.__get__()
+        if isinstance(other, MutableModelProxy):
+            other = other.model
+        if type(model) == type(other):
+            return model == other
+        return NotImplemented
 
-    def __hash__(self, *args, **kwargs):
-        model_class = self.__get_model_class()
-        return hash(model_class)
-
-    def __reduce__(self):
-        model_class = self.__get_model_class()
-        return (_model_class_from_pk, model_class._definition)
-
-    def __str__(self):
-        model_class = self.__get_model_class()
-        return str(model_class)
+    def __reduce_ex__(self, version):
+        model = self.__get__()
+        return (_model_class_from_pk, model._definition)
 
 
 class ModelDefinition(ContentType):
@@ -233,7 +232,7 @@ class ModelDefinition(ContentType):
         model_class = super(ModelDefinition, self).model_class()
         if force_create or model_class is None:
             model_class = self._create_model_class(model_class)
-        return _ModelClassProxy(model_class)
+        return MutableModelProxy(model_class)
 
     @property
     def model_ct(self):
@@ -314,8 +313,8 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         unique_together = (('model_def', 'order'),)
 
     def get_model_class(self):
-        if isinstance(self.base, _ModelClassProxy):
-            return self.base.__get__(None, None)
+        if isinstance(self.base, MutableModelProxy):
+            return self.base.__get__()
         return self.base
 
     def get_declared_fields(self):
