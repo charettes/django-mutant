@@ -151,6 +151,8 @@ class FieldDefinitionTestMixin(object):
         self.field.save()
         Model.objects.create(field=value)
         write_db = router.db_for_write(Model)
+        connection = connections[write_db]
+        # TODO: Convert this to `atomic` once support for Django < 1.6 is dropped
         sid = transaction.savepoint(using=write_db)
         try:
             Model.objects.create(field=value)
@@ -159,6 +161,7 @@ class FieldDefinitionTestMixin(object):
         else:
             self.fail("One shouldn't be able to save duplicate entries in a unique field")
         finally:
+            connection.needs_rollback = False
             transaction.savepoint_rollback(sid, using=write_db)
 
     def test_field_cloning(self):
