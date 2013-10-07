@@ -12,6 +12,7 @@ class MutableModel(models.Model):
     """
     Abstract class used to identify models that we're created by a definition
     """
+
     class Meta:
         abstract = True
 
@@ -23,6 +24,10 @@ class MutableModel(models.Model):
     @classmethod
     def is_obsolete(cls):
         return cls._is_obsolete
+
+    @classmethod
+    def checksum(cls):
+        return cls._checksum
 
     @classmethod
     def mark_as_obsolete(cls):

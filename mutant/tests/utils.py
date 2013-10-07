@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from contextlib import contextmanager
+
 from django.db import connections
 from django.test.testcases import _deferredSkip
 
@@ -22,6 +24,29 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
             app_label='app',
             object_name='Model'
         )
+
+    @contextmanager
+    def assertChecksumChange(self, model_def=None):
+        model_def = model_def or self.model_def
+        checksum = model_def.model_class().checksum()
+        yield
+        self.assertNotEqual(
+            model_def.model_class().checksum(), checksum,
+            "Checksum of model %s should have changed." % model_def
+        )
+
+    @contextmanager
+    def assertChecksumDoesntChange(self, model_def=None):
+        try:
+            with self.assertChecksumChange(model_def):
+                yield
+        except AssertionError:
+            pass
+        else:
+            model_class = (model_def or self.model_def).model_class()
+            self.fail(
+                "Checksum of model %s shouldn't have changed." % model_class
+            )
 
     def assertTableExists(self, db, table):
         tables = connections[db].introspection.table_names()
@@ -67,23 +92,3 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
         table = model._meta.db_table
         for db in allow_migrate(model):
             self.assertColumnDoesntExists(db, table, column)
-
-
-def skipIfMutantModelDBFeature(feature, default=False):
-    dbs = tuple(allow_migrate(MutableModel))
-
-    def _dbs_have_feature():
-        return all(getattr(connections[db].features, feature, default)
-                   for db in dbs)
-    return _deferredSkip(_dbs_have_feature,
-                         "Databases %s have feature %s" % (dbs, feature))
-
-
-def skipUnlessMutantModelDBFeature(feature, default=True):
-    dbs = tuple(allow_migrate(MutableModel))
-
-    def _dbs_dont_have_feature():
-        return all(not getattr(connections[db].features, feature, default)
-                   for db in dbs)
-    return _deferredSkip(_dbs_dont_have_feature,
-                         "Databases %s don't have feature %s" % (dbs, feature))

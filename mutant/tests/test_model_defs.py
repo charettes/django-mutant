@@ -16,8 +16,7 @@ from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
     UniqueTogetherDefinition, BaseDefinition, MutableModelProxy)
 from mutant.test.utils import CaptureQueriesContext
 
-from .utils import (BaseModelDefinitionTestCase,
-    skipUnlessMutantModelDBFeature)
+from .utils import BaseModelDefinitionTestCase
 
 
 try:
@@ -82,14 +81,19 @@ class ModelSubclassWithTextField(models.Model):
 
 class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_model_class_creation_cache(self):
-        Model = self.model_def.model_class()
-        self.assertEqual(Model, self.model_def.model_class())
-        self.assertNotEqual(Model, self.model_def.model_class(force_create=True))
+        existing_model_class = self.model_def.model_class()
+        self.assertEqual(existing_model_class, self.model_def.model_class())
+        self.assertNotEqual(
+            self.model_def.model_class(force_create=True), existing_model_class
+        )
+
+    def test_force_create_checksum(self):
+        """Recreating a model with no changes shouldn't change it's checksum"""
+        with self.assertChecksumDoesntChange():
+            self.model_def.model_class(force_create=True)
 
     def test_repr(self):
-        """
-        Make sure ModelDefinition objects are always repr()-able.
-        """
+        """Make sure ModelDefinition objects are always repr()-able."""
         repr(self.model_def)
         repr(ModelDefinition())
 
@@ -97,45 +101,48 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         model_class = model_def.model_class()
         return router.db_for_write(model_class), model_class._meta.db_table
 
-    def test_rename_model(self):
-        """
-        Make sure changing the app_label or object_name renames the associated
-        table
-        """
+    def test_app_label_rename(self):
         db, table_name = self.get_model_db_table_name(self.model_def)
-        self.model_def.app_label = 'myapp'
-        self.model_def.save()
+
+        with self.assertChecksumChange():
+            self.model_def.app_label = 'myapp'
+            self.model_def.save(update_fields=['app_label'])
+
         self.assertTableDoesntExists(db, table_name)
         db, table_name = self.get_model_db_table_name(self.model_def)
         self.assertTableExists(db, table_name)
 
-        self.model_def.object_name = 'MyModel'
-        self.model_def.save()
+    def test_object_name_rename(self):
+        db, table_name = self.get_model_db_table_name(self.model_def)
+
+        with self.assertChecksumChange():
+            self.model_def.object_name = 'MyModel'
+            self.model_def.save(update_fields=['object_name', 'model'])
+
         self.assertTableDoesntExists(db, table_name)
         db, table_name = self.get_model_db_table_name(self.model_def)
         self.assertTableExists(db, table_name)
 
-        self.model_def.delete()
-        self.assertTableDoesntExists(db, table_name)
-
-    def test_db_table(self):
-        """
-        Asserts that the db_table field is correctly handled
-        """
+    def test_db_table_change(self):
+        """Asserts that the `db_table` field is correctly handled."""
         db, table_name = self.get_model_db_table_name(self.model_def)
-        self.model_def.db_table = 'test_db_table'
-        self.model_def.save()
+
+        with self.assertChecksumChange():
+            self.model_def.db_table = 'test_db_table'
+            self.model_def.save(update_fields=['db_table'])
+
         self.assertTableDoesntExists(db, table_name)
         self.assertTableExists(db, 'test_db_table')
-        self.model_def.db_table = None
-        self.model_def.save()
+
+        with self.assertChecksumChange():
+            self.model_def.db_table = None
+            self.model_def.save(update_fields=['db_table'])
+
         self.assertTableDoesntExists(db, 'test_db_table')
         self.assertTableExists(db, table_name)
 
     def test_fixture_loading(self):
-        """
-        Make model and field definitions can be loaded from fixtures.
-        """
+        """Make model and field definitions can be loaded from fixtures."""
         call_command(
             'loaddata', 'fixture_loading_test', verbosity=0, commit=False
         )
@@ -167,45 +174,63 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         self.assertModelTablesColumnExists(MyFixtureModel, 'fixture_integerfieldcolumn')
 
     def test_verbose_name(self):
-        Model = self.model_def.model_class()
+        model_class = self.model_def.model_class()
 
-        self.assertEqual(Model._meta.verbose_name, self.model_def.model)
-        self.assertEqual(Model._meta.verbose_name_plural, "%ss" % self.model_def.model)
+        self.assertEqual(model_class._meta.verbose_name, 'model')
 
-        self.model_def.verbose_name = 'MyMoDeL'
-        self.model_def.verbose_name_plural = 'MyMoDeLZ0Rs'
-        self.model_def.save()
+        with self.assertChecksumChange():
+            self.model_def.verbose_name = 'MyModel'
+            self.model_def.save(update_fields=['verbose_name'])
 
-        self.assertEqual(Model._meta.verbose_name, _('MyMoDeL'))
-        self.assertEqual(Model._meta.verbose_name_plural, _('MyMoDeLZ0Rs'))
+        self.assertEqual(
+            model_class._meta.verbose_name, self.model_def.verbose_name
+        )
+
+    def test_verbose_name_plural(self):
+        model_class = self.model_def.model_class()
+
+        self.assertEqual(model_class._meta.verbose_name_plural, 'models')
+
+        with self.assertChecksumChange():
+            self.model_def.verbose_name_plural = 'MyModels'
+            self.model_def.save(update_fields=['verbose_name_plural'])
+
+        self.assertEqual(
+            model_class._meta.verbose_name_plural,
+            self.model_def.verbose_name_plural
+        )
 
     def test_multiple_model_definition(self):
-        """
-        Make sure multiple model definition can coexists
-        """
-        other_model_def = ModelDefinition.objects.create(app_label='app',
-                                                         object_name='OtherModel')
-        self.assertNotEqual(other_model_def.model_class(),
-                            self.model_def.model_class())
+        """Make sure multiple model definition can coexist."""
+        other_model_def = ModelDefinition.objects.create(
+            app_label='app', object_name='OtherModel'
+        )
+        self.assertNotEqual(
+            other_model_def.model_class(), self.model_def.model_class()
+        )
         self.assertNotEqual(other_model_def.model_ct, self.model_def.model_ct)
 
     def test_natural_key(self):
         natural_key = self.model_def.natural_key()
-        self.assertEqual(ModelDefinition.objects.get_by_natural_key(*natural_key),
-                         self.model_def)
+        self.assertEqual(
+            ModelDefinition.objects.get_by_natural_key(*natural_key),
+            self.model_def
+        )
 
     def test_deletion(self):
         # Add a an extra field to make sure no alter statements are issued
-        CharFieldDefinition.objects.create(
-            model_def=self.model_def,
-            name='field',
-            max_length=10
-        )
+        with self.assertChecksumChange():
+            CharFieldDefinition.objects.create(
+                model_def=self.model_def,
+                name='field',
+                max_length=10
+            )
         # Add a base with a field to make sure no alter statements are issued
-        BaseDefinition.objects.create(
-            model_def=self.model_def,
-            base=AbstractModel
-        )
+        with self.assertChecksumChange():
+            BaseDefinition.objects.create(
+                model_def=self.model_def,
+                base=AbstractModel
+            )
         model_cls = self.model_def.model_class()
         self.assertModelTablesExist(model_cls)
         db, table_name = self.get_model_db_table_name(self.model_def)
@@ -215,13 +240,13 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         # Ensure no ALTER queries were issued during deletion of model_def,
         # that is, check that the columns were not deleted on table one at a
         # time before the entire table was dropped.
-        self.assertFalse(any('ALTER' in query['sql'] for query in captured_queries))
+        self.assertFalse(
+            any('ALTER' in query['sql'] for query in captured_queries)
+        )
         self.assertTableDoesntExists(db, table_name)
 
     def test_model_management(self):
-        """
-        Make sure no DDL is executed when a model is marked as managed.
-        """
+        """Make sure no DDL is executed when a model is marked as managed."""
         model_def = self.model_def
         CharFieldDefinition.objects.create(
             model_def=model_def,
@@ -408,12 +433,15 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):
     def setUp(self):
         super(OrderingDefinitionTest, self).setUp()
-        self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
-                                                     name='f1', max_length=25)
+        with self.assertChecksumChange():
+            self.f1 = CharFieldDefinition.objects.create(
+                model_def=self.model_def, name='f1', max_length=25
+            )
         ct_ct = ContentType.objects.get_for_model(ContentType)
-        self.f2 = ForeignKeyDefinition.objects.create(model_def=self.model_def,
-                                                      null=True,
-                                                      name='f2', to=ct_ct)
+        with self.assertChecksumChange():
+            self.f2 = ForeignKeyDefinition.objects.create(
+                model_def=self.model_def, null=True, name='f2', to=ct_ct
+            )
 
     def test_clean(self):
         ordering = OrderingFieldDefinition(model_def=self.model_def)
@@ -435,7 +463,6 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
             ordering.lookup = 'f2__higgs_boson'
             ordering.clean()
 
-    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_simple_ordering(self):
         Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model)  # app
@@ -444,41 +471,43 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         Model.objects.create(f1='Alexander', f2=model_ct)
         # Instances should be sorted by id
         self.assertSequenceEqual(
-            Model.objects.values_list('f1', flat=True),
-            ('Simon', 'Alexander')
+            Model.objects.values_list('f1', flat=True), ('Simon', 'Alexander')
         )
         # Instances should be sorted by f1 and not id
-        f1_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
-                                                             lookup='f1')
+        with self.assertChecksumChange():
+            f1_ordering = OrderingFieldDefinition.objects.create(
+                model_def=self.model_def, lookup='f1'
+            )
         self.assertSequenceEqual(
-            Model.objects.values_list('f1', flat=True),
-            ('Alexander', 'Simon')
+            Model.objects.values_list('f1', flat=True), ('Alexander', 'Simon')
         )
         # Swap the ordering to descending
-        f1_ordering.descending = True
-        f1_ordering.save()
+        with self.assertChecksumChange():
+            f1_ordering.descending = True
+            f1_ordering.save()
         self.assertSequenceEqual(
-            Model.objects.values_list('f1', flat=True),
-            ('Simon', 'Alexander')
+            Model.objects.values_list('f1', flat=True), ('Simon', 'Alexander')
         )
-        f1_ordering.delete()
+        with self.assertChecksumChange():
+            f1_ordering.delete()
         # Order by f2__app_label
-        f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
-                                                             lookup='f2__app_label')
+        with self.assertChecksumChange():
+            f2_ordering = OrderingFieldDefinition.objects.create(
+                model_def=self.model_def, lookup='f2__app_label'
+            )
         self.assertSequenceEqual(
-            Model.objects.values_list('f1', flat=True),
-            ('Alexander', 'Simon')
+            Model.objects.values_list('f1', flat=True), ('Alexander', 'Simon')
         )
         # Swap the ordering to descending
-        f2_ordering.descending = True
-        f2_ordering.save()
+        with self.assertChecksumChange():
+            f2_ordering.descending = True
+            f2_ordering.save()
         self.assertSequenceEqual(
-            Model.objects.values_list('f1', flat=True),
-            ('Simon', 'Alexander')
+            Model.objects.values_list('f1', flat=True), ('Simon', 'Alexander')
         )
-        f2_ordering.delete()
+        with self.assertChecksumChange():
+            f2_ordering.delete()
 
-    @skipUnlessMutantModelDBFeature('supports_joins')
     def test_multiple_ordering(self):
         Model = self.model_def.model_class()
         model_ct = ContentType.objects.get_for_model(Model)  # app
@@ -488,10 +517,14 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         Model.objects.create(f1='Julia', f2=ct_ct)
         Model.objects.create(f1='Alexander', f2=ct_ct)
         # Orderings
-        f1_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
-                                                             lookup='f1')
-        f2_ordering = OrderingFieldDefinition.objects.create(model_def=self.model_def,
-                                                             lookup='f2__app_label')
+        with self.assertChecksumChange():
+            f1_ordering = OrderingFieldDefinition.objects.create(
+                model_def=self.model_def, lookup='f1'
+            )
+        with self.assertChecksumChange():
+            f2_ordering = OrderingFieldDefinition.objects.create(
+                model_def=self.model_def, lookup='f2__app_label'
+            )
         self.assertSequenceEqual(
             Model.objects.values_list('f1', 'f2__app_label'), (
                 ('Alexander', 'app'),
@@ -501,8 +534,9 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
             )
         )
         # Swap the ordering to descending
-        f2_ordering.descending = True
-        f2_ordering.save()
+        with self.assertChecksumChange():
+            f2_ordering.descending = True
+            f2_ordering.save()
         self.assertSequenceEqual(
             Model.objects.values_list('f1', 'f2__app_label'), (
                 ('Alexander', 'contenttypes'),
@@ -513,8 +547,9 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
         )
         # Swap order
         f1_ordering.order, f2_ordering.order = f2_ordering.order, f1_ordering.order
-        f1_ordering.save()
-        f2_ordering.save()
+        with self.assertChecksumChange():
+            f1_ordering.save()
+            f2_ordering.save()
         self.assertSequenceEqual(
             Model.objects.values_list('f1', 'f2__app_label'), (
                 ('Alexander', 'contenttypes'),
@@ -524,8 +559,9 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
             )
         )
         # Swap the ordering to descending
-        f1_ordering.descending = True
-        f1_ordering.save()
+        with self.assertChecksumChange():
+            f1_ordering.descending = True
+            f1_ordering.save()
         self.assertSequenceEqual(
             Model.objects.values_list('f1', 'f2__app_label'), (
                 ('Simon', 'contenttypes'),
@@ -534,46 +570,52 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
                 ('Alexander', 'app')
             )
         )
-        f1_ordering.delete()
-        f2_ordering.delete()
+        with self.assertChecksumChange():
+            f1_ordering.delete()
+        with self.assertChecksumChange():
+            f2_ordering.delete()
 
 
 class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
     def setUp(self):
         super(UniqueTogetherDefinitionTest, self).setUp()
-        self.f1 = CharFieldDefinition.objects.create(model_def=self.model_def,
-                                                     name='f1', max_length=25)
-        self.f2 = CharFieldDefinition.objects.create(model_def=self.model_def,
-                                                     name='f2', max_length=25)
-        self.ut = UniqueTogetherDefinition.objects.create(model_def=self.model_def)
-        self.Model = self.model_def.model_class()
+        with self.assertChecksumChange():
+            self.f1 = CharFieldDefinition.objects.create(
+                model_def=self.model_def, name='f1', max_length=25
+            )
+        with self.assertChecksumChange():
+            self.f2 = CharFieldDefinition.objects.create(
+                model_def=self.model_def, name='f2', max_length=25
+            )
+        with self.assertChecksumChange():
+            self.ut = UniqueTogetherDefinition.objects.create(
+                model_def=self.model_def
+            )
+        self.model_class = self.model_def.model_class()
 
     def test_repr(self):
-        """
-        Make sure UniqueTogetherDefinition objects are always repr()-able.
-        """
+        """Make sure UniqueTogetherDefinition objects are always
+        repr()-able."""
         repr(self.ut)
         repr(UniqueTogetherDefinition())
 
     def test_clean(self):
-        """
-        Make sure we can't create a unique key with two fields of two
-        different models
-        """
-        other_model_def = ModelDefinition.objects.create(app_label='app',
-                                                         object_name='OtherModel')
-        f2 = CharFieldDefinition.objects.create(model_def=other_model_def,
-                                                name='f2', max_length=25)
+        """Make sure we can't create a unique key with two fields of two
+        different models"""
+        other_model_def = ModelDefinition.objects.create(
+            app_label='app', object_name='OtherModel'
+        )
+        with self.assertChecksumChange(other_model_def):
+            f2 = CharFieldDefinition.objects.create(
+                model_def=other_model_def, name='f2', max_length=25
+            )
         self.ut.field_defs = (self.f1, f2)
-        with self.assertRaises(ValidationError):
-            self.ut.clean()
+        self.assertRaises(ValidationError, self.ut.clean)
         other_model_def.delete()
 
     def test_db_column(self):
-        """
-        Make sure a unique index creation works correctly when using a custom
-        `db_column`. This is needed for unique FK's columns.
-        """
+        """Make sure a unique index creation works correctly when using a
+        custom `db_column`. This is needed for unique FK's columns."""
         self.f2.db_column = 'f2_column'
         self.f2.save()
         self.ut.field_defs = (self.f1, self.f2)
@@ -582,34 +624,28 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.ut.delete()
 
     def test_cannot_create_unique(self):
-        """
-        Creating a unique key on a table with duplicate
-        rows shouldn't work
-        """
-        self.Model.objects.create(f1='a', f2='b')
-        self.Model.objects.create(f1='a', f2='b')
+        """Creating a unique key on a table with duplicate rows
+        shouldn't work"""
+        self.model_class.objects.create(f1='a', f2='b')
+        self.model_class.objects.create(f1='a', f2='b')
         with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.ut.field_defs = (self.f1, self.f2)
 
     def test_cannot_insert_duplicate_row(self):
-        """
-        Inserting a duplicate rows shouldn't work
-        """
-        self.Model.objects.create(f1='a', f2='b')
+        """Inserting a duplicate rows shouldn't work."""
+        self.model_class.objects.create(f1='a', f2='b')
         self.ut.field_defs = (self.f1, self.f2)
         with captured_stderr():
             with self.assertRaises(IntegrityError):
-                self.Model.objects.create(f1='a', f2='b')
+                self.model_class.objects.create(f1='a', f2='b')
 
     def test_cannot_remove_unique(self):
-        """
-        Removing a unique constraint that cause
-        duplicate rows shouldn't work
-        """
+        """Removing a unique constraint that cause duplicate rows shouldn't
+        work."""
         self.ut.field_defs = (self.f1, self.f2)
-        self.Model.objects.create(f1='a', f2='b')
-        self.Model.objects.create(f1='a', f2='c')
+        self.model_class.objects.create(f1='a', f2='b')
+        self.model_class.objects.create(f1='a', f2='c')
         with captured_stderr():
             with self.assertRaises(IntegrityError):
                 self.ut.field_defs.remove(self.f2)
@@ -619,34 +655,35 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         Removing a unique constraint should relax duplicate row
         validation
         """
-        self.Model.objects.create(f1='a', f2='b')
+        self.model_class.objects.create(f1='a', f2='b')
         self.ut.field_defs = self.f1, self.f2
         self.ut.field_defs.clear()
-        self.Model.objects.create(f1='a', f2='b')
+        self.model_class.objects.create(f1='a', f2='b')
 
 
 class BaseDefinitionTest(BaseModelDefinitionTestCase):
     def test_clean(self):
-        """
-        Ensure `BaseDefinition.clean` works correctly.
-        """
         bd = BaseDefinition(model_def=self.model_def)
         # Base must be a class
         bd.base = BaseDefinitionTest.test_clean
-        self.assertRaisesMessage(ValidationError,
-                                 _('Base must be a class.'), bd.clean)
+        self.assertRaisesMessage(
+            ValidationError, _('Base must be a class.'), bd.clean
+        )
         # Subclasses of MutableModel are valid bases
-        bd.base = ModelDefinition.objects.create(app_label='app',
-                                                 object_name='AnotherModel').model_class()
+        bd.base = ModelDefinition.objects.create(
+            app_label='app', object_name='AnotherModel'
+        ).model_class()
         try:
             bd.clean()
         except ValidationError:
             self.fail('MutableModel subclasses are valid bases.')
         # But model definition can't be bases of themselves
         bd.base = self.model_def.model_class()
-        self.assertRaisesMessage(ValidationError,
-                                 _("A model definition can't be a base of "
-                                   "itself."), bd.clean)
+        self.assertRaisesMessage(
+            ValidationError,
+            _("A model definition can't be a base of itself."),
+            bd.clean
+        )
         # Mixin objets are valid bases
         bd.base = Mixin
         try:
@@ -661,72 +698,100 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
             self.fail('Abstract Model are valid bases')
         # Proxy model are not valid bases
         bd.base = ProxyModel
-        self.assertRaisesMessage(ValidationError,
-                                 _("Base can't be a proxy model."), bd.clean)
+        self.assertRaisesMessage(
+            ValidationError, _("Base can't be a proxy model."), bd.clean
+        )
 
     def test_mutable_model_base(self):
-        another_model_def = ModelDefinition.objects.create(app_label='app',
-                                                           object_name='AnotherModel')
+        another_model_def = ModelDefinition.objects.create(
+            app_label='app', object_name='AnotherModel'
+        )
         AnotherModel = another_model_def.model_class()
         auto_pk_column = AnotherModel._meta.pk.get_attname_column()[1]
         self.assertModelTablesColumnExists(AnotherModel, auto_pk_column)
-        CharFieldDefinition.objects.create(model_def=self.model_def,
-                                           name='f1', max_length=25)
-        base_definition = BaseDefinition(model_def=another_model_def)
-        base_definition.base = self.model_def.model_class()
-        base_definition.save()
+        with self.assertChecksumChange():
+            CharFieldDefinition.objects.create(
+                model_def=self.model_def, name='f1', max_length=25
+            )
+        with self.assertChecksumChange(another_model_def):
+            base_definition = BaseDefinition(model_def=another_model_def)
+            base_definition.base = self.model_def.model_class()
+            base_definition.save()
         self.assertModelTablesColumnDoesntExists(AnotherModel, auto_pk_column)
         another_model = AnotherModel.objects.create(f1='Martinal')
         self.assertTrue(AnotherModel.objects.exists())
-        CharFieldDefinition.objects.create(model_def=self.model_def,
-                                           name='f2', max_length=25, null=True)
+        with self.assertChecksumChange():
+            with self.assertChecksumChange(another_model_def):
+                CharFieldDefinition.objects.create(
+                    model_def=self.model_def, name='f2', max_length=25,
+                    null=True
+                )
         another_model = AnotherModel.objects.get(pk=another_model.pk)
         self.assertIsNone(another_model.f2)
         another_model.f2 = 'Placebo'
         another_model.save()
 
     def test_base_inheritance(self):
-        Model = self.model_def.model_class()
-        BaseDefinition.objects.create(model_def=self.model_def,
-                                      base=Mixin)
-        self.assertTrue(issubclass(Model, Mixin))
-        BaseDefinition.objects.create(model_def=self.model_def,
-                                      base=AbstractModel)
-        self.assertTrue(issubclass(Model, Mixin) and
-                        issubclass(Model, AbstractModel))
+        model_class = self.model_def.model_class()
+        with self.assertChecksumChange():
+            BaseDefinition.objects.create(
+                model_def=self.model_def, base=Mixin
+            )
+        self.assertTrue(issubclass(model_class, Mixin))
+        with self.assertChecksumChange():
+            BaseDefinition.objects.create(
+                model_def=self.model_def, base=AbstractModel
+            )
+        self.assertTrue(
+            issubclass(model_class, Mixin) and
+            issubclass(model_class, AbstractModel)
+        )
 
     def test_base_ordering(self):
-        Model = self.model_def.model_class()
-        BaseDefinition.objects.create(model_def=self.model_def,
-                                      base=Mixin, order=2)
-        model_subclass_def = BaseDefinition.objects.create(model_def=self.model_def,
-                                                           base=AbstractModel,
-                                                           order=1)
-        instance = Model()
+        model_class = self.model_def.model_class()
+        with self.assertChecksumChange():
+            BaseDefinition.objects.create(
+                model_def=self.model_def, base=Mixin, order=2
+            )
+        with self.assertChecksumChange():
+            model_subclass_def = BaseDefinition.objects.create(
+                model_def=self.model_def, base=AbstractModel, order=1
+            )
+        instance = model_class()
         self.assertEqual('AbstractModel', instance.method())
-        model_subclass_def.order = 3
-        model_subclass_def.save()
-        instance = Model()
+        with self.assertChecksumChange():
+            model_subclass_def.order = 3
+            model_subclass_def.save()
+        instance = model_class()
         self.assertEqual('Mixin', instance.method())
 
     def test_abstract_field_inherited(self):
-        bd = BaseDefinition.objects.create(model_def=self.model_def,
-                                           base=AbstractModel)
-        Model = self.model_def.model_class()
-        Model.objects.create(abstract_model_field='value')
+        with self.assertChecksumChange():
+            bd = BaseDefinition.objects.create(
+                model_def=self.model_def, base=AbstractModel
+            )
+        model_class = self.model_def.model_class()
+        model_class.objects.create(abstract_model_field='value')
         # Test column alteration and addition by replacing the base with
         # a new one with a field with the same name and a second field.
-        bd.base = ModelSubclassWithTextField
-        bd.save()
-        Model.objects.get(abstract_model_field='value')
+        with self.assertChecksumChange():
+            bd.base = ModelSubclassWithTextField
+            bd.save()
+        model_class.objects.get(abstract_model_field='value')
         # The original CharField should be replaced by a TextField with no
         # max_length and a second field should be added
-        Model.objects.create(abstract_model_field='another one bites the dust',
-                             second_field=True)
+        model_class.objects.create(
+            abstract_model_field='another one bites the dust',
+            second_field=True
+        )
         # Test column deletion by deleting the base
         # This should cause the model to loose all it's fields and the table
         # to loose all it's columns
-        bd.delete()
-        self.assertEqual(list(Model.objects.values_list()),
-                         [(instance.id,) for instance in Model.objects.all()])
-        self.assertModelTablesColumnDoesntExists(Model, 'field')
+        with self.assertChecksumChange():
+            bd.delete()
+        self.assertEqual(
+            list(model_class.objects.values_list()), list(
+                model_class.objects.values_list('pk')
+            )
+        )
+        self.assertModelTablesColumnDoesntExists(model_class, 'field')

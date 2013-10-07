@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
+from hashlib import md5
 from inspect import isclass
 from itertools import chain
+import pickle
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ImproperlyConfigured
@@ -172,27 +174,38 @@ class ModelDefinition(ContentType):
             self._model_class = super(ModelDefinition, self).model_class()
 
     def get_model_bases(self):
-        return tuple(bd.construct() for bd in self.basedefinitions.all())
+        """Build a tuple of bases for the constructed definition"""
+        bases = []
+        has_mutable_base = False
+        for base_def in self.basedefinitions.all():
+            base = base_def.construct()
+            if issubclass(base, MutableModel):
+                has_mutable_base = True
+                base._dependencies.add((self.__class__, self.pk))
+            bases.append(base)
+        if not has_mutable_base:
+            bases.append(MutableModel)
+        return tuple(bases)
 
     def get_model_opts(self):
-        attrs = {'app_label': self.app_label, 'managed': self.managed}
+        opts = {'app_label': self.app_label, 'managed': self.managed}
         # Database table
         db_table = self.db_table
         if db_table is None:
             db_table = get_db_table(*self.natural_key())
-        attrs['db_table'] = db_table
+        opts['db_table'] = db_table
         # Verbose names
         if self.verbose_name is not None:
-            attrs['verbose_name'] = self.verbose_name
+            opts['verbose_name'] = self.verbose_name
         if self.verbose_name_plural is not None:
-            attrs['verbose_name_plural'] = self.verbose_name_plural
+            opts['verbose_name_plural'] = self.verbose_name_plural
         # Unique together
         unique_together = tuple(
             ut_def.construct()
             for ut_def in self.uniquetogetherdefinitions.all()
         )
         if unique_together:
-            attrs['unique_together'] = unique_together
+            opts['unique_together'] = unique_together
         # Ordering
         ordering = tuple(
             ord_field_def.construct()
@@ -202,12 +215,11 @@ class ModelDefinition(ContentType):
             # Make sure not to add ordering if it's empty since it would
             # prevent the model from inheriting its possible base ordering.
             # Kinda related to django #17429
-            attrs['ordering'] = ordering
-        return type(str('Meta'), (), attrs)
+            opts['ordering'] = ordering
+        return opts
 
-    def get_model_attrs(self, existing_model_class=None):
+    def get_model_attrs(self):
         attrs = {
-            'Meta': self.get_model_opts(),
             '__module__': str("mutant.apps.%s.models" % self.app_label),
             '_definition': (self.__class__, self.pk),
             '_is_obsolete': False,
@@ -221,16 +233,27 @@ class ModelDefinition(ContentType):
 
     def construct(self, existing_model_class=None):
         bases = self.get_model_bases()
-        has_mutable_base = False
-        for base in bases:
-            if issubclass(base, MutableModel):
-                has_mutable_base = True
-                base._dependencies.add((self.__class__, self.pk))
-        if not has_mutable_base:
-            bases += (MutableModel,)
-        attrs = self.get_model_attrs(existing_model_class)
+        opts = self.get_model_opts()
+        attrs = self.get_model_attrs()
+
+        identifier = (
+            self.object_name, opts, attrs, [
+                MutableModelProxy(base).checksum()
+                    if base is not MutableModel and issubclass(base, MutableModel)
+                    else base
+                for base in bases
+            ]
+        )
+        checksum = md5(pickle.dumps(identifier)).hexdigest()
+
+        attrs.update(
+            Meta=type(str('Meta'), (), opts),
+            _checksum=checksum
+        )
+
         if existing_model_class:
             existing_model_class.mark_as_obsolete()
+
         model_class = type(str(self.object_name), bases, attrs)
         mutable_class_prepared.send(
             sender=model_class, definition=self,
