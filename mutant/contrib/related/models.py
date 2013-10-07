@@ -101,6 +101,24 @@ to_field_help_text = _('The field on the related object that the '
 on_delete_help_text = _('Behavior when an object referenced by this field '
                         'is deleted')
 
+
+class SET(object):
+    def __init__(self, value):
+        self.value = value
+        self.callable = callable(self.value)
+
+    def __call__(self, collector, field, sub_objs, using):
+        value = self.value
+        if self.callable:
+            value = value()
+        collector.add_field_update(field, value, sub_objs)
+
+    def deconstruct(self):
+        return ("%s.%s" % (self.__module__, self.__name__), (self.value,), {})
+
+SET_NULL = SET(None)
+
+
 class ForeignKeyDefinition(RelatedFieldDefinition):
     ON_DELETE_CASCADE = 'CASCADE'
     ON_DELETE_PROTECT = 'PROTECT'
@@ -159,7 +177,9 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
     def get_field_options(self, **overrides):
         options = super(ForeignKeyDefinition, self).get_field_options(**overrides)
         if self.on_delete == self.ON_DELETE_SET_VALUE:
-            on_delete = deletion.SET(self.on_delete_set_value)
+            on_delete = SET(self.on_delete_set_value)
+        elif self.on_delete == self.ON_DELETE_SET_NULL:
+            on_delete = SET_NULL
         else:
             on_delete = getattr(deletion, self.on_delete, None)
         options['on_delete'] = on_delete
@@ -184,6 +204,7 @@ through_help_text = _('Intermediary model')
 db_table_help_text = _('The name of the table to create for storing the '
                        'many-to-many data')
 
+
 class ManyToManyFieldDefinition(RelatedFieldDefinition):
     symmetrical = fields.NullBooleanField(_('symmetrical'))
     through = fields.related.ForeignKey(ContentType, blank=True, null=True,
@@ -206,7 +227,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         else:
             messages = {}
 
-        if (self.symmetrical is not None and 
+        if (self.symmetrical is not None and
             not self.is_recursive_relationship):
             msg = _("The relationship can only be symmetrical or not if it's "
                     "recursive, i. e. it points to 'self'")
@@ -224,7 +245,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
                 messages.setdefault('symmetrical', []).append(msg)
 
             seen_from, seen_to = 0, 0
-            to_model = self.to.model_class()  
+            to_model = self.to.model_class()
             through_class = self.through.model_class()
             from_model = self.model_def.cached_model
             for field in through_class._meta.fields:
