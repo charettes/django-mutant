@@ -232,8 +232,10 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         return super(FieldDefinition, self).delete(*args, **kwargs)
 
     def clone(self):
-        options = dict((name, getattr(self, name))
-                       for name in self.get_field_option_names())
+        options = dict(
+            (name, getattr(self, name))
+            for name in self.get_field_option_names()
+        )
         return self.__class__(**options)
 
     @classmethod
@@ -261,9 +263,6 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
     def get_content_type(cls):
         return ContentType.objects.get_for_model(cls, for_concrete_model=False)
 
-    def get_field_choices(self):
-        return tuple(self.choices.as_choices())
-
     def get_field_options(self, **overrides):
         model_opts = self._meta
         options = {}
@@ -274,12 +273,12 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
             if value != model_opts.get_field(name).get_default():
                 options[name] = value
         if 'choices' not in overrides:  # Avoid fetching if it's overridden
-            choices = self.get_field_choices()
+            choices = self.choices.construct()
             if choices:
                 options['choices'] = choices
         return options
 
-    def field_instance(self, **overrides):
+    def construct(self, **overrides):
         cls = self.get_field_class()
         options = self.get_field_options(**overrides)
         options.update(overrides)
@@ -298,12 +297,12 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         South api sometimes needs to have modified version of fields to work.
         i. e. You can't pass a ForeignKey(to='self') to add_column
         """
-        return self.field_instance()
+        return self.construct()
 
     def clean(self):
         # Make sure we can build the field
         try:
-            field = self.field_instance()
+            field = self.construct()
         except NotImplementedError:
             pass  # `get_field_class` is not implemented
         except Exception as e:
@@ -343,7 +342,7 @@ class FieldDefinitionChoice(OrderableModel):
         try:
             # Make sure to create a field instance with no choices to avoid
             # validating against existing ones.
-            field = self.field_def.type_cast().field_instance(choices=None)
+            field = self.field_def.type_cast().construct(choices=None)
             field.clean(self.value, None)
         except ValidationError as e:
             raise ValidationError({'value': e.messages})

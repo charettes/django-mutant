@@ -111,20 +111,23 @@ class MutableModelProxy(object):
             return model == other
         return NotImplemented
 
-    def __reduce_ex__(self, version):
+    def __reduce_ex__(self, protocol):
         model = self.__get__()
         return (_model_class_from_pk, model._definition)
 
 
 class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
-    db_table = models.CharField(_('database table'), max_length=63,
-                                blank=True, null=True)
+    db_table = models.CharField(
+        _('database table'), max_length=63, blank=True, null=True
+    )
     managed = models.BooleanField(_('managed'), default=False)
-    verbose_name = LazilyTranslatedField(_('verbose name'),
-                                         blank=True, null=True)
-    verbose_name_plural = LazilyTranslatedField(_('verbose name plural'),
-                                                blank=True, null=True)
+    verbose_name = LazilyTranslatedField(
+        _('verbose name'), blank=True, null=True
+    )
+    verbose_name_plural = LazilyTranslatedField(
+        _('verbose name plural'), blank=True, null=True
+    )
 
     objects = ModelDefinitionManager()
 
@@ -134,11 +137,11 @@ class ModelDefinition(ContentType):
         verbose_name_plural = _('model definitions')
 
     def __unicode__(self):
-        return '.'.join((self.app_label, self.object_name))
+        return "%s.%s" % (self.app_label, self.object_name)
 
     def natural_key(self):
         return (self.app_label, self.model)
-    natural_key.dependencies = ('contenttypes.contenttype',)
+    natural_key.dependencies = ['contenttypes.contenttype']
 
     def __init__(self, *args, **kwargs):
         # Attach unsaved related objects
@@ -169,7 +172,7 @@ class ModelDefinition(ContentType):
             self._model_class = super(ModelDefinition, self).model_class()
 
     def get_model_bases(self):
-        return tuple(bd.get_model_class() for bd in self.basedefinitions.all())
+        return tuple(bd.construct() for bd in self.basedefinitions.all())
 
     def get_model_opts(self):
         attrs = {'app_label': self.app_label, 'managed': self.managed}
@@ -183,17 +186,21 @@ class ModelDefinition(ContentType):
             attrs['verbose_name'] = self.verbose_name
         if self.verbose_name_plural is not None:
             attrs['verbose_name_plural'] = self.verbose_name_plural
-        # Unique togethers
-        unique_together = tuple(tuple(utd.field_defs.names())
-                                    for utd in self.uniquetogetherdefinitions.all())
+        # Unique together
+        unique_together = tuple(
+            ut_def.construct()
+            for ut_def in self.uniquetogetherdefinitions.all()
+        )
         if unique_together:
             attrs['unique_together'] = unique_together
         # Ordering
-        ordering = tuple(ordf.get_defined_ordering()
-                            for ordf in self.orderingfielddefinitions.all())
+        ordering = tuple(
+            ord_field_def.construct()
+            for ord_field_def in self.orderingfielddefinitions.all()
+        )
         if ordering:
             # Make sure not to add ordering if it's empty since it would
-            # prevent the model from inheriting it's possible base ordering.
+            # prevent the model from inheriting its possible base ordering.
             # Kinda related to django #17429
             attrs['ordering'] = ordering
         return type(str('Meta'), (), attrs)
@@ -206,11 +213,13 @@ class ModelDefinition(ContentType):
             '_is_obsolete': False,
             '_dependencies': set(),
         }
-        attrs.update(dict((f.name, f.field_instance())
-                            for f in self.fielddefinitions.select_subclasses()))
+        attrs.update(
+            (field_def.name, field_def.construct())
+            for field_def in self.fielddefinitions.select_subclasses()
+        )
         return attrs
 
-    def _create_model_class(self, existing_model_class=None):
+    def construct(self, existing_model_class=None):
         bases = self.get_model_bases()
         has_mutable_base = False
         for base in bases:
@@ -223,15 +232,17 @@ class ModelDefinition(ContentType):
         if existing_model_class:
             existing_model_class.mark_as_obsolete()
         model_class = type(str(self.object_name), bases, attrs)
-        mutable_class_prepared.send(sender=model_class, definition=self,
-                                    existing_model_class=existing_model_class)
+        mutable_class_prepared.send(
+            sender=model_class, definition=self,
+            existing_model_class=existing_model_class
+        )
         logger.debug("Created model class %s.", model_class)
         return model_class
 
     def model_class(self, force_create=False):
         model_class = super(ModelDefinition, self).model_class()
         if force_create or model_class is None:
-            model_class = self._create_model_class(model_class)
+            model_class = self.construct(model_class)
         return MutableModelProxy(model_class)
 
     @property
@@ -282,8 +293,10 @@ class ModelDefinitionAttribute(models.Model):
     A mixin used to make sure models that alter the state of a defined model
     clear the cached version
     """
-    model_def = models.ForeignKey(ModelDefinition, related_name="%(class)ss",
-                                  on_delete=CASCADE_MARK_ORIGIN)
+    model_def = models.ForeignKey(
+        ModelDefinition, related_name="%(class)ss",
+        on_delete=CASCADE_MARK_ORIGIN
+    )
 
     class Meta:
         abstract = True
@@ -312,7 +325,19 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         ordering = ('order',)
         unique_together = (('model_def', 'order'),)
 
-    def get_model_class(self):
+    def clean(self):
+        try:
+            if issubclass(self.base, models.Model):
+                if self.base._meta.proxy:
+                    raise ValidationError(_("Base can't be a proxy model."))
+                elif (issubclass(self.base, MutableModel) and
+                      self.base.definition() == self.model_def):
+                    raise ValidationError(_("A model definition can't be a base of itself."))
+        except TypeError:
+            raise ValidationError(_('Base must be a class.'))
+        return super(BaseDefinition, self).clean()
+
+    def construct(self):
         if isinstance(self.base, MutableModelProxy):
             return self.base.__get__()
         return self.base
@@ -341,18 +366,6 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
                     )
                 )
         return tuple(fields)
-
-    def clean(self):
-        try:
-            if issubclass(self.base, models.Model):
-                if self.base._meta.proxy:
-                    raise ValidationError(_("Base can't be a proxy model."))
-                elif (issubclass(self.base, MutableModel) and
-                      self.base.definition() == self.model_def):
-                    raise ValidationError(_("A model definition can't be a base of itself."))
-        except TypeError:
-            raise ValidationError(_('Base must be a class.'))
-        return super(BaseDefinition, self).clean()
 
 
 class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
@@ -388,10 +401,10 @@ class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
                         valid = False
                 finally:
                     if not valid:
-                        msg = _('This field doesn\'t exist')
+                        msg = _("This field doesn't exist")
                         raise ValidationError({'lookup': [msg]})
 
-    def get_defined_ordering(self):
+    def construct(self):
         return ("-%s" % self.lookup) if self.descending else self.lookup
 
 
@@ -405,7 +418,7 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
 
     def __unicode__(self):
         if self.pk:
-            names = ', '.join(self.field_defs.names())
+            names = ', '.join(self.construct())
             return _("Unique together of (%s)") % names
         return ''
 
@@ -414,3 +427,6 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
             if field_def.model_def != self.model_def:
                 msg = _('All fields must be of the same model')
                 raise ValidationError({'field_defs': [msg]})
+
+    def construct(self):
+        return self.field_defs.names()

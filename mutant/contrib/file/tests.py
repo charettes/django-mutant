@@ -26,7 +26,7 @@ class FilePathFieldDefinitionTest(testcases.FieldDefinitionTestMixin,
     def test_formfield(self):
         self.field.match = r'\.pyc?$'
         self.field.save()
-        formfield = self.field.field_instance().formfield()
+        formfield = self.field.construct().formfield()
         self.assertTrue(formfield.valid_value(MODULE_PATH))
         invalid_path = os.path.abspath(testcases.__file__)
         self.assertFalse(formfield.valid_value(invalid_path))

@@ -49,14 +49,16 @@ class FieldDefinitionManager(PolymorphicManager):
 
 
 class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
-    def as_choices(self):
+    def construct(self):
         # Here we don't use .values() since it's raw output from the database
         # and values are not prepared correctly.
-        choices = ({'group': choice.group,
-                    'label': choice.label,
-                    'value': choice.value}
-                   for choice in self.only('group', 'value', 'label'))
-        return choices_from_dict(choices)
+        choices = (
+           {'group': choice.group,
+            'label': choice.label,
+            'value': choice.value}
+           for choice in self.only('group', 'value', 'label')
+        )
+        return tuple(choices_from_dict(choices))
 
 
 class FieldDefinitionChoiceManager(models.Manager):
@@ -77,5 +79,5 @@ class FieldDefinitionChoiceManager(models.Manager):
                 )
             return FieldDefinitionChoiceManager.get_queryset(self)
 
-    def as_choices(self):
-        return self.get_queryset().as_choices()
+    def construct(self):
+        return self.get_queryset().construct()
