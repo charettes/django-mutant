@@ -286,6 +286,11 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
         options.update(overrides)
         instance = cls(**options)
         setattr(instance, self.FIELD_DEFINITION_PK_ATTR, self.pk)
+        # On Django < 1.7 field don't have a deconstruct method thus we provide
+        # one to allow model checksum generation
+        if not hasattr(instance, 'deconstruct'):
+            path = "%s.%s" % (cls.__module__, cls.__name__)
+            instance.deconstruct = lambda: (instance.name, path, [], options)
         return instance
 
     def get_bound_field(self):

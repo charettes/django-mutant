@@ -68,6 +68,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         )
         FirstModel = first_model_def.model_class()
         SecondModel = second_model_def.model_class()
+        second = SecondModel.objects.create()
         ForeignKeyDefinition.objects.create(
             model_def=first_model_def,
             name='second',
@@ -75,12 +76,13 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
             to=second_model_def,
             related_name='first_set'
         )
+        self.assertTrue(second.is_obsolete())
         # Make sure dependencies were set correctly
         self.assertSetEqual(
             SecondModel._dependencies,
             set([(ModelDefinition, first_model_def.pk)])
         )
-        second = SecondModel.objects.create()
+        second = SecondModel.objects.get()
         first = FirstModel.objects.create(second=second)
         # Make sure related managers are correctly assigned
         self.assertEqual(second.first_set.get(), first)
@@ -93,6 +95,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
             to=first_model_def,
             related_name='second_set'
         )
+        self.assertTrue(first.is_obsolete())
         # Make sure dependencies were set correctly
         self.assertSetEqual(
             FirstModel._dependencies,
@@ -106,7 +109,6 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         self.assertRaisesMessage(
             ValidationError, 'Cannot save an obsolete model', second.save
         )
-        self.assertTrue(first.is_obsolete())
         second = SecondModel.objects.get()
         first = FirstModel.objects.get()
         second.first = first

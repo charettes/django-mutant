@@ -5,13 +5,13 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from .. import logger
+from ..state import handler as state_handler
 from ..utils import remove_from_app_cache
 
 
 class MutableModel(models.Model):
-    """
-    Abstract class used to identify models that we're created by a definition
-    """
+    """Abstract class used to identify models that we're created by a
+    definition."""
 
     class Meta:
         abstract = True
@@ -22,28 +22,33 @@ class MutableModel(models.Model):
         return definition_cls.objects.get(pk=definition_pk)
 
     @classmethod
-    def is_obsolete(cls):
-        return cls._is_obsolete
-
-    @classmethod
     def checksum(cls):
         return cls._checksum
 
     @classmethod
-    def mark_as_obsolete(cls):
+    def is_obsolete(cls):
+        checksum = state_handler.get_checksum(cls._definition[1])
+        return cls._checksum != checksum
+
+    @classmethod
+    def mark_as_obsolete(cls, origin=None):
         remove_from_app_cache(cls)
-        cls._is_obsolete = True
+        state_handler.clear_checksum(cls._definition[1])
         logger.debug(
             "Marking model %s and it dependencies (%s) as obsolete.",
             cls, cls._dependencies
         )
+        if origin is None:
+            origin = cls._definition
         for definition_cls, definition_pk in cls._dependencies:
+            if (definition_cls, definition_pk) == origin:
+                continue
             try:
                 definition = definition_cls.objects.get(pk=definition_pk)
             except definition_cls.DoesNotExist:
                 pass
             else:
-                definition.model_class().mark_as_obsolete()
+                definition.model_class().mark_as_obsolete(origin)
 
     def clean(self):
         if self.is_obsolete():

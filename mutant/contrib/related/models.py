@@ -76,13 +76,20 @@ class RelatedFieldDefinition(FieldDefinition):
 
     def get_field_options(self, **overrides):
         options = super(RelatedFieldDefinition, self).get_field_options(**overrides)
-        if self.is_recursive_relationship:
-            options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
+        if self.to_model_class_is_mutable:
+            if self.is_recursive_relationship:
+                options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
+            else:
+                model_def = self.to.modeldefinition
+                options['to'] = "%s.%s" % (
+                    model_def.app_label, model_def.object_name
+                )
         else:
-            opts = self.to_model_class._meta
-            options['to'] = "%s.%s" % (opts.app_label, opts.object_name)
-        if not self.to_model_class_is_mutable:
-            options['related_name'] = '+'
+            opts = self.to._meta
+            options.update(
+                to="%s.%s" % (opts.app_label, opts.object_name),
+                related_name='+'
+            )
         return options
 
     def _south_ready_field_instance(self):
@@ -94,6 +101,12 @@ class RelatedFieldDefinition(FieldDefinition):
         options = self.get_field_options()
         options['to'] = self.to.model_class()
         return cls(**options)
+
+    def save(self, *args, **kwargs):
+        save = super(RelatedFieldDefinition, self).save()
+        if self.to_model_class_is_mutable:
+            self.to_model_class.mark_as_obsolete()
+        return save
 
 
 to_field_help_text = _('The field on the related object that the '

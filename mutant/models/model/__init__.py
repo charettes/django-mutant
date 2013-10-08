@@ -24,6 +24,7 @@ from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
+from ...state import handler as state_handler
 from ...utils import get_db_table, model_name
 
 from .managers import ModelDefinitionManager
@@ -226,7 +227,6 @@ class ModelDefinition(ContentType):
         attrs = {
             '__module__': str("mutant.apps.%s.models" % self.app_label),
             '_definition': (self.__class__, self.pk),
-            '_is_obsolete': False,
             '_dependencies': set(),
         }
         attrs.update(
@@ -241,7 +241,11 @@ class ModelDefinition(ContentType):
         attrs = self.get_model_attrs()
 
         identifier = (
-            self.object_name, opts, attrs, [
+            self.object_name, opts, dict(
+                    (name, attr.deconstruct())
+                    for name, attr in attrs.iteritems()
+                        if hasattr(attr, 'deconstruct')
+                ), [
                 MutableModelProxy(base).checksum()
                     if base is not MutableModel and issubclass(base, MutableModel)
                     else base
@@ -258,7 +262,10 @@ class ModelDefinition(ContentType):
         if existing_model_class:
             existing_model_class.mark_as_obsolete()
 
+        state_handler.set_checksum(self.pk, checksum)
+
         model_class = type(str(self.object_name), bases, attrs)
+
         mutable_class_prepared.send(
             sender=model_class, definition=self,
             existing_model_class=existing_model_class
@@ -268,7 +275,7 @@ class ModelDefinition(ContentType):
 
     def model_class(self, force_create=False):
         model_class = super(ModelDefinition, self).model_class()
-        if force_create or model_class is None:
+        if force_create or model_class is None or model_class.is_obsolete():
             model_class = self.construct(model_class)
         return MutableModelProxy(model_class)
 

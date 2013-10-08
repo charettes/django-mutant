@@ -371,9 +371,6 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         instance = proxy()
         self.assertIsInstance(instance, proxy)
         self.assertIsInstance(instance, proxy.model)
-        new_instance = self.model_def.model_class(force_create=True)()
-        self.assertIsInstance(new_instance, proxy)
-        self.assertIsInstance(new_instance, proxy.model)
 
     def test_contains(self):
         proxy = self.model_def.model_class()
