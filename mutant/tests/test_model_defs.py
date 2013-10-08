@@ -350,10 +350,8 @@ class ModelValidationTest(BaseModelDefinitionTestCase):
 
 class MutableModelProxyTest(BaseModelDefinitionTestCase):
     def test_pickling(self):
-        """
-        Make sure _ModelClassProxy can be pickled correctly. This is required
-        to allow a model definition to subclass a MutableModel.
-        """
+        """Make sure `MutableModelProxy` instances can be pickled correctly.
+        This is required for mutable model inheritance."""
         proxy = self.model_def.model_class()
         pickled = pickle.dumps(proxy)
         self.assertEqual(pickle.loads(pickled), proxy)
@@ -364,9 +362,18 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         self.assertTrue(issubclass(proxy, models.Model))
         self.assertTrue(issubclass(proxy, MutableModel))
         self.assertFalse(issubclass(proxy, MutableModelProxyTest))
-        self.assertTrue(isinstance(proxy, models.base.ModelBase))
-        self.assertTrue(isinstance(proxy, MutableModelProxy))
+        self.assertIsInstance(proxy, models.base.ModelBase)
+        self.assertIsInstance(proxy, MutableModelProxy)
         self.assertFalse(isinstance(proxy, MutableModelProxyTest))
+
+    def test_instance_checks(self):
+        proxy = self.model_def.model_class()
+        instance = proxy()
+        self.assertIsInstance(instance, proxy)
+        self.assertIsInstance(instance, proxy.model)
+        new_instance = self.model_def.model_class(force_create=True)()
+        self.assertIsInstance(new_instance, proxy)
+        self.assertIsInstance(new_instance, proxy.model)
 
     def test_contains(self):
         proxy = self.model_def.model_class()

@@ -113,6 +113,10 @@ class MutableModelProxy(object):
             return model == other
         return NotImplemented
 
+    def __instancecheck__(self, instance):
+        model = self.__get__()
+        return isinstance(instance, model)
+
     def __reduce_ex__(self, protocol):
         model = self.__get__()
         return (_model_class_from_pk, model._definition)
