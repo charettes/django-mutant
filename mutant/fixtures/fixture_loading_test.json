@@ -47,13 +47,6 @@
         }
     },
     {
-        "pk": 9999,
-        "model": "mutant.charfielddefinition",
-        "fields": {
-            "max_length": 255
-        }
-    },
-    {
         "pk": 9998,
         "model": "mutant.fielddefinition",
         "fields": {
@@ -79,6 +72,13 @@
             "verbose_name": "",
             "unique_for_date": null,
             "db_index": false
+        }
+    },
+    {
+        "pk": 9999,
+        "model": "mutant.charfielddefinition",
+        "fields": {
+            "max_length": 255
         }
     }
 ]

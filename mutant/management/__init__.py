@@ -249,9 +249,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     This signal is connected by all FieldDefinition subclasses
     see comment in FieldDefinitionBase for more details
     """
-    # If the field definition is raw we must re-create the model class
-    # since ModelDefinitionAttribute.save won't be called
-    model_class = instance.model_def.model_class(force_create=raw)
+    model_class = instance.model_def.model_class()
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
     if created:
