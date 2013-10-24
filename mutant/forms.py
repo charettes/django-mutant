@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import force_text
+from django.utils.encoding import smart_text
 
 from .utils import choices_from_dict, group_item_getter
 
@@ -47,9 +47,9 @@ class FieldDefinitionTypeField(forms.ModelChoiceField):
                 definition = content_type.model_class()
                 category = definition.get_field_category()
                 definition_choices.append({
-                    'group': force_text(category) if category else None,
+                    'group': smart_text(category) if category else None,
                     'value': content_type.pk,
-                    'label': force_text(definition.get_field_description()),
+                    'label': self.label_from_instance(content_type),
                 })
             choices = list(
                 choices_from_dict(
@@ -62,3 +62,6 @@ class FieldDefinitionTypeField(forms.ModelChoiceField):
         return super(FieldDefinitionTypeField, self)._get_choices()
 
     choices = property(_get_choices, forms.ModelChoiceField._set_queryset)
+
+    def label_from_instance(self, obj):
+        return smart_text(obj.model_class().get_field_description())

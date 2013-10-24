@@ -79,7 +79,21 @@ class FieldDefinitionTypeFieldTest(TestCase):
         form = form_cls({'field_type': self.content_type_ct.pk})
         self.assertFalse(form.is_valid())
 
-    def test_group_by_category(self):
+    def test_choices(self):
+        field = FieldDefinitionTypeField(
+            ContentType.objects.filter(pk__in=[
+                self.field_definition_ct.pk, self.custom_field_ct.pk
+            ]).order_by('pk'), group_by_category=False, empty_label='Empty'
+        )
+        self.assertEqual(
+            list(field.choices), [
+                ('', 'Empty'),
+                (self.field_definition_ct.pk, 'None'),
+                (self.custom_field_ct.pk, ugettext('Custom description'))
+            ]
+        )
+
+    def test_group_by_category_choices(self):
         field = FieldDefinitionTypeField(
             ContentType.objects.filter(pk__in=[
                 self.field_definition_ct.pk, self.custom_field_ct.pk
