@@ -12,16 +12,11 @@ from ...validators import validate_python_identifier
 
 
 class DirectoryPathField(CharField):
-    def to_python(self, value):
-        value = super(DirectoryPathField, self).to_python(value)
-        if value is None:
-            return
+    def validate(self, value, model_instance):
         if not os.path.exists(value):
             raise ValidationError(_("Specified path doesn't exist"))
         elif not os.path.isdir(value):
             raise ValidationError(_("Specified path isn't a directory"))
-        else:
-            return value
 
 
 class RegExpStringField(CharField):
