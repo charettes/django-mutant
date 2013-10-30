@@ -270,7 +270,9 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
             if name in overrides:  # Avoid fetching if it's overridden
                 continue
             value = getattr(self, name)
-            if value != model_opts.get_field(name).get_default():
+            field = model_opts.get_field(name)
+            default = field.to_python(field.get_default())
+            if value != default:
                 options[name] = value
         if 'choices' not in overrides:  # Avoid fetching if it's overridden
             choices = self.choices.construct()
