@@ -241,7 +241,7 @@ class ModelDefinition(ContentType):
         attrs = self.get_model_attrs()
 
         identifier = (
-            self.object_name, opts, dict(
+            self.pk, self.object_name, opts, dict(
                     (name, attr.deconstruct())
                     for name, attr in attrs.iteritems()
                         if hasattr(attr, 'deconstruct')

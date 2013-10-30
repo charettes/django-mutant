@@ -6,7 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from .. import logger
 from ..state import handler as state_handler
-from ..utils import remove_from_app_cache
 
 
 class MutableModel(models.Model):
