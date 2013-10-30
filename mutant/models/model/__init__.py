@@ -25,7 +25,7 @@ from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
-from ...utils import get_db_table, model_name
+from ...utils import get_db_table, model_name, remove_from_app_cache
 
 from .managers import ModelDefinitionManager
 
@@ -253,17 +253,18 @@ class ModelDefinition(ContentType):
             ]
         )
         checksum = md5(pickle.dumps(identifier)).hexdigest()
+        state_handler.set_checksum(self.pk, checksum)
+
+        if existing_model_class:
+            if existing_model_class._checksum == checksum:
+                return existing_model_class
+            remove_from_app_cache(existing_model_class)
+            existing_model_class.mark_as_obsolete()
 
         attrs.update(
             Meta=type(str('Meta'), (), opts),
             _checksum=checksum
         )
-
-        if existing_model_class:
-            existing_model_class.mark_as_obsolete()
-
-        state_handler.set_checksum(self.pk, checksum)
-
         model_class = type(str(self.object_name), bases, attrs)
 
         mutable_class_prepared.send(
@@ -271,6 +272,7 @@ class ModelDefinition(ContentType):
             existing_model_class=existing_model_class
         )
         logger.debug("Created model class %s.", model_class)
+
         return model_class
 
     def model_class(self, force_create=False):
@@ -316,6 +318,7 @@ class ModelDefinition(ContentType):
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
         delete = super(ModelDefinition, self).delete(*args, **kwargs)
+        remove_from_app_cache(model_class)
         model_class.mark_as_obsolete()
         ContentType.objects.clear_cache()
         del self._model_class

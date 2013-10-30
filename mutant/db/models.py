@@ -32,7 +32,6 @@ class MutableModel(models.Model):
 
     @classmethod
     def mark_as_obsolete(cls, origin=None):
-        remove_from_app_cache(cls)
         state_handler.clear_checksum(cls._definition[1])
         logger.debug(
             "Marking model %s and it dependencies (%s) as obsolete.",
