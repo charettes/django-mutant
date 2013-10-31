@@ -42,7 +42,7 @@ def _model_class_from_pk(definition_cls, definition_pk):
 
 
 class MutableModelProxy(object):
-    __slots__ = ['model', '__weakref__']
+    __slots__ = ['model', 'refreshing', '__weakref__']
 
     proxied_methods = [
         '__setattr__', '__delattr__', '__hash__', '__str__'
@@ -80,24 +80,31 @@ class MutableModelProxy(object):
 
     def __init__(self, model):
         assert issubclass(model, MutableModel)
-        super(MutableModelProxy, self).__setattr__('model', model)
+        supset = super(MutableModelProxy, self).__setattr__
+        supset('model', model)
+        supset('refreshing', False)
 
     def __get__(self, instance=None, owner=None):
         model = self.model
         if model.is_obsolete():
+            supset = super(MutableModelProxy, self).__setattr__
             try:
-                definition = model.definition()
+                supset('refreshing', True)
+                try:
+                    definition = model.definition()
+                finally:
+                    supset('refreshing', False)
             except ModelDefinition.DoesNotExist:
                 raise AttributeError('This model definition has been deleted')
             else:
                 proxy = definition.model_class()
                 assert isinstance(proxy, MutableModelProxy)
                 model = proxy.model
-                super(MutableModelProxy, self).__setattr__('model', model)
+                supset('model', model)
         return model
 
     def __getattribute__(self, name):
-        if name in ('model', '__get__', '__reduce_ex__'):
+        if name in ('model', 'refreshing', '__get__', '__reduce_ex__'):
             return super(MutableModelProxy, self).__getattribute__(name)
         model = super(MutableModelProxy, self).__getattribute__('__get__')()
         return getattr(model, name)
