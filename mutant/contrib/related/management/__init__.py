@@ -9,26 +9,10 @@ from ....db.models import MutableModel
 from ....management import perform_ddl
 from ....models import ModelDefinition
 from ....signals import mutable_class_prepared
-from ....utils import allow_migrate
+from ....utils import allow_migrate, clear_opts_related_cache
 
 from ..models import (ForeignKeyDefinition, ManyToManyFieldDefinition,
     OneToOneFieldDefinition)
-
-
-_opts_related_cache_attrs = ('_related_objects_cache', '_related_objects_proxy_cache',
-                             '_related_many_to_many_cache', '_name_map')
-
-
-def clear_opts_related_cache(model_class):
-    """
-    Clear the specified model opts related cache
-    """
-    opts = model_class._meta
-    for attr in _opts_related_cache_attrs:
-        try:
-            delattr(opts, attr)
-        except AttributeError:
-            pass
 
 
 @receiver(mutable_class_prepared)

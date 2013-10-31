@@ -15,6 +15,7 @@ from mutant.db.models import MutableModel
 from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
     UniqueTogetherDefinition, BaseDefinition, MutableModelProxy)
 from mutant.test.utils import CaptureQueriesContext
+from mutant.utils import clear_opts_related_cache
 
 from .utils import BaseModelDefinitionTestCase
 
@@ -432,6 +433,26 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
 
         with self.assertRaises(ValidationError):
             instance.delete()
+
+    def test_refreshing_safeguard(self):
+        """Make sure model refreshing that occurs when a model class is
+        obsolete doesn't hang when a model class in the app_cache points to
+        the obsolete one thus triggering a chain of refreshing indirectly
+        caused by `ModelDefinition._opts.get_all_related_objects`."""
+        proxy = self.model_def.model_class()
+        model = proxy.model
+        # Create a FK pointing to a  model class that will become obsolete
+        fk = models.ForeignKey(to=proxy)
+        fk.contribute_to_class(model, 'fk')
+        model.mark_as_obsolete()
+        # Clear up the related cache of ModelDefiniton to make sure
+        # _fill_related_objects_cache` is called.
+        clear_opts_related_cache(ModelDefinition)
+        self.assertTrue(model.is_obsolete())
+        # Trigger model refreshing to make sure the `refreshing` safe guard works
+        self.assertFalse(proxy.is_obsolete())
+        # Cleanup the FK to avoid test pollution.
+        model._meta.local_fields.remove(fk)
 
 
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):

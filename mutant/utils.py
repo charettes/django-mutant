@@ -134,3 +134,21 @@ if django.VERSION >= (1, 6):  # pragma: no cover
 else:  # pragma: no cover
     def model_name(opts):
         return opts.module_name
+
+
+_opts_related_cache_attrs = [
+    '_related_objects_cache', '_related_objects_proxy_cache',
+    '_related_many_to_many_cache', '_name_map'
+]
+
+
+def clear_opts_related_cache(model_class):
+    """
+    Clear the specified model opts related cache
+    """
+    opts = model_class._meta
+    for attr in _opts_related_cache_attrs:
+        try:
+            delattr(opts, attr)
+        except AttributeError:
+            pass

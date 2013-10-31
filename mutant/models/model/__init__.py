@@ -86,7 +86,7 @@ class MutableModelProxy(object):
 
     def __get__(self, instance=None, owner=None):
         model = self.model
-        if model.is_obsolete():
+        if not self.refreshing and model.is_obsolete():
             supset = super(MutableModelProxy, self).__setattr__
             try:
                 supset('refreshing', True)
