@@ -12,3 +12,9 @@ STATE_HANDLER = getattr(
 STATE_CACHE_ALIAS = getattr(
     settings, 'MUTANT_STATE_CACHE_ALIAS', DEFAULT_CACHE_ALIAS
 )
+
+STATE_PUBSUB = getattr(
+    settings, 'MUTANT_STATE_PUBSUB', (
+        'mutant.state.handlers.pubsub.engines.Redis', {}
+    )
+)

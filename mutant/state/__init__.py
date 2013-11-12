@@ -4,17 +4,7 @@ from django.utils.module_loading import import_by_path
 
 from ..settings import STATE_HANDLER
 
-
-class StateHandlerProxy(object):
-    __slots__ = ['path']
-
-    def __init__(self, path):
-        self.path = path
-
-    def __getattribute__(self, name):
-        path = super(StateHandlerProxy, self).__getattribute__('path')
-        handler = import_by_path(path, 'MUTANT_STATE_HANDLER ')()
-        return getattr(handler, name)
+from .utils import HandlerProxy
 
 
-handler = StateHandlerProxy(STATE_HANDLER)
+handler = HandlerProxy(STATE_HANDLER)

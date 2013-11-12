@@ -8,6 +8,9 @@ python:
   - 2.6
   - 2.7
 
+services:
+  - redis-server
+
 env:
   - REQUIREMENTS=1.5.X BACKEND=sqlite3
   - REQUIREMENTS=1.5.X-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
@@ -34,7 +37,7 @@ matrix:
 
 install:
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
-  - pip install coveralls -q --use-mirrors
+  - pip install coveralls redis -q --use-mirrors
   - pip freeze
 
 before_script:

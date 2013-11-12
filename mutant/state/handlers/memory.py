@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from threading import Lock
+from threading import RLock
 
 
 class MemoryStateHandler(object):
@@ -8,8 +8,9 @@ class MemoryStateHandler(object):
     pk and their associated checksums to maintain the current state of mutable
     models."""
 
-    checksums = {}
-    lock = Lock()
+    def __init__(self):
+        self.checksums = {}
+        self.lock = RLock()
 
     def get_checksum(self, definition_pk):
         return self.checksums.get(definition_pk)
