@@ -26,12 +26,14 @@ class MutableModel(models.Model):
 
     @classmethod
     def is_obsolete(cls):
-        checksum = state_handler.get_checksum(cls._definition[1])
-        return cls._checksum != checksum
+        return (
+            cls._is_obsolete or
+            cls._checksum != state_handler.get_checksum(cls._definition[1])
+        )
 
     @classmethod
     def mark_as_obsolete(cls, origin=None):
-        state_handler.clear_checksum(cls._definition[1])
+        cls._is_obsolete = True
         logger.debug(
             "Marking model %s and it dependencies (%s) as obsolete.",
             cls, cls._dependencies

@@ -235,6 +235,7 @@ class ModelDefinition(ContentType):
             '__module__': str("mutant.apps.%s.models" % self.app_label),
             '_definition': (self.__class__, self.pk),
             '_dependencies': set(),
+            '_is_obsolete': False
         }
         attrs.update(
             (field_def.name, field_def.construct())
@@ -264,6 +265,7 @@ class ModelDefinition(ContentType):
 
         if existing_model_class:
             if existing_model_class._checksum == checksum:
+                existing_model_class._is_obsolete = False
                 return existing_model_class
             remove_from_app_cache(existing_model_class)
             existing_model_class.mark_as_obsolete()
@@ -324,9 +326,11 @@ class ModelDefinition(ContentType):
 
     def delete(self, *args, **kwargs):
         model_class = self.model_class()
+        pk = self.pk
         delete = super(ModelDefinition, self).delete(*args, **kwargs)
         remove_from_app_cache(model_class)
         model_class.mark_as_obsolete()
+        state_handler.clear_checksum(pk)
         ContentType.objects.clear_cache()
         del self._model_class
         return delete

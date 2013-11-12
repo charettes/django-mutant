@@ -12,6 +12,10 @@ class HandlerProxy(object):
 
     def __getattribute__(self, name):
         get = super(HandlerProxy, self).__getattribute__
+        try:
+            return get(name)
+        except AttributeError:
+            pass
         handlers = get('_handlers')
         path = get('path')
         try:

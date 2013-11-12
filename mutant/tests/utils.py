@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 from contextlib import contextmanager
 
 from django.db import connections
-from django.test.testcases import _deferredSkip
 
-from mutant.db.models import MutableModel
 from mutant.models.model import ModelDefinition
 from mutant.test.testcases import ModelDefinitionDDLTestCase
 from mutant.utils import allow_migrate
