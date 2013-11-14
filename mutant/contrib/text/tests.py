@@ -78,8 +78,8 @@ class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,
 
     @skipIf(
         connection.settings_dict['ENGINE'] == 'django.db.backends.sqlite3' and
-        south.__version__ in ('0.8.1', '0.8.2'),
-        "South 0.8.1 doesn't escape added column default value correctly on SQLite3."
+        south.__version__ in ('0.8.1', '0.8.2', '0.8.3'),
+        "This version of South doesn't escape added column default value correctly on SQLite3."
     )
     def test_create_with_default(self):
         super(TextFieldDefinitionTest, self).test_create_with_default()
