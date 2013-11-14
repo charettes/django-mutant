@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import sys
+from threading import Thread
 import time
 
 # TODO: Remove when support for Python 2.6 is dropped
@@ -35,21 +36,44 @@ class StateHandlerTestMixin(object):
         state_handler.path = self._state_handler
         super(StateHandlerTestMixin, self).tearDown()
 
-    @cached_property
-    def handler(self):
-        return import_by_path(self.handler_path)()
-
     def test_basic_interaction(self):
-        self.assertIsNone(self.handler.get_checksum(0))
+        self.assertIsNone(state_handler.get_checksum(0))
         checksum = '397fc6229a59429ee114441b780fe7a2'
-        self.handler.set_checksum(0, checksum)
-        self.assertEqual(self.handler.get_checksum(0), checksum)
-        self.handler.clear_checksum(0)
-        self.assertIsNone(self.handler.get_checksum(0))
+        state_handler.set_checksum(0, checksum)
+        self.assertEqual(state_handler.get_checksum(0), checksum)
+        state_handler.clear_checksum(0)
+        self.assertIsNone(state_handler.get_checksum(0))
+
+
+class ChecksumGetter(Thread):
+    """Class used to fetch a checksum from a another thread since state
+    handler instances are thread local."""
+
+    def __init__(self, definition_pk, *args, **kwargs):
+        super(ChecksumGetter, self).__init__(*args, **kwargs)
+        self.definition_pk = definition_pk
+        self.checksum = None
+
+    def run(self):
+        self.checksum = state_handler.get_checksum(self.definition_pk)
 
 
 class MemoryHandlerTest(StateHandlerTestMixin, BaseModelDefinitionTestCase):
     handler_path = 'mutant.state.handlers.memory.MemoryStateHandler'
+
+    def test_checksum_persistence(self):
+        """Make sure checksums are shared between threads."""
+        checksum = '397fc6229a59429ee114441b780fe7a2'
+        state_handler.set_checksum(0, checksum)
+        getter = ChecksumGetter(0)
+        getter.start()
+        getter.join()
+        self.assertEqual(getter.checksum, checksum)
+        state_handler.clear_checksum(0)
+        getter = ChecksumGetter(0)
+        getter.start()
+        getter.join()
+        self.assertIsNone(getter.checksum)
 
 
 class CacheHandlerTest(StateHandlerTestMixin, BaseModelDefinitionTestCase):
@@ -57,7 +81,7 @@ class CacheHandlerTest(StateHandlerTestMixin, BaseModelDefinitionTestCase):
 
 
 @skipUnless(redis_installed, 'This state handler requires redis to be installed.')
-class PubsubHandlerTest(StateHandlerTestMixin, BaseModelDefinitionTestCase):
+class PubsubHandlerTest(MemoryHandlerTest):
     handler_path = 'mutant.state.handlers.pubsub.PubSubStateHandler'
 
     def test_obsolesence_do_not_clear_checksum(self):

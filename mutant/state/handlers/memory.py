@@ -8,9 +8,8 @@ class MemoryStateHandler(object):
     pk and their associated checksums to maintain the current state of mutable
     models."""
 
-    def __init__(self):
-        self.checksums = {}
-        self.lock = RLock()
+    checksums = {}
+    lock = RLock()
 
     def get_checksum(self, definition_pk):
         return self.checksums.get(definition_pk)
