@@ -7,7 +7,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
 from django.utils.translation import ugettext_lazy as _
-from orderable.models import OrderableModel
+from ordered_model.models import OrderedModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields
@@ -325,7 +325,7 @@ class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
                     raise ValidationError({'default': [msg]})
 
 
-class FieldDefinitionChoice(OrderableModel):
+class FieldDefinitionChoice(OrderedModel):
     """
     A Model to allow specifying choices for a field definition instance
     """
@@ -336,7 +336,7 @@ class FieldDefinitionChoice(OrderableModel):
 
     objects = FieldDefinitionChoiceManager()
 
-    class Meta(OrderableModel.Meta):
+    class Meta(OrderedModel.Meta):
         app_label = 'mutant'
         verbose_name = _('field definition choice')
         verbose_name_plural = _('field definition choices')

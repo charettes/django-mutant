@@ -775,18 +775,23 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
     def test_base_ordering(self):
         model_class = self.model_def.model_class()
         with self.assertChecksumChange():
-            BaseDefinition.objects.create(
-                model_def=self.model_def, base=Mixin, order=2
+            mixin_base_def = BaseDefinition.objects.create(
+                model_def=self.model_def, base=Mixin
             )
         with self.assertChecksumChange():
-            model_subclass_def = BaseDefinition.objects.create(
-                model_def=self.model_def, base=AbstractModel, order=1
+            abstract_base_def = BaseDefinition.objects.create(
+                model_def=self.model_def, base=AbstractModel
             )
+        instance = model_class()
+        self.assertEqual('Mixin', instance.method())
+        with self.assertChecksumChange():
+            mixin_base_def.order = abstract_base_def.order + 1
+            mixin_base_def.save(update_fields=['order'])
         instance = model_class()
         self.assertEqual('AbstractModel', instance.method())
         with self.assertChecksumChange():
-            model_subclass_def.order = 3
-            model_subclass_def.save()
+            abstract_base_def.order = mixin_base_def.order + 1
+            abstract_base_def.save(update_fields=['order'])
         instance = model_class()
         self.assertEqual('Mixin', instance.method())
 

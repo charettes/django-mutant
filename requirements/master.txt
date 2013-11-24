@@ -1,5 +1,5 @@
 https://github.com/django/django/archive/master.tar.gz
 https://bitbucket.org/andrewgodwin/south/get/tip.tar.gz
-https://github.com/tkaemming/django-orderable/archive/master.tar.gz
+https://github.com/bfirsh/django-ordered-model/archive/master.tar.gz
 https://github.com/gintas/django-picklefield/archive/master.tar.gz
 https://github.com/charettes/django-polymodels/archive/master.tar.gz

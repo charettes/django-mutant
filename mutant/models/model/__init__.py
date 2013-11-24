@@ -11,7 +11,7 @@ from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 from django.utils.translation import ugettext_lazy as _
-from orderable.models import OrderableModel
+from ordered_model.models import OrderedModel
 from picklefield.fields import PickledObjectField
 
 try:
@@ -362,7 +362,7 @@ class ModelDefinitionAttribute(models.Model):
         return delete
 
 
-class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
+class BaseDefinition(OrderedModel, ModelDefinitionAttribute):
     """
     Model used to represent bases of a ModelDefinition
     """
@@ -416,11 +416,11 @@ class BaseDefinition(OrderableModel, ModelDefinitionAttribute):
         return tuple(fields)
 
 
-class OrderingFieldDefinition(OrderableModel, ModelDefinitionAttribute):
+class OrderingFieldDefinition(OrderedModel, ModelDefinitionAttribute):
     lookup = models.CharField(max_length=255)
     descending = models.BooleanField(_('descending'), default=False)
 
-    class Meta(OrderableModel.Meta):
+    class Meta(OrderedModel.Meta):
         app_label = 'mutant'
         # TODO: Should be unique both it bugs order swapping
         # unique_together = (('model_def', 'order'),)
