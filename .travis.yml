@@ -8,32 +8,35 @@ python:
   - 2.6
   - 2.7
 
+addons:
+  postgresql: "9.3"
+
 services:
   - redis-server
 
 env:
   - REQUIREMENTS=1.5.X BACKEND=sqlite3
-  - REQUIREMENTS=1.5.X-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
-  - REQUIREMENTS=1.5.X-postgres BACKEND=postgis TEMPLATE=template_postgis
+  - REQUIREMENTS=1.5.X-postgres BACKEND=postgresql_psycopg2
+  - REQUIREMENTS=1.5.X-postgres BACKEND=postgis
   - REQUIREMENTS=1.6.X BACKEND=sqlite3
-  - REQUIREMENTS=1.6.X-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
-  - REQUIREMENTS=1.6.X-postgres BACKEND=postgis TEMPLATE=template_postgis
+  - REQUIREMENTS=1.6.X-postgres BACKEND=postgresql_psycopg2
+  - REQUIREMENTS=1.6.X-postgres BACKEND=postgis
   - REQUIREMENTS=master BACKEND=sqlite3
-  - REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
-  - REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
+  - REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
+  - REQUIREMENTS=master-postgres BACKEND=postgis
 
 matrix:
   exclude:
     - python: 2.6
       env: REQUIREMENTS=master BACKEND=sqlite3
     - python: 2.6
-      env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
+      env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
     - python: 2.6
-      env: REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
+      env: REQUIREMENTS=master-postgres BACKEND=postgis
   allow_failures:
     - env: REQUIREMENTS=master BACKEND=sqlite3
-    - env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2 TEMPLATE=template0
-    - env: REQUIREMENTS=master-postgres BACKEND=postgis TEMPLATE=template_postgis
+    - env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
+    - env: REQUIREMENTS=master-postgres BACKEND=postgis
 
 install:
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
@@ -41,10 +44,9 @@ install:
   - pip freeze
 
 before_script:
-  - export PGUSER='postgres'
-  - if echo $BACKEND | grep 'postgis' -q; then sudo apt-get install binutils gdal-bin libproj-dev postgresql-9.1-postgis -q > /dev/null; fi
-  - if echo $BACKEND | grep 'postgis' -q; then ./create_template_postgis-debian.sh > /dev/null; fi
-  - if echo $BACKEND | grep -E '(postgresql|postgis)' -q; then psql -c "CREATE DATABASE mutant TEMPLATE ${TEMPLATE};" -U postgres -q; fi
+  - if echo $BACKEND | grep 'postgis' -q; then sudo apt-get install postgis; fi
+  - if echo $BACKEND | grep -E '(postgresql|postgis)' -q; then psql -U postgres -c "CREATE DATABASE mutant;"; fi
+  - if echo $BACKEND | grep 'postgis' -q; then psql mutant -U postgres -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"; fi
 
 script:
   - python -Wonce `which coverage` run `which django-admin.py` test --pythonpath=`pwd` --settings=mutant.tests.settings.$BACKEND -v2
