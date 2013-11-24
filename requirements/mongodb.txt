@@ -1,4 +1,0 @@
--r 1.4.X.txt
-https://github.com/django-nonrel/django-nonrel/tarball/develop
-https://github.com/django-nonrel/djangotoolbox/tarball/develop
-https://github.com/django-nonrel/mongodb-engine/tarball/develop
