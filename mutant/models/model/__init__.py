@@ -11,7 +11,6 @@ from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 from django.utils.translation import ugettext_lazy as _
-from ordered_model.models import OrderedModel
 from picklefield.fields import PickledObjectField
 
 try:
@@ -26,6 +25,8 @@ from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
 from ...utils import get_db_table, model_name, remove_from_app_cache
+
+from ..ordered import OrderedModel
 
 from .managers import ModelDefinitionManager
 
@@ -362,7 +363,16 @@ class ModelDefinitionAttribute(models.Model):
         return delete
 
 
-class BaseDefinition(OrderedModel, ModelDefinitionAttribute):
+class OrderedModelDefinitionAttribute(OrderedModel, ModelDefinitionAttribute):
+    class Meta:
+        abstract = True
+
+    def get_ordering_queryset(self):
+        qs = super(OrderedModelDefinitionAttribute, self).get_ordering_queryset()
+        return qs.filter(model_def_id=self.model_def_id)
+
+
+class BaseDefinition(OrderedModelDefinitionAttribute):
     """
     Model used to represent bases of a ModelDefinition
     """
@@ -370,7 +380,7 @@ class BaseDefinition(OrderedModel, ModelDefinitionAttribute):
 
     class Meta:
         app_label = 'mutant'
-        ordering = ('order',)
+        ordering = ['order']
         unique_together = (('model_def', 'order'),)
 
     def clean(self):
@@ -416,12 +426,13 @@ class BaseDefinition(OrderedModel, ModelDefinitionAttribute):
         return tuple(fields)
 
 
-class OrderingFieldDefinition(OrderedModel, ModelDefinitionAttribute):
+class OrderingFieldDefinition(OrderedModelDefinitionAttribute):
     lookup = models.CharField(max_length=255)
     descending = models.BooleanField(_('descending'), default=False)
 
-    class Meta(OrderedModel.Meta):
+    class Meta:
         app_label = 'mutant'
+        ordering = ['order']
         # TODO: Should be unique both it bugs order swapping
         # unique_together = (('model_def', 'order'),)
 
@@ -431,7 +442,6 @@ class OrderingFieldDefinition(OrderedModel, ModelDefinitionAttribute):
         """
         if self.lookup == '?':  # Randomly sort
             return
-        #TODO: Support order_with_respect_to...
         else:
             lookups = self.lookup.split(LOOKUP_SEP)
             opts = self.model_def.model_class()._meta

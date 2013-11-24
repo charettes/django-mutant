@@ -7,16 +7,17 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
 from django.utils.translation import ugettext_lazy as _
-from ordered_model.models import OrderedModel
 from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields
 
-from ...db.fields import (FieldDefinitionTypeField, LazilyTranslatedField,
-    PythonIdentifierField)
+from ...db.fields import (
+    FieldDefinitionTypeField, LazilyTranslatedField, PythonIdentifierField
+)
 from ...hacks import patch_model_option_verbose_name_raw
 from ...utils import lazy_string_format, model_name, popattr
 
+from ..ordered import OrderedModel
 from ..model import ModelDefinitionAttribute
 
 from .managers import FieldDefinitionChoiceManager, FieldDefinitionManager
@@ -336,10 +337,11 @@ class FieldDefinitionChoice(OrderedModel):
 
     objects = FieldDefinitionChoiceManager()
 
-    class Meta(OrderedModel.Meta):
+    class Meta:
         app_label = 'mutant'
         verbose_name = _('field definition choice')
         verbose_name_plural = _('field definition choices')
+        ordering = ['order']
         unique_together = (
             ('field_def', 'order'),
             ('field_def', 'group', 'value')
@@ -358,3 +360,7 @@ class FieldDefinitionChoice(OrderedModel):
         save = super(FieldDefinitionChoice, self).save(*args, **kwargs)
         self.field_def.model_def.model_class(force_create=True)
         return save
+
+    def get_ordering_queryset(self):
+        qs = super(FieldDefinitionChoice, self).get_ordering_queryset()
+        return qs.filter(field_def_id=self.field_def_id)
