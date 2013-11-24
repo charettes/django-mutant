@@ -29,11 +29,6 @@ class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):
         super(GeometryFieldDefinitionTestMixin, self).setUp()
         BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
 
-    @expectedFailure
-    def test_create_with_default(self):
-        """'Geometry field defaults are not correctly handled by South.'"""
-        super(GeometryFieldDefinitionTestMixin, self).test_create_with_default()
-
 
 class GeometryFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
