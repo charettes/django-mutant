@@ -10,9 +10,6 @@ if sys.version_info >= (2, 7):
 else:
     from django.utils.unittest import skipUnless
 
-from django.utils.functional import cached_property
-from django.utils.module_loading import import_by_path
-
 from mutant.state import handler as state_handler
 from mutant.state.handlers.pubsub import engines as pubsub_engines
 
