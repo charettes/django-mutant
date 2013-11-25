@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import smart_text
-from django.utils.functional import LazyObject
 
-from .utils import choices_from_dict, group_item_getter
+from .utils import choices_from_dict, group_item_getter, LazyObject
 
 
 class LazyFieldDefinitionQueryset(LazyObject):

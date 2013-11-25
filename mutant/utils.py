@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import operator
+
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import groupby
@@ -11,7 +13,7 @@ from django.db import connections, router
 from django.db.models.loading import cache as app_cache
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
-from django.utils.functional import lazy
+from django.utils.functional import lazy, LazyObject, new_method_proxy
 
 
 # TODO: Remove `allow_syncdb` alternative when support for 1.6 is dropped
@@ -152,3 +154,14 @@ def clear_opts_related_cache(model_class):
             delattr(opts, attr)
         except AttributeError:
             pass
+
+# TODO: Remove when support for 1.5 is dropped
+if django.VERSION < (1, 6):
+    class LazyObject(LazyObject):
+        # Dictionary methods support
+        __getitem__ = new_method_proxy(operator.getitem)
+        __setitem__ = new_method_proxy(operator.setitem)
+        __delitem__ = new_method_proxy(operator.delitem)
+
+        __len__ = new_method_proxy(len)
+        __contains__ = new_method_proxy(operator.contains)
