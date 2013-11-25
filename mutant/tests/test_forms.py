@@ -12,7 +12,7 @@ from mutant.models.field import FieldDefinition
 from .models import CustomFieldDefinition, FieldDefinitionModel
 
 
-class FieldDefinitionTypeFieldTest(TestCase):
+class FieldDefinitionTypeFieldTests(TestCase):
     def setUp(self):
         self.field_definition_ct = FieldDefinition.get_content_type()
         self.custom_field_ct = CustomFieldDefinition.get_content_type()
@@ -20,6 +20,7 @@ class FieldDefinitionTypeFieldTest(TestCase):
         self.field_types = ContentType.objects.filter(
             **FieldDefinition.subclasses_lookup('pk')
         )
+        ContentType.objects.clear_cache()
 
     def test_invalid_field_definitions(self):
         with self.assertRaisesMessage(
@@ -29,7 +30,8 @@ class FieldDefinitionTypeFieldTest(TestCase):
             )
 
     def test_valid_value(self):
-        field = FieldDefinitionTypeField(self.field_types)
+        with self.assertNumQueries(0):
+            field = FieldDefinitionTypeField(self.field_types)
         self.assertEqual(
             field.to_python(self.field_definition_ct.pk),
             self.field_definition_ct
@@ -42,9 +44,10 @@ class FieldDefinitionTypeFieldTest(TestCase):
             field.to_python(self.content_type_ct.pk)
 
     def test_field_definitions_valid_value(self):
-        field = FieldDefinitionTypeField(
-            self.field_types, field_definitions=[CustomFieldDefinition]
-        )
+        with self.assertNumQueries(0):
+            field = FieldDefinitionTypeField(
+                self.field_types, field_definitions=[CustomFieldDefinition]
+            )
         with self.assertRaises(ValidationError):
             field.to_python(self.field_definition_ct.pk)
         self.assertEqual(
@@ -55,10 +58,10 @@ class FieldDefinitionTypeFieldTest(TestCase):
             field.to_python(self.content_type_ct.pk)
 
     def test_form_validation(self):
+        with self.assertNumQueries(0):
+            class CustomModelForm(forms.Form):
+                field_type = FieldDefinitionTypeField(self.field_types)
         custom_field_ct = CustomFieldDefinition.get_content_type()
-
-        class CustomModelForm(forms.Form):
-            field_type = FieldDefinitionTypeField(self.field_types)
         form = CustomModelForm({'field_type': self.custom_field_ct.pk})
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['field_type'], custom_field_ct)
@@ -80,11 +83,12 @@ class FieldDefinitionTypeFieldTest(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_choices(self):
-        field = FieldDefinitionTypeField(
-            ContentType.objects.filter(pk__in=[
-                self.field_definition_ct.pk, self.custom_field_ct.pk
-            ]).order_by('pk'), group_by_category=False, empty_label='Empty'
-        )
+        with self.assertNumQueries(0):
+            field = FieldDefinitionTypeField(
+                ContentType.objects.filter(pk__in=[
+                    self.field_definition_ct.pk, self.custom_field_ct.pk
+                ]).order_by('pk'), group_by_category=False, empty_label='Empty'
+            )
         self.assertEqual(
             list(field.choices), [
                 ('', 'Empty'),
@@ -94,13 +98,14 @@ class FieldDefinitionTypeFieldTest(TestCase):
         )
 
     def test_group_by_category_choices(self):
-        field = FieldDefinitionTypeField(
-            ContentType.objects.filter(pk__in=[
-                self.field_definition_ct.pk, self.custom_field_ct.pk
-            ]).order_by('pk'), group_by_category=True, empty_label=None
-        )
+        with self.assertNumQueries(0):
+            field = FieldDefinitionTypeField(
+                ContentType.objects.filter(pk__in=[
+                    self.field_definition_ct.pk, self.custom_field_ct.pk
+                ]).order_by('pk'), group_by_category=True, empty_label=None
+            )
         self.assertEqual(
-            field.choices, [
+            list(field.choices), [
                 (self.field_definition_ct.pk, 'None'),
                 (ugettext('Custom category'), (
                     (self.custom_field_ct.pk, ugettext('Custom description')),
