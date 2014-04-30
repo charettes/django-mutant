@@ -35,7 +35,9 @@ The main concept was inspired by those projects:
 Installation
 ************
 
->>> pip install django-mutant
+::
+
+    pip install django-mutant
 
 Make sure ``'django.contrib.contenttypes'`` and ``'mutant'`` are in
 your ``INSTALLED_APPS``
