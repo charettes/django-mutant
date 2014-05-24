@@ -75,9 +75,7 @@ class MutableModelProxy(object):
             proxy_class = cache[base]
         except KeyError:
             cache[base] = proxy_class = cls.factory(base)
-        proxy = super(MutableModelProxy, cls).__new__(proxy_class)
-        proxy_class.__init__(proxy, model, *args, **kwargs)
-        return proxy
+        return super(MutableModelProxy, cls).__new__(proxy_class)
 
     def __init__(self, model):
         assert issubclass(model, MutableModel)
