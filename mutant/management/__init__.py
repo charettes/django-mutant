@@ -252,6 +252,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     model_class = instance.model_def.model_class()
     table_name = model_class._meta.db_table
     field = instance._south_ready_field_instance()
+    field.model = model_class
     if created:
         if hasattr(instance._state, '_creation_default_value'):
             field.default = instance._state._creation_default_value
