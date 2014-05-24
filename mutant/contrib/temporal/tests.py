@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 import datetime
 
+from django.test.utils import override_settings
+from django.utils.timezone import make_aware, utc
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.test.testcases import FieldDefinitionTestMixin
@@ -25,8 +27,9 @@ class DateFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
     )
 
 
-class DateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
-                                  BaseModelDefinitionTestCase):
+@override_settings(USE_TZ=False)
+class NaiveDateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
+                                       BaseModelDefinitionTestCase):
     field_definition_cls = DateTimeFieldDefinition
     field_definition_init_kwargs = {
         'default': datetime.datetime(1990, 8, 31, 23, 46)
@@ -34,6 +37,19 @@ class DateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
     field_values = (
         datetime.datetime(2020, 11, 15, 15, 34),
         datetime.datetime(1988, 5, 15, 15, 30)
+    )
+
+
+@override_settings(USE_TZ=True)
+class AwareDateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
+                                       BaseModelDefinitionTestCase):
+    field_definition_cls = DateTimeFieldDefinition
+    field_definition_init_kwargs = {
+        'default': make_aware(datetime.datetime(1990, 8, 31, 23, 46), utc)
+    }
+    field_values = (
+        make_aware(datetime.datetime(2020, 11, 15, 15, 34), utc),
+        make_aware(datetime.datetime(1988, 5, 15, 15, 30), utc)
     )
 
 
