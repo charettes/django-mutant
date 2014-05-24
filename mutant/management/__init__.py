@@ -131,34 +131,28 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
         opts = model_class._meta
         table_name = opts.db_table
         if created:
-            try:
-                add_columns = getattr(instance._state, '_add_columns')
-            except AttributeError:
-                add_columns = True
-            else:
-                delattr(instance._state, '_add_columns')
-            finally:
-                if add_columns:
-                    auto_pk = isinstance(opts.pk, models.AutoField)
-                    for field in declared_fields:
-                        if auto_pk and field.rel and field.rel.parent_link:
-                            auto_pk = False
-                            field.primary_key = True
-                            auto_pk_column = opts.pk.get_attname_column()[1]
-                            perform_ddl(
-                                model_class, 'alter_column', table_name,
-                                auto_pk_column, field
-                            )
-                            column = field.get_attname_column()[1]
-                            perform_ddl(
-                                model_class, 'rename_column', table_name,
-                                auto_pk_column, column
-                            )
-                        else:
-                            perform_ddl(
-                                model_class, 'add_column', table_name,
-                                field.name, field
-                            )
+            add_columns = popattr(instance._state, '_add_columns', True)
+            if add_columns:
+                auto_pk = isinstance(opts.pk, models.AutoField)
+                for field in declared_fields:
+                    if auto_pk and field.rel and field.rel.parent_link:
+                        auto_pk = False
+                        field.primary_key = True
+                        auto_pk_column = opts.pk.get_attname_column()[1]
+                        perform_ddl(
+                            model_class, 'alter_column', table_name,
+                            auto_pk_column, field
+                        )
+                        column = field.get_attname_column()[1]
+                        perform_ddl(
+                            model_class, 'rename_column', table_name,
+                            auto_pk_column, column
+                        )
+                    else:
+                        perform_ddl(
+                            model_class, 'add_column', table_name,
+                            field.name, field
+                        )
         else:
             for field in declared_fields:
                 try:
@@ -180,7 +174,10 @@ def base_definition_pre_delete(sender, instance, **kwargs):
     signal that is no more available thereafter.
     """
     # see CASCADE_MARK_ORIGIN's docstring
-    if popattr(instance._state, '_cascade_deletion_origin', None) == 'model_def':
+    cascade_deletion_origin = popattr(
+        instance._state, '_cascade_deletion_origin', None
+    )
+    if cascade_deletion_origin == 'model_def':
         return
     if (instance.base and issubclass(instance.base, models.Model) and
         instance.base._meta.abstract):
@@ -256,16 +253,11 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         if hasattr(instance._state, '_creation_default_value'):
             field.default = instance._state._creation_default_value
             delattr(instance._state, '_creation_default_value')
-        try:
-            add_column = getattr(instance._state, '_add_column')
-        except AttributeError:
-            add_column = True
-        else:
-            delattr(instance._state, '_add_column')
-        finally:
-            if add_column:
-                perform_ddl(model_class, 'add_column', table_name,
-                            instance.name, field)
+        add_column = popattr(instance._state, '_add_column', True)
+        if add_column:
+            perform_ddl(
+                model_class, 'add_column', table_name, instance.name, field
+            )
     else:
         column = field.get_attname_column()[1]
         old_field = instance._state._pre_save_field
@@ -290,16 +282,15 @@ FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
           dispatch_uid='mutant.management.field_definition_pre_delete')
 def field_definition_pre_delete(sender, instance, **kwargs):
     # see CASCADE_MARK_ORIGIN's docstring
-    if popattr(instance._state, '_cascade_deletion_origin', None) == 'model_def':
+    cascade_deletion_origin = popattr(
+        instance._state, '_cascade_deletion_origin', None
+    )
+    if cascade_deletion_origin == 'model_def':
         return
     model_class = instance.model_def.model_class()
     opts = model_class._meta
     field = opts.get_field(instance.name)
-    instance._state._deletion = (
-        model_class,
-        opts.db_table,
-        field,
-    )
+    instance._state._deletion = (model_class, opts.db_table, field)
 
 
 @receiver(post_delete, sender=FieldDefinition,
