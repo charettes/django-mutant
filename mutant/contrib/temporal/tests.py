@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import warnings
 
 from django.test.utils import override_settings
 from django.utils.timezone import make_aware, utc
@@ -51,6 +52,20 @@ class AwareDateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
         make_aware(datetime.datetime(2020, 11, 15, 15, 34), utc),
         make_aware(datetime.datetime(1988, 5, 15, 15, 30), utc)
     )
+
+    def test_create_with_naive_default(self):
+        """Makes sure creating a DateTimeField with a naive default while
+        timezone support is turned on correctly raise a warning instead
+        of throwing an exception. refs #23"""
+        naive_default = datetime.datetime(1990, 8, 31, 23, 46)
+        with warnings.catch_warnings(record=True) as messages:
+            DateTimeFieldDefinition.objects.create_with_default(
+                model_def=self.model_def,
+                name='field_created_with_naive_default',
+                default=naive_default
+            )
+        self.assertEqual(len(messages), 1)
+        self.assertIn('received a naive datetime', messages[0].message.args[0])
 
 
 class TimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
