@@ -67,7 +67,9 @@ class FieldDefinitionTypeFieldTests(TestCase):
         self.assertEqual(form.cleaned_data['field_type'], custom_field_ct)
 
     def test_model_form_validation(self):
-        form_cls = forms.models.modelform_factory(FieldDefinitionModel)
+        form_cls = forms.models.modelform_factory(
+            FieldDefinitionModel, fields=['field_type']
+        )
 
         form = form_cls({'field_type': self.field_definition_ct.pk})
         self.assertTrue(form.is_valid())
