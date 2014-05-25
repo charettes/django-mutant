@@ -21,6 +21,9 @@ env:
   - REQUIREMENTS=1.6.X BACKEND=sqlite3
   - REQUIREMENTS=1.6.X-postgres BACKEND=postgresql_psycopg2
   - REQUIREMENTS=1.6.X-postgres BACKEND=postgis
+  - REQUIREMENTS=1.7.X BACKEND=sqlite3
+  - REQUIREMENTS=1.7.X-postgres BACKEND=postgresql_psycopg2
+  - REQUIREMENTS=1.7.X-postgres BACKEND=postgis
   - REQUIREMENTS=master BACKEND=sqlite3
   - REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
   - REQUIREMENTS=master-postgres BACKEND=postgis
@@ -28,12 +31,21 @@ env:
 matrix:
   exclude:
     - python: 2.6
+      env: REQUIREMENTS=1.7.x BACKEND=sqlite3
+    - python: 2.6
+      env: REQUIREMENTS=1.7.x-postgres BACKEND=postgresql_psycopg2
+    - python: 2.6
+      env: REQUIREMENTS=1.7.x-postgres BACKEND=postgis
+    - python: 2.6
       env: REQUIREMENTS=master BACKEND=sqlite3
     - python: 2.6
       env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
     - python: 2.6
       env: REQUIREMENTS=master-postgres BACKEND=postgis
   allow_failures:
+    - env: REQUIREMENTS=1.7.x BACKEND=sqlite3
+    - env: REQUIREMENTS=1.7.x-postgres BACKEND=postgresql_psycopg2
+    - env: REQUIREMENTS=1.7.x-postgres BACKEND=postgis
     - env: REQUIREMENTS=master BACKEND=sqlite3
     - env: REQUIREMENTS=master-postgres BACKEND=postgresql_psycopg2
     - env: REQUIREMENTS=master-postgres BACKEND=postgis
