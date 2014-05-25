@@ -52,7 +52,7 @@ matrix:
 
 install:
   - pip install -r requirements/$REQUIREMENTS.txt -q --use-mirrors
-  - pip install coveralls redis -q --use-mirrors
+  - pip install coveralls redis -q
   - pip freeze
 
 before_script:
