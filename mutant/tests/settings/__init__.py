@@ -29,19 +29,6 @@ else:
 
 TEST_RUNNER = 'mutant.tests.runners.MutantTestSuiteRunner'
 
-TEST_DEFAULT_LABELS = [
-    'mutant',
-    'boolean',
-    'temporal',
-    'file',
-    'numeric',
-    'related',
-    'text',
-    'web',
-    'south',
-    'polymodels',
-]
-
 COVERAGE_MODULE_EXCLUDES = [
     '^(?!mutant)',
     'tests$',

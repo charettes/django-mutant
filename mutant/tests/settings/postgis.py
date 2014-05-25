@@ -10,6 +10,4 @@ INSTALLED_APPS.extend([
     'mutant.contrib.geo',
 ])
 
-TEST_DEFAULT_LABELS.append('geo')
-
 COVERAGE_MODULE_EXCLUDES.remove('mutant.contrib.geo')

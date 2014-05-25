@@ -4,12 +4,21 @@ import logging
 from optparse import make_option
 
 from django.conf import settings
-from django.test.simple import DjangoTestSuiteRunner
+try:
+    from django.test.runner import DiscoverRunner
+except ImportError:
+    try:
+        from discover_runner import DiscoverRunner
+    except ImportError:
+        raise ImportError(
+            'django-discover-runner must be installed in order to use '
+            '`MutantTestSuiteRunner` under Django < 1.6'
+        )
 
 from mutant import logger
 
 
-class MutantTestSuiteRunner(DjangoTestSuiteRunner):
+class MutantTestSuiteRunner(DiscoverRunner):
     option_list = (
         make_option('-l', '--logger-level',
             dest='logger_level',
@@ -24,7 +33,10 @@ class MutantTestSuiteRunner(DjangoTestSuiteRunner):
 
     def build_suite(self, test_labels, extra_tests=None, **kwargs):
         if not test_labels:
-            test_labels = getattr(settings, 'TEST_DEFAULT_LABELS', test_labels)
+            test_labels = [
+                "%s.tests" % app for app in settings.INSTALLED_APPS
+                if app.startswith('mutant') or app in ('south', 'polymodels')
+            ]
         return super(MutantTestSuiteRunner, self).build_suite(
             test_labels, extra_tests=None, **kwargs
         )
