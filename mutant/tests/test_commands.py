@@ -1,16 +1,16 @@
 from __future__ import unicode_literals
 
 import json
-from StringIO import StringIO
 from tempfile import NamedTemporaryFile
 
 from django.core.management import call_command
+from django.core.serializers.base import DeserializationError
 from django.core.serializers.json import Serializer as JSONSerializer
+from django.utils.six import StringIO
 
 from mutant.models import ModelDefinition
 from mutant.test.testcases import ModelDefinitionDDLTestCase
 from mutant.utils import remove_from_app_cache
-from django.core.serializers.base import DeserializationError
 
 
 class DataCommandTestCase(ModelDefinitionDDLTestCase):

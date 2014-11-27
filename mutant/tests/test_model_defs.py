@@ -25,14 +25,14 @@ try:
 except ImportError:
     # python 2.6 doesn't provide this helper
     from contextlib import contextmanager
-    import StringIO
+    from django.utils.six import StringIO
     import sys
 
     @contextmanager
     def captured_stderr():
         stderr = sys.stderr
         try:
-            sys.stderr = StringIO.StringIO()
+            sys.stderr = StringIO()
             yield sys.stderr
         finally:
             sys.stderr = stderr
