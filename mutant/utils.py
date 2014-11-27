@@ -60,7 +60,7 @@ def _string_format(string, *args, **kwargs):
     if args:
         return string % tuple(force_text(s) for s in args)
     elif kwargs:
-        return string % dict((k, force_text(v)) for k, v in kwargs.iteritems())
+        return string % dict((k, force_text(v)) for k, v in kwargs.items())
 lazy_string_format = lazy(_string_format, six.text_type)
 
 
@@ -95,7 +95,7 @@ def _app_cache_deepcopy(obj):
     """
     if isinstance(obj, dict):
         return dict((_app_cache_deepcopy(key), _app_cache_deepcopy(val))
-                    for key, val in obj.iteritems())
+                    for key, val in obj.items())
     elif isinstance(obj, list):
         return list(_app_cache_deepcopy(val) for val in obj)
     elif isinstance(obj, SortedDict):

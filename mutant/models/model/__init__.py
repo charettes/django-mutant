@@ -253,7 +253,7 @@ class ModelDefinition(ContentType):
         identifier = (
             self.pk, self.object_name, opts, dict(
                     (name, attr.deconstruct())
-                    for name, attr in attrs.iteritems()
+                    for name, attr in attrs.items()
                         if hasattr(attr, 'deconstruct')
                 ), [
                 MutableModelProxy(base).checksum()
