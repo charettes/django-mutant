@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connections, models, router
 from django.db.utils import IntegrityError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
 
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
