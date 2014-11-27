@@ -4,25 +4,18 @@ import logging
 from optparse import make_option
 
 from django.conf import settings
-try:
-    from django.test.runner import DiscoverRunner
-except ImportError:
-    try:
-        from discover_runner import DiscoverRunner
-    except ImportError:
-        raise ImportError(
-            'django-discover-runner must be installed in order to use '
-            '`MutantTestSuiteRunner` under Django < 1.6'
-        )
+from django.test.runner import DiscoverRunner
 
 from mutant import logger
 
 
 class MutantTestSuiteRunner(DiscoverRunner):
     option_list = (
-        make_option('-l', '--logger-level',
+        make_option(
+            '-l', '--logger-level',
             dest='logger_level',
-            help='Set the level of the `mutant` logger.'),
+            help='Set the level of the `mutant` logger.'
+        ),
     )
 
     def __init__(self, logger_level, **kwargs):
