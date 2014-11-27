@@ -402,7 +402,7 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         halak = proxy(name='Halak')
         halak.save()
         self.assertEqual(
-            "<class 'mutant.apps.app.models.Model'>", unicode(proxy)
+            "<class 'mutant.apps.app.models.Model'>", str(proxy)
         )
         self.assertEqual(sergei, proxy.objects.get(name='Sergei'))
 
