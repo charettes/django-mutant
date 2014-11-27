@@ -11,8 +11,9 @@ from operator import itemgetter
 import django
 from django.db import connections, router
 from django.db.models.loading import cache as app_cache
+from django.utils import six
 from django.utils.datastructures import SortedDict
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 from django.utils.functional import lazy, LazyObject, new_method_proxy
 
 
@@ -57,10 +58,10 @@ def popattr(obj, attr, default=NOT_PROVIDED):
 
 def _string_format(string, *args, **kwargs):
     if args:
-        return string % tuple(force_unicode(s) for s in args)
+        return string % tuple(force_text(s) for s in args)
     elif kwargs:
-        return string % dict((k, force_unicode(v)) for k, v in kwargs.iteritems())
-lazy_string_format = lazy(_string_format, unicode)
+        return string % dict((k, force_text(v)) for k, v in kwargs.iteritems())
+lazy_string_format = lazy(_string_format, six.text_type)
 
 
 def get_db_table(app_label, model):
