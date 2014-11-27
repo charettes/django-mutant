@@ -25,9 +25,11 @@ def perform_ddl(model, action, *args, **kwargs):
         db = dbs[alias]
         if db.deferred_sql:
             for statement in db.deferred_sql:
-                logger.warn("Clearing non-executed deferred SQL statement "
-                            "since we can't assume it's safe to execute it now. "
-                            "Statements was: %s", statement)
+                logger.warning(
+                    "Clearing non-executed deferred SQL statement "
+                    "since we can't assume it's safe to execute it now. "
+                    "Statements was: %s", statement
+                )
             db.clear_deferred_sql()
 
         if django.VERSION >= (1, 6):
