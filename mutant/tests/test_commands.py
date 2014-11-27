@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from django.core.management import call_command
 from django.core.serializers.base import DeserializationError
 from django.core.serializers.json import Serializer as JSONSerializer
+from django.utils.encoding import force_bytes
 from django.utils.six import StringIO
 
 from mutant.models import ModelDefinition
@@ -52,6 +53,17 @@ class DumpDataTestCase(DataCommandTestCase):
         )
 
 
+class BytesWritter(object):
+    def __init__(self, stream):
+        self._stream = stream
+
+    def __getattr__(self, name):
+        return getattr(self._stream, name)
+
+    def write(self, data):
+        self._stream.write(force_bytes(data))
+
+
 class LoadDataTestCase(DataCommandTestCase):
     def setUp(self):
         super(LoadDataTestCase, self).setUp()
@@ -67,7 +79,7 @@ class LoadDataTestCase(DataCommandTestCase):
         # actually testing it's correctly loaded.
         remove_from_app_cache(self.model_cls)
         with NamedTemporaryFile(suffix='.json') as stream:
-            self.serializer.serialize([instance], stream=stream)
+            self.serializer.serialize([instance], stream=BytesWritter(stream))
             stream.seek(0)
             call_command(
                 'loaddata', stream.name, stdout=StringIO(), commit=False
@@ -80,7 +92,7 @@ class LoadDataTestCase(DataCommandTestCase):
         """
         instance = self.model_cls(pk=1)
         with NamedTemporaryFile(suffix='.json') as stream:
-            self.serializer.serialize([instance], stream=stream)
+            self.serializer.serialize([instance], stream=BytesWritter(stream))
             stream.seek(0)
             self.model_def.delete()
             with self.assertRaisesMessage(
