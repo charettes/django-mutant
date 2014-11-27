@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import smart_text
 
-from .utils import choices_from_dict, group_item_getter, LazyObject
+from .utils import choices_from_dict, LazyObject
 
 
 class LazyFieldDefinitionQueryset(LazyObject):
@@ -45,7 +45,7 @@ class LazyFieldDefinitionGroupedChoices(LazyObject):
             })
         choices = list(
             choices_from_dict(
-                sorted(definition_choices, key=group_item_getter)
+                sorted(definition_choices, key=lambda c: c['group'] or '')
             )
         )
         if empty_label is not None:
