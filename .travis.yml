@@ -15,9 +15,6 @@ services:
   - redis-server
 
 env:
-  - REQUIREMENTS=1.5.X BACKEND=sqlite3
-  - REQUIREMENTS=1.5.X-postgres BACKEND=postgresql_psycopg2
-  - REQUIREMENTS=1.5.X-postgres BACKEND=postgis
   - REQUIREMENTS=1.6.X BACKEND=sqlite3
   - REQUIREMENTS=1.6.X-postgres BACKEND=postgresql_psycopg2
   - REQUIREMENTS=1.6.X-postgres BACKEND=postgis

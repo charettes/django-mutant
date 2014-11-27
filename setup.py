@@ -13,7 +13,7 @@ LINK_REQUIREMENT = re.compile(
 )
 
 
-install_requires = ['django>=1.5']
+install_requires = ['django>=1.6']
 dependency_links = []
 
 for requirement in (l.strip() for l in open(os.path.join(MODULE_PATH, 'requirements/base.txt'))):

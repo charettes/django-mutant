@@ -15,7 +15,7 @@ from ...db.fields import (
     FieldDefinitionTypeField, LazilyTranslatedField, PythonIdentifierField
 )
 from ...hacks import patch_model_option_verbose_name_raw
-from ...utils import lazy_string_format, model_name, popattr
+from ...utils import lazy_string_format, popattr
 
 from ..ordered import OrderedModel
 from ..model import ModelDefinitionAttribute
@@ -103,7 +103,7 @@ class FieldDefinitionBase(models.base.ModelBase):
 
             from ...management import (field_definition_post_save,
                 FIELD_DEFINITION_POST_SAVE_UID)
-            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % model_name(definition._meta)
+            post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % definition._meta.model_name
             signals.post_save.connect(field_definition_post_save, definition,
                                       dispatch_uid=post_save_dispatch_uid)
 

@@ -78,7 +78,7 @@ def app_cache_lock():
 
 def remove_from_app_cache(model_class):
     opts = model_class._meta
-    app_label, model_name = opts.app_label, opts.object_name.lower()
+    app_label, model_name = opts.app_label, opts.model_name
     with app_cache_lock():
         app_models = app_cache.app_models.get(app_label, False)
         if app_models:
@@ -127,15 +127,6 @@ def choices_from_dict(choices):
         else:
             yield (grp, tuple((choice['value'], choice['label'])
                                 for choice in choices))
-
-
-# TODO: Remove when support for 1.5 is dropped
-if django.VERSION >= (1, 6):  # pragma: no cover
-    def model_name(opts):
-        return opts.model_name
-else:  # pragma: no cover
-    def model_name(opts):
-        return opts.module_name
 
 
 _opts_related_cache_attrs = [

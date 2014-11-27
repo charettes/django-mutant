@@ -24,7 +24,7 @@ from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
-from ...utils import get_db_table, model_name, remove_from_app_cache
+from ...utils import get_db_table, remove_from_app_cache
 
 from ..ordered import OrderedModel
 
@@ -414,7 +414,7 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
                         fields.append(field)
             elif not opts.proxy:
                 # This is a concrete model base, we must declare a o2o
-                attr_name = '%s_ptr' % model_name(opts)
+                attr_name = '%s_ptr' % opts.model_name
                 fields.append(
                     models.OneToOneField(
                         self.base, name=attr_name,
