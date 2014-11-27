@@ -103,7 +103,7 @@ class MutableModelProxy(object):
         return model
 
     def __getattribute__(self, name):
-        if name in ('model', 'refreshing', '__get__', '__reduce_ex__'):
+        if name in ('model', 'refreshing', '__get__', '__eq__', '__ne__', '__reduce_ex__'):
             return super(MutableModelProxy, self).__getattribute__(name)
         model = super(MutableModelProxy, self).__getattribute__('__get__')()
         return getattr(model, name)
@@ -115,10 +115,13 @@ class MutableModelProxy(object):
     def __eq__(self, other):
         model = self.__get__()
         if isinstance(other, MutableModelProxy):
-            other = other.model
+            other = other.__get__()
         if type(model) == type(other):
             return model == other
-        return NotImplemented
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __instancecheck__(self, instance):
         model = self.__get__()
@@ -242,7 +245,7 @@ class ModelDefinition(ContentType):
         )
         return attrs
 
-    def construct(self, existing_model_class=None):
+    def construct(self, force_create=False, existing_model_class=None):
         bases = self.get_model_bases()
         opts = self.get_model_opts()
         attrs = self.get_model_attrs()
@@ -263,7 +266,7 @@ class ModelDefinition(ContentType):
         state_handler.set_checksum(self.pk, checksum)
 
         if existing_model_class:
-            if existing_model_class._checksum == checksum:
+            if not force_create and existing_model_class._checksum == checksum:
                 existing_model_class._is_obsolete = False
                 return existing_model_class
             remove_from_app_cache(existing_model_class)
@@ -286,7 +289,7 @@ class ModelDefinition(ContentType):
     def model_class(self, force_create=False):
         model_class = super(ModelDefinition, self).model_class()
         if force_create or model_class is None or model_class.is_obsolete():
-            model_class = self.construct(model_class)
+            model_class = self.construct(force_create, model_class)
         return MutableModelProxy(model_class)
 
     @property

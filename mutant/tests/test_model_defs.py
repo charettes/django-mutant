@@ -82,10 +82,12 @@ class ModelSubclassWithTextField(models.Model):
 
 class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_model_class_creation_cache(self):
-        existing_model_class = self.model_def.model_class()
-        self.assertEqual(existing_model_class, self.model_def.model_class())
-        self.assertNotEqual(
-            self.model_def.model_class(force_create=True), existing_model_class
+        existing_model_class = self.model_def.model_class().model
+        self.assertIs(
+            self.model_def.model_class().model, existing_model_class
+        )
+        self.assertIsNot(
+            self.model_def.model_class(force_create=True).model, existing_model_class
         )
 
     def test_force_create_checksum(self):
@@ -377,6 +379,17 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         proxy = self.model_def.model_class()
         self.assertIn(proxy, set([proxy.model]))
         self.assertIn(proxy.model, set([proxy]))
+
+    def test_equality(self):
+        p1 = self.model_def.model_class()
+        p2 = self.model_def.model_class()
+        self.assertEqual(p1, p2)  # Test underlying model retrieval
+        self.assertEqual(p1, p2.model)  # Test direct model comparison
+        self.assertNotEqual(p1, 'string')  # Test type comparison
+        # Test underlying model class comparison
+        m1 = p1.model
+        p3 = self.model_def.model_class(force_create=True)
+        self.assertNotEqual(p3, m1)
 
     def test_proxy_interactions(self):
         CharFieldDefinition.objects.create(
