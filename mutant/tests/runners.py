@@ -35,7 +35,7 @@ class MutantTestSuiteRunner(DiscoverRunner):
         if not test_labels:
             test_labels = [
                 "%s.tests" % app for app in settings.INSTALLED_APPS
-                if app.startswith('mutant') or app in ('south', 'polymodels')
+                if app.startswith('mutant')
             ]
         return super(MutantTestSuiteRunner, self).build_suite(
             test_labels, extra_tests=None, **kwargs
