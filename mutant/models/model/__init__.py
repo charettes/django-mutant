@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError, ImproperlyConfigured
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
@@ -132,6 +133,7 @@ class MutableModelProxy(object):
         return (_model_class_from_pk, model._definition)
 
 
+@python_2_unicode_compatible
 class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
     db_table = models.CharField(
@@ -152,7 +154,7 @@ class ModelDefinition(ContentType):
         verbose_name = _('model definition')
         verbose_name_plural = _('model definitions')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s.%s" % (self.app_label, self.object_name)
 
     def natural_key(self):
@@ -253,7 +255,7 @@ class ModelDefinition(ContentType):
         identifier = (
             self.pk, self.object_name, opts, dict(
                     (name, attr.deconstruct())
-                    for name, attr in attrs.iteritems()
+                    for name, attr in attrs.items()
                         if hasattr(attr, 'deconstruct')
                 ), [
                 MutableModelProxy(base).checksum()
@@ -467,6 +469,7 @@ class OrderingFieldDefinition(OrderedModelDefinitionAttribute):
         return ("-%s" % self.lookup) if self.descending else self.lookup
 
 
+@python_2_unicode_compatible
 class UniqueTogetherDefinition(ModelDefinitionAttribute):
     field_defs = models.ManyToManyField(
         'FieldDefinition', related_name='unique_together_defs'
@@ -475,7 +478,7 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
     class Meta:
         app_label = 'mutant'
 
-    def __unicode__(self):
+    def __str__(self):
         if self.pk:
             names = ', '.join(self.construct())
             return _("Unique together of (%s)") % names

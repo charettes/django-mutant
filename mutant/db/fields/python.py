@@ -6,6 +6,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.fields import CharField
+from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
 from ...validators import validate_python_identifier
@@ -32,9 +33,7 @@ class RegExpStringField(CharField):
             return value
 
 
-class PythonIdentifierField(CharField):
-    __metaclass__ = models.SubfieldBase
-
+class PythonIdentifierField(six.with_metaclass(models.SubfieldBase, CharField)):
     default_validators = [validate_python_identifier]
     description = _('Python identifier')
 

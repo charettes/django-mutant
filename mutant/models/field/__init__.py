@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
 from django.db.models import signals
+from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import dbsafe_encode, PickledObjectField
 from polymodels.models import BasePolymorphicModel
@@ -44,6 +45,17 @@ class FieldDefinitionBase(models.base.ModelBase):
     _lookups = {}
 
     def __new__(cls, name, parents, attrs):
+        super_new = super(FieldDefinitionBase, cls).__new__
+
+        # TODO: Remove when support for Django 1.6 is dropped.
+        # Deal with the intermediary class created by six.with_metaclass.
+        if name == 'NewBase' and not attrs:
+            attrs = {
+                '__module__': __name__,
+                'Meta': type(str('Meta'), (), {'abstract': True}),
+            }
+            return super_new(cls, name, parents, attrs)
+
         if 'Meta' in attrs:
             Meta = attrs['Meta']
 
@@ -76,7 +88,7 @@ class FieldDefinitionBase(models.base.ModelBase):
             has_verbose_name = False
             has_verbose_name_plural = False
 
-        definition = super(FieldDefinitionBase, cls).__new__(cls, name, parents, attrs)
+        definition = super_new(cls, name, parents, attrs)
         opts = definition._meta
 
         # Store the FieldDefinition cls
@@ -154,8 +166,8 @@ class FieldDefinitionBase(models.base.ModelBase):
         return definition
 
 
-class FieldDefinition(BasePolymorphicModel, ModelDefinitionAttribute):
-    __metaclass__ = FieldDefinitionBase
+class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicModel,
+                                         ModelDefinitionAttribute)):
 
     FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
 

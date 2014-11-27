@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connections, models, router
 from django.db.utils import IntegrityError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
 
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
@@ -25,14 +25,14 @@ try:
 except ImportError:
     # python 2.6 doesn't provide this helper
     from contextlib import contextmanager
-    import StringIO
+    from django.utils.six import StringIO
     import sys
 
     @contextmanager
     def captured_stderr():
         stderr = sys.stderr
         try:
-            sys.stderr = StringIO.StringIO()
+            sys.stderr = StringIO()
             yield sys.stderr
         finally:
             sys.stderr = stderr
@@ -402,7 +402,7 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         halak = proxy(name='Halak')
         halak.save()
         self.assertEqual(
-            "<class 'mutant.apps.app.models.Model'>", unicode(proxy)
+            "<class 'mutant.apps.app.models.Model'>", str(proxy)
         )
         self.assertEqual(sergei, proxy.objects.get(name='Sergei'))
 

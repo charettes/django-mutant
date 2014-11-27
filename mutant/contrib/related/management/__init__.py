@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.db.models import Q, signals
 from django.db.models.fields.related import RelatedField
 from django.dispatch.dispatcher import receiver
+from django.utils.six import string_types
 from south.db import dbs
 
 from ....db.models import MutableModel
@@ -28,13 +29,13 @@ def mutable_model_prepared(signal, sender, definition, existing_model_class,
         for field in existing_model_class._meta.local_fields:
             if isinstance(field, RelatedField):
                 rel_to = field.rel.to
-                if not isinstance(rel_to, basestring):
+                if not isinstance(rel_to, string_types):
                     referenced_models.add(rel_to)
     # Add sender as a dependency of all mutable models it refers to
     for field in sender._meta.local_fields:
         if isinstance(field, RelatedField):
             rel_to = field.rel.to
-            if not isinstance(rel_to, basestring):
+            if not isinstance(rel_to, string_types):
                 referenced_models.add(rel_to)
                 if (issubclass(rel_to, MutableModel) and
                     rel_to._definition != sender._definition):
