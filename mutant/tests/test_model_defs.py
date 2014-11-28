@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connections, models, router
 from django.db.utils import IntegrityError
+from django.test.utils import CaptureQueriesContext
 from django.utils.translation import ugettext as _
 
 from mutant.contrib.text.models import CharFieldDefinition
@@ -16,7 +17,6 @@ from mutant.models.model import (
     ModelDefinition, OrderingFieldDefinition, UniqueTogetherDefinition,
     BaseDefinition, MutableModelProxy
 )
-from mutant.test.utils import CaptureQueriesContext
 from mutant.utils import clear_opts_related_cache
 
 from .utils import BaseModelDefinitionTestCase

@@ -147,14 +147,3 @@ def clear_opts_related_cache(model_class):
             delattr(opts, attr)
         except AttributeError:
             pass
-
-# TODO: Remove when support for 1.5 is dropped
-if django.VERSION < (1, 6):
-    class LazyObject(LazyObject):
-        # Dictionary methods support
-        __getitem__ = new_method_proxy(operator.getitem)
-        __setitem__ = new_method_proxy(operator.setitem)
-        __delitem__ = new_method_proxy(operator.delitem)
-
-        __len__ = new_method_proxy(len)
-        __contains__ = new_method_proxy(operator.contains)
