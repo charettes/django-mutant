@@ -161,19 +161,14 @@ class FieldDefinitionTestMixin(object):
             self.field.unique = True
             self.field.save()
         model_class.objects.create(field=value)
-        write_db = router.db_for_write(model_class)
-        connection = connections[write_db]
-        # TODO: Convert this to `atomic` once support for Django < 1.6 is dropped
-        sid = transaction.savepoint(using=write_db)
+        using = router.db_for_write(model_class)
         try:
-            model_class.objects.create(field=value)
+            with transaction.atomic(using, savepoint=True):
+                model_class.objects.create(field=value)
         except IntegrityError:
             pass
         else:
             self.fail("One shouldn't be able to save duplicate entries in a unique field")
-        finally:
-            connection.needs_rollback = False
-            transaction.savepoint_rollback(sid, using=write_db)
 
     def test_field_cloning(self):
         with self.assertChecksumChange():
