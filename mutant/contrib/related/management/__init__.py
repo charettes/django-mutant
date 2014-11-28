@@ -7,13 +7,11 @@ from django.utils.six import string_types
 from south.db import dbs
 
 from ....db.models import MutableModel
-from ....management import perform_ddl
 from ....models import ModelDefinition
 from ....signals import mutable_class_prepared
 from ....utils import allow_migrate, clear_opts_related_cache
 
-from ..models import (ForeignKeyDefinition, ManyToManyFieldDefinition,
-    OneToOneFieldDefinition)
+from ..models import ManyToManyFieldDefinition
 
 
 @receiver(mutable_class_prepared)
@@ -38,7 +36,7 @@ def mutable_model_prepared(signal, sender, definition, existing_model_class,
             if not isinstance(rel_to, string_types):
                 referenced_models.add(rel_to)
                 if (issubclass(rel_to, MutableModel) and
-                    rel_to._definition != sender._definition):
+                        rel_to._definition != sender._definition):
                     rel_to._dependencies.add(sender._definition)
     # Mark all model referring to this one as dependencies
     related_model_defs = ModelDefinition.objects.filter(

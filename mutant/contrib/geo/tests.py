@@ -1,25 +1,22 @@
 from __future__ import unicode_literals
 
-import sys
-# TODO: Remove when support for Python 2.6 is dropped
-if sys.version_info >= (2, 7):
-    from unittest import expectedFailure
-else:
-    from django.utils.unittest import expectedFailure
-
-from django.contrib.gis.geos import (GeometryCollection, LineString, Point,
-    Polygon, MultiLineString, MultiPoint, MultiPolygon)
+from django.contrib.gis.geos import (
+    GeometryCollection, LineString, Point, Polygon, MultiLineString,
+    MultiPoint, MultiPolygon
+)
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.models import BaseDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from .models import (GeoModel, GeometryFieldDefinition,
+from .models import (
+    GeoModel, GeometryFieldDefinition,
     GeometryCollectionFieldDefinition, LineStringFieldDefinition,
     PointFieldDefinition, PolygonFieldDefinition,
     MultiLineStringFieldDefinition, MultiPointFieldDefinition,
-    MultiPolygonFieldDefinition)
+    MultiPolygonFieldDefinition
+)
 
 
 class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):

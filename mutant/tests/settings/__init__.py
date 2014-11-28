@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 SECRET_KEY = 'secret'
 
 INSTALLED_APPS = [
-    'django.contrib.auth', # This is needed because of django bug
+    'django.contrib.auth',  # This is needed because of django bug
     'django.contrib.contenttypes',
     'south',
     'polymodels',
@@ -21,7 +21,7 @@ INSTALLED_APPS = [
 SKIP_SOUTH_TESTS = False
 
 try:
-    import django_coverage
+    import django_coverage  # NOQA
 except ImportError:
     pass
 else:

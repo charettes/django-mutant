@@ -27,7 +27,7 @@ class ModelClassAttributeDescriptor(object):
                                                  self.name, self.model_def_name))
         else:
             if (not isinstance(field, fields.related.ForeignKey) or
-                not issubclass(field.rel.to, ModelDefinition)):
+                    not issubclass(field.rel.to, ModelDefinition)):
                 raise ImproperlyConfigured("%s.%s.%s must refer to a ForeignKey "
                                            "to `ModelDefinition`"
                                            % (opts.app_label, opts.object_name,

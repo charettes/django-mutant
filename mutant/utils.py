@@ -126,8 +126,9 @@ def choices_from_dict(choices):
             for choice in choices:
                 yield (choice['value'], choice['label'])
         else:
-            yield (grp, tuple((choice['value'], choice['label'])
-                                for choice in choices))
+            yield (grp, tuple(
+                (choice['value'], choice['label']) for choice in choices)
+            )
 
 
 _opts_related_cache_attrs = [

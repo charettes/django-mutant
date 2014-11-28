@@ -1,5 +1,11 @@
 from __future__ import unicode_literals
 
+# TODO: Remove when support for Python 2.6 is dropped
+try:
+    from unittest import skip
+except ImportError:
+    from django.utils.unittest import skip
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -12,7 +18,7 @@ from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.tests.utils import BaseModelDefinitionTestCase
 from mutant.utils import app_cache_restorer
 
-from .models import ForeignKeyDefinition
+from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
@@ -218,95 +224,96 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
         self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default)
 
 
-#class ManyToManyFieldDefinitionTest(RelatedFieldDefinitionTestMixin,
-#                                    BaseModelDefinitionTestCase):
-#    field_definition_cls = ManyToManyFieldDefinition
-#
-#    def setUp(self):
-#        self.field_values = (
-#            [ContentType.objects.get_for_model(ContentType)],
-#            [ContentType.objects.get_for_model(ModelDefinition),
-#             ContentType.objects.get_for_model(ContentType)]
-#        )
-#        super(ManyToManyFieldDefinitionTest, self).setUp()
-#
-#    def get_field_value(self, instance, name='field'):
-#        value = super(RelatedFieldDefinitionTestMixin, self).get_field_value(instance, name)
-#        return list(value.all())
-#
-#    def test_field_renaming(self):
-#        # TODO: investigate why this fails
-#        return
-#        value = self.field_values[0]
-#        Model = self.model_def.model_class()
-#
-#        instance = Model.objects.create()
-#        instance.field = value
-#
-#        self.field.name = 'renamed_field'
-#        self.field.save()
-#
-#        instance = Model.objects.get()
-#        self.assertEqual(instance.renamed_field.all(), value)
-#
-#        self.assertFalse(hasattr(Model, 'field'))
-#
-#        instance = Model.objects.create()
-#        instance.renamed_field = value
-#
-#    def test_field_default(self):
-#        # TODO: Investigate why this fails
-#        pass
-#
-#    def test_model_save(self):
-#        # TODO: Investigate why this fails
-#        pass
-#
-#    def test_field_unique(self):
-#        # TODO: Investigate why this fails
-#        pass
-#
-#    def test_field_deletion(self):
-#        # TODO: Investigate why this fails
-#        pass
-#
-#    def test_field_symmetrical(self):
-#        m2m = ManyToManyFieldDefinition(model_def=self.model_def, name='objs')
-#        ct_ct = ContentType.objects.get_for_model(ContentType)
-#        m2m.to = ct_ct
-#
-#        with self.assertRaises(ValidationError):
-#            m2m.symmetrical = True
-#            m2m.clean()
-#
-#        with self.assertRaises(ValidationError):
-#            m2m.symmetrical = False
-#            m2m.clean()
-#
-#        m2m.to = self.model_def.model_ct
-#
-#        # Make sure `symetrical=True` works
-##        m2m.symmetrical = True
-##        m2m.clean()
-##        m2m.save()
-##        
-##        Model = self.model_def.model_class()
-##        first_object = Model.objects.create()
-##        second_object = Model.objects.create()
-##        
-##        first_object.objs.add(second_object)
-##        self.assertIn(first_object, second_object.objs.all())
-#
-#        # Makes sure non-symmetrical works
-#        m2m.symmetrical = False
-#        m2m.clean()
-#        m2m.save()
-#
-#        Model = self.model_def.model_class()
-#        first_object = Model.objects.create()
-#        second_object = Model.objects.create()
-#
-#        first_object.objs.add(second_object)
-#        self.assertNotIn(first_object, second_object.objs.all())
-#
-#        first_object.objs.clear()
+@skip('Incomplete support for many to many field.')
+class ManyToManyFieldDefinitionTest(RelatedFieldDefinitionTestMixin,
+                                    BaseModelDefinitionTestCase):
+    field_definition_cls = ManyToManyFieldDefinition
+
+    def setUp(self):
+        self.field_values = (
+            [ContentType.objects.get_for_model(ContentType)],
+            [ContentType.objects.get_for_model(ModelDefinition),
+             ContentType.objects.get_for_model(ContentType)]
+        )
+        super(ManyToManyFieldDefinitionTest, self).setUp()
+
+    def get_field_value(self, instance, name='field'):
+        value = super(RelatedFieldDefinitionTestMixin, self).get_field_value(instance, name)
+        return list(value.all())
+
+    def test_field_renaming(self):
+        # TODO: investigate why this fails
+        return
+        value = self.field_values[0]
+        Model = self.model_def.model_class()
+
+        instance = Model.objects.create()
+        instance.field = value
+
+        self.field.name = 'renamed_field'
+        self.field.save()
+
+        instance = Model.objects.get()
+        self.assertEqual(instance.renamed_field.all(), value)
+
+        self.assertFalse(hasattr(Model, 'field'))
+
+        instance = Model.objects.create()
+        instance.renamed_field = value
+
+    def test_field_default(self):
+        # TODO: Investigate why this fails
+        pass
+
+    def test_model_save(self):
+        # TODO: Investigate why this fails
+        pass
+
+    def test_field_unique(self):
+        # TODO: Investigate why this fails
+        pass
+
+    def test_field_deletion(self):
+        # TODO: Investigate why this fails
+        pass
+
+    def test_field_symmetrical(self):
+        m2m = ManyToManyFieldDefinition(model_def=self.model_def, name='objs')
+        ct_ct = ContentType.objects.get_for_model(ContentType)
+        m2m.to = ct_ct
+
+        with self.assertRaises(ValidationError):
+            m2m.symmetrical = True
+            m2m.clean()
+
+        with self.assertRaises(ValidationError):
+            m2m.symmetrical = False
+            m2m.clean()
+
+        m2m.to = self.model_def.model_ct
+
+        # Make sure `symetrical=True` works
+        # m2m.symmetrical = True
+        # m2m.clean()
+        # m2m.save()
+
+        # Model = self.model_def.model_class()
+        # first_object = Model.objects.create()
+        # second_object = Model.objects.create()
+
+        # first_object.objs.add(second_object)
+        # self.assertIn(first_object, second_object.objs.all())
+
+        # Makes sure non-symmetrical works
+        m2m.symmetrical = False
+        m2m.clean()
+        m2m.save()
+
+        Model = self.model_def.model_class()
+        first_object = Model.objects.create()
+        second_object = Model.objects.create()
+
+        first_object.objs.add(second_object)
+        self.assertNotIn(first_object, second_object.objs.all())
+
+        first_object.objs.clear()

@@ -1,3 +1,2 @@
-
-from .field import *
-from .model import *
+from .field import *  # NOQA
+from .model import *  # NOQA

@@ -7,10 +7,12 @@ from django.utils.translation import ugettext_lazy as _
 from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from .models import (BigIntegerFieldDefinition, DecimalFieldDefinition,
+from .models import (
+    BigIntegerFieldDefinition, DecimalFieldDefinition,
     FloatFieldDefinition, IntegerFieldDefinition,
     PositiveIntegerFieldDefinition, PositiveSmallIntegerFieldDefinition,
-    SmallIntegerFieldDefinition)
+    SmallIntegerFieldDefinition
+)
 
 
 class NumericFieldDefinitionTestMixin(FieldDefinitionTestMixin):

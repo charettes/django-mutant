@@ -1,2 +1,2 @@
 # Make sure signals are always registered
-from . import management
+from . import management  # NOQA

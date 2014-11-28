@@ -45,6 +45,7 @@ protocol_help_text = _('Limits valid inputs to the specified protocol.')
 unpack_ipv4_help_text = _('Unpacks IPv4 mapped addresses like '
                           '``::ffff::192.0.2.1`` to ``192.0.2.1``')
 
+
 class GenericIPAddressFieldDefinition(CharFieldDefinition):
     PROTOCOL_BOTH = 'both'
     PROTOCOL_IPV4 = 'IPv4'

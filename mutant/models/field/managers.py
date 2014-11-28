@@ -24,14 +24,13 @@ class FieldDefinitionManager(PolymorphicManager):
 
     if django.VERSION < (1, 8):
         def get_query_set(self):
-            if django.VERSION >= (1, 6):
-                warnings.warn(
-                    "`FieldDefinitionManager.get_query_set` is deprecated, "
-                    "use `get_queryset` instead.",
-                    DeprecationWarning if django.VERSION >= (1, 7)
-                        else PendingDeprecationWarning,
-                    stacklevel=2
-                )
+            warnings.warn(
+                "`FieldDefinitionManager.get_query_set` is deprecated, "
+                "use `get_queryset` instead.",
+                DeprecationWarning if django.VERSION >= (1, 7)
+                else PendingDeprecationWarning,
+                stacklevel=2
+            )
             return FieldDefinitionManager.get_queryset(self)
 
     def get_by_natural_key(self, app_label, model, name):
@@ -53,10 +52,8 @@ class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
         # Here we don't use .values() since it's raw output from the database
         # and values are not prepared correctly.
         choices = (
-           {'group': choice.group,
-            'label': choice.label,
-            'value': choice.value}
-           for choice in self.only('group', 'value', 'label')
+            {'group': choice.group, 'label': choice.label, 'value': choice.value}
+            for choice in self.only('group', 'value', 'label')
         )
         return tuple(choices_from_dict(choices))
 
@@ -69,14 +66,13 @@ class FieldDefinitionChoiceManager(models.Manager):
 
     if django.VERSION < (1, 8):
         def get_query_set(self):
-            if django.VERSION >= (1, 6):
-                warnings.warn(
-                    "`FieldDefinitionChoiceManager.get_query_set` is"
-                    "deprecated, use `get_queryset` instead.",
-                    DeprecationWarning if django.VERSION >= (1, 7)
-                        else PendingDeprecationWarning,
-                    stacklevel=2
-                )
+            warnings.warn(
+                "`FieldDefinitionChoiceManager.get_query_set` is"
+                "deprecated, use `get_queryset` instead.",
+                DeprecationWarning if django.VERSION >= (1, 7)
+                else PendingDeprecationWarning,
+                stacklevel=2
+            )
             return FieldDefinitionChoiceManager.get_queryset(self)
 
     def construct(self):

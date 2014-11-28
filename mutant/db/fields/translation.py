@@ -1,22 +1,13 @@
 from __future__ import unicode_literals
 
-import django
 from django.db.models.fields import TextField
 from django.utils.encoding import smart_text
 from django.utils.functional import Promise
 from django.utils.translation import ugettext_lazy as _
 
 
-if django.VERSION[0:2] > (1, 4):
-    _delegate_bytes = '_delegate_bytes'
-    _delegate_text = '_delegate_text'
-else:
-    _delegate_bytes = '_delegate_str'
-    _delegate_text = '_delegate_unicode'
-
 def _is_gettext_promise(value):
-    return isinstance(value, Promise) and (getattr(value, _delegate_bytes) or
-                                           getattr(value, _delegate_text))
+    return isinstance(value, Promise) and (value._delegate_bytes or value._delegate_text)
 
 
 class LazilyTranslatedField(TextField):

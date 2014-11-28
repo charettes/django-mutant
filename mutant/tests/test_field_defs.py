@@ -1,34 +1,32 @@
 from __future__ import unicode_literals
 
-import sys
 import warnings
-# TODO: Remove when support for Python 2.6 is dropped
-if sys.version_info >= (2, 7):
-    from unittest import TestCase
-else:
-    from django.utils.unittest import TestCase
 
 from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
-from mutant.models.field import (FieldDefinition, FieldDefinitionChoice,
-    NOT_PROVIDED)
+from mutant.models.field import (
+    FieldDefinition, FieldDefinitionChoice, NOT_PROVIDED
+)
 from mutant.tests.utils import BaseModelDefinitionTestCase
 
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):
     def test_proxy_inheritance(self):
-        obj = CharFieldDefinition.objects.create(name='caca',
-                                                  max_length=25,
-                                                  model_def=self.model_def)
+        obj = CharFieldDefinition.objects.create(
+            name='caca',
+            max_length=25,
+            model_def=self.model_def,
+        )
         save_obj = self.model_def.fielddefinitions.select_subclasses().get()
         self.assertEqual(obj, save_obj)
         Model = self.model_def.model_class()
         Model.objects.create(caca="NO WAY")
 
 
-class FieldDefinitionDeclarationTest(TestCase):
+class FieldDefinitionDeclarationTest(SimpleTestCase):
     def test_delete_override(self):
         """
         Make sure a warning is raised when declaring a `FieldDefinition`
@@ -141,15 +139,13 @@ class FieldDefinitionChoiceTest(BaseModelDefinitionTestCase):
         choices = Model._meta.get_field('media').get_choices(include_blank=False)
         expected_choices = [
             ('Audio', (
-                    ('vinyl', 'Vinyl'),
-                    ('cd', 'CD'),
-                )
-             ),
+                ('vinyl', 'Vinyl'),
+                ('cd', 'CD'),
+            )),
             ('Video', (
-                    ('vhs', 'VHS Tape'),
-                    ('dvd', 'DVD'),
-                )
-             ),
+                ('vhs', 'VHS Tape'),
+                ('dvd', 'DVD'),
+            )),
             ('unknown', 'Unknown')
         ]
         self.assertEqual(choices, expected_choices)

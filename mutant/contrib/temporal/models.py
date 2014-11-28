@@ -11,6 +11,7 @@ auto_now_help_text = _('Automatically set the field to now every time the '
 auto_now_add_help_text = _('Automatically set the field to now when the '
                            'object is first created.')
 
+
 class DateFieldDefinition(FieldDefinition):
     auto_now = fields.BooleanField(_('auto now'), default=False,
                                    help_text=auto_now_help_text)

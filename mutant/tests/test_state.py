@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 import sys
-from threading import Thread
 import time
+from threading import Thread
 
 # TODO: Remove when support for Python 2.6 is dropped
 if sys.version_info >= (2, 7):
@@ -18,9 +18,7 @@ from .utils import BaseModelDefinitionTestCase
 try:
     import redis
 except ImportError:
-    redis_installed = False
-else:
-    redis_installed = True
+    redis = None
 
 
 class StateHandlerTestMixin(object):
@@ -77,7 +75,7 @@ class CacheHandlerTest(StateHandlerTestMixin, BaseModelDefinitionTestCase):
     handler_path = 'mutant.state.handlers.cache.CacheStateHandler'
 
 
-@skipUnless(redis_installed, 'This state handler requires redis to be installed.')
+@skipUnless(redis, 'This state handler requires redis to be installed.')
 class PubsubHandlerTest(MemoryHandlerTest):
     handler_path = 'mutant.state.handlers.pubsub.PubSubStateHandler'
 

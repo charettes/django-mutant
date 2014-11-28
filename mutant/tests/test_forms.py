@@ -23,8 +23,7 @@ class FieldDefinitionTypeFieldTests(TestCase):
         ContentType.objects.clear_cache()
 
     def test_invalid_field_definitions(self):
-        with self.assertRaisesMessage(
-            TypeError, 'is not a subclass of `FieldDefinition`'):
+        with self.assertRaisesMessage(TypeError, 'is not a subclass of `FieldDefinition`'):
             FieldDefinitionTypeField(
                 self.field_types, field_definitions=[FieldDefinitionTypeField]
             )

@@ -16,6 +16,7 @@ from .managers import ForeignKeyDefinitionManager
 related_name_help_text = _('The name to use for the relation from the '
                            'related object back to this one.')
 
+
 class RelatedFieldDefinition(FieldDefinition):
     to = fields.related.ForeignKey(ContentType, verbose_name=_('to'),
                                    related_name='+')
@@ -70,7 +71,7 @@ class RelatedFieldDefinition(FieldDefinition):
 
     def clean(self):
         if (None not in (self.related_name, self.to_id) and
-            not self.to_model_class_is_mutable):
+                not self.to_model_class_is_mutable):
             msg = _('Cannot assign a related manager to non-mutable model')
             raise ValidationError({'related_name': [msg]})
 
@@ -241,7 +242,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
             messages = {}
 
         if (self.symmetrical is not None and
-            not self.is_recursive_relationship):
+                not self.is_recursive_relationship):
             msg = _("The relationship can only be symmetrical or not if it's "
                     "recursive, i. e. it points to 'self'")
             messages['symmetrical'] = [msg]

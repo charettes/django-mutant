@@ -5,8 +5,10 @@ from django.utils.translation import ugettext_lazy as _
 from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from .models import (EmailFieldDefinition, GenericIPAddressFieldDefinition,
-    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition)
+from .models import (
+    EmailFieldDefinition, GenericIPAddressFieldDefinition,
+    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition,
+)
 
 
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):

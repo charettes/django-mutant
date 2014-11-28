@@ -113,8 +113,9 @@ class FieldDefinitionBase(models.base.ModelBase):
                     if parent is not base_definition:
                         parents = list(parent.__bases__) + parents  # mimic mro
 
-            from ...management import (field_definition_post_save,
-                FIELD_DEFINITION_POST_SAVE_UID)
+            from ...management import (
+                field_definition_post_save, FIELD_DEFINITION_POST_SAVE_UID
+            )
             post_save_dispatch_uid = FIELD_DEFINITION_POST_SAVE_UID % definition._meta.model_name
             signals.post_save.connect(field_definition_post_save, definition,
                                       dispatch_uid=post_save_dispatch_uid)
@@ -125,7 +126,7 @@ class FieldDefinitionBase(models.base.ModelBase):
             if definition.delete != base_definition.delete:
                 concrete_model = opts.concrete_model
                 if (opts.proxy and
-                    concrete_model.delete != base_definition.delete):
+                        concrete_model.delete != base_definition.delete):
                     # Because of the workaround for django #18083 in
                     # FieldDefinition, overriding the `delete` method on a proxy
                     # of a concrete FieldDefinition that also override the
@@ -303,7 +304,10 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
         # one to allow model checksum generation
         if not hasattr(instance, 'deconstruct'):
             path = "%s.%s" % (cls.__module__, cls.__name__)
-            instance.deconstruct = lambda: (instance.name, path, [], options)
+
+            def deconstruct():
+                return instance.name, path, [], options
+            instance.deconstruct = deconstruct
         return instance
 
     def get_bound_field(self):

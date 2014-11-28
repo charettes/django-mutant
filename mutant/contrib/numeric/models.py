@@ -58,6 +58,7 @@ max_digits_help_text = _('The maximum number of digits allowed in the number. '
 decimal_places_help_text = _('The number of decimal places to store '
                              'with the number.')
 
+
 class DecimalFieldDefinition(FieldDefinition):
     max_digits = fields.PositiveSmallIntegerField(_('max digits'),
                                                   help_text=max_digits_help_text)

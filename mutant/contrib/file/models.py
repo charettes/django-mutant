@@ -15,6 +15,7 @@ match_help_text = _('A regular expression used to filter filenames.')
 recursive_help_text = _('Specifies whether all subdirectories of '
                         'path should be included')
 
+
 class FilePathFieldDefinition(CharFieldDefinition):
     path = DirectoryPathField(_('path'), max_length=100,
                               help_text=path_help_text)

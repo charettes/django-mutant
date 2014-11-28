@@ -12,8 +12,10 @@ from django.utils.translation import ugettext as _
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.db.models import MutableModel
-from mutant.models.model import (ModelDefinition, OrderingFieldDefinition,
-    UniqueTogetherDefinition, BaseDefinition, MutableModelProxy)
+from mutant.models.model import (
+    ModelDefinition, OrderingFieldDefinition, UniqueTogetherDefinition,
+    BaseDefinition, MutableModelProxy
+)
 from mutant.test.utils import CaptureQueriesContext
 from mutant.utils import clear_opts_related_cache
 

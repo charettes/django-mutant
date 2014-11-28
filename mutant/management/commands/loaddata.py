@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.core.management.commands.loaddata import Command
+from django.core.management.commands.loaddata import Command  # NOQA
 from django.core.serializers import python as python_serializer
 from django.core.serializers.base import DeserializationError
 

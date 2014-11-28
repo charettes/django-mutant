@@ -25,14 +25,14 @@ class DDLTestCase(TestCase):
 
     def _fixture_setup(self):
         if (not self.manual_transaction and
-            self.connections_have_ddl_transactions()):
+                self.connections_have_ddl_transactions()):
             return super(DDLTestCase, self)._fixture_setup()
         else:
             return super(TestCase, self)._fixture_setup()
 
     def _fixture_teardown(self):
         if (not self.manual_transaction and
-            self.connections_have_ddl_transactions()):
+                self.connections_have_ddl_transactions()):
             return super(DDLTestCase, self)._fixture_teardown()
         else:
             return super(TestCase, self)._fixture_teardown()
@@ -41,7 +41,7 @@ class DDLTestCase(TestCase):
 class ModelDefinitionDDLTestCase(DDLTestCase):
     def tearDown(self):
         if (self.manual_transaction or
-            not self.connections_have_ddl_transactions()):
+                not self.connections_have_ddl_transactions()):
             # Remove all the extra tables since `TransactionTestCase` only
             # truncate data on teardown.
             ModelDefinition.objects.all().delete()
