@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
 
 import json
-
 from threading import Thread
+
+from django.utils.encoding import force_str
 
 
 class Redis(Thread):
@@ -19,7 +20,7 @@ class Redis(Thread):
         self.pubsub.subscribe(self.channel)
         for event in self.pubsub.listen():
             if event['type'] == 'message':
-                args = json.loads(event['data'])
+                args = json.loads(force_str(event['data']))
                 self.callback(*args)
 
     def publish(self, *args):
