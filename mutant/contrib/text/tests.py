@@ -37,8 +37,9 @@ class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
         self.field.max_length = 24
         self.field.save()
         Model = self.model_def.model_class()
-        with self.assertRaises(DatabaseError), transaction.atomic():
-            Model.objects.create(field='Simon' * 5)
+        with self.assertRaises(DatabaseError):
+            with transaction.atomic():
+                Model.objects.create(field='Simon' * 5)
 
 
 class TextFieldDefinitionTest(TextFieldDefinitionTestMixin,

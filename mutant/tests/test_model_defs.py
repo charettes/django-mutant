@@ -662,16 +662,18 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.model_class.objects.create(f1='a', f2='b')
         self.model_class.objects.create(f1='a', f2='b')
         with captured_stderr():
-            with self.assertRaises(IntegrityError), transaction.atomic():
-                self.ut.field_defs = (self.f1, self.f2)
+            with self.assertRaises(IntegrityError):
+                with transaction.atomic():
+                    self.ut.field_defs = (self.f1, self.f2)
 
     def test_cannot_insert_duplicate_row(self):
         """Inserting a duplicate rows shouldn't work."""
         self.model_class.objects.create(f1='a', f2='b')
         self.ut.field_defs = (self.f1, self.f2)
         with captured_stderr():
-            with self.assertRaises(IntegrityError), transaction.atomic():
-                self.model_class.objects.create(f1='a', f2='b')
+            with self.assertRaises(IntegrityError):
+                with transaction.atomic():
+                    self.model_class.objects.create(f1='a', f2='b')
 
     def test_cannot_remove_unique(self):
         """Removing a unique constraint that cause duplicate rows shouldn't
@@ -680,8 +682,9 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         self.model_class.objects.create(f1='a', f2='b')
         self.model_class.objects.create(f1='a', f2='c')
         with captured_stderr():
-            with self.assertRaises(IntegrityError), transaction.atomic():
-                self.ut.field_defs.remove(self.f2)
+            with self.assertRaises(IntegrityError):
+                with transaction.atomic():
+                    self.ut.field_defs.remove(self.f2)
 
     def test_clear_removes_unique(self):
         """
