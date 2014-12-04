@@ -35,4 +35,3 @@ COVERAGE_MODULE_EXCLUDES = [
     'hacks$',
     'mutant.contrib.geo',
 ]
-
