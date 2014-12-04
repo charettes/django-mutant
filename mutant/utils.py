@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-import operator
-
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import groupby
@@ -14,7 +12,7 @@ from django.db.models.loading import cache as app_cache
 from django.utils import six
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_text
-from django.utils.functional import lazy, LazyObject, new_method_proxy
+from django.utils.functional import lazy
 
 
 # TODO: Remove `allow_syncdb` alternative when support for 1.6 is dropped
