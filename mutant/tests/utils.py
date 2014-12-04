@@ -19,7 +19,7 @@ def table_columns_iterator(db, table_name):
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
     def setUp(self):
         self.model_def = ModelDefinition.objects.create(
-            app_label='app',
+            app_label='mutant',
             object_name='Model'
         )
 

@@ -70,7 +70,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
     def test_foreign_key_between_mutable_models(self):
         first_model_def = self.model_def
         second_model_def = ModelDefinition.objects.create(
-            app_label='app', object_name='SecondModel'
+            app_label='related', object_name='SecondModel'
         )
         FirstModel = first_model_def.model_class()
         SecondModel = second_model_def.model_class()
@@ -145,7 +145,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                 verbosity=0, commit=False
             )
         to_model_def = ModelDefinition.objects.get_by_natural_key(
-            'app', 'tomodel'
+            'related', 'tomodel'
         )
         to_model_class = to_model_def.model_class()
         # Make sure the origin's model class was created

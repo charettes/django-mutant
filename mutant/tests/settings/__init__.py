@@ -18,8 +18,6 @@ INSTALLED_APPS = [
     'mutant.contrib.related',
 ]
 
-SKIP_SOUTH_TESTS = False
-
 try:
     import django_coverage  # NOQA
 except ImportError:
@@ -36,5 +34,5 @@ COVERAGE_MODULE_EXCLUDES = [
     'fixtures$',
     'hacks$',
     'mutant.contrib.geo',
-    'mutant.contrib.nonrel',
 ]
+

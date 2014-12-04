@@ -8,7 +8,7 @@ if sys.version_info >= (2, 7):
 else:
     from django.utils.unittest import skipIf, skipUnless
 
-from django.db import connection
+from django.db import connection, transaction
 from django.db.utils import DatabaseError
 from django.utils.translation import ugettext_lazy as _
 import south
@@ -37,7 +37,7 @@ class CharFieldDefinitionTest(TextFieldDefinitionTestMixin,
         self.field.max_length = 24
         self.field.save()
         Model = self.model_def.model_class()
-        with self.assertRaises(DatabaseError):
+        with self.assertRaises(DatabaseError), transaction.atomic():
             Model.objects.create(field='Simon' * 5)
 
 

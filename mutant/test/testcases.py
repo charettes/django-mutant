@@ -7,6 +7,7 @@ from django.test.testcases import TestCase
 from south.db import dbs as south_dbs
 
 from ..models.model import ModelDefinition
+from ..utils import remove_from_app_cache
 
 
 class DDLTestCase(TestCase):
@@ -45,6 +46,9 @@ class ModelDefinitionDDLTestCase(DDLTestCase):
             # Remove all the extra tables since `TransactionTestCase` only
             # truncate data on teardown.
             ModelDefinition.objects.all().delete()
+        else:
+            for model_def in ModelDefinition.objects.all():
+                remove_from_app_cache(model_def.model_class())
         ContentType.objects.clear_cache()
 
 

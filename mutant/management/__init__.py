@@ -14,7 +14,8 @@ from .. import logger
 from ..models import (
     ModelDefinition, BaseDefinition, FieldDefinition, UniqueTogetherDefinition
 )
-from ..utils import allow_migrate, popattr
+from ..state import handler as state_handler
+from ..utils import allow_migrate, popattr, remove_from_app_cache
 
 
 def perform_ddl(model, action, *args, **kwargs):
@@ -67,6 +68,7 @@ def nonraw_instance(receiver):
 def model_definition_post_save(sender, instance, created, **kwargs):
     model_class = instance.model_class(force_create=True)
     opts = model_class._meta
+    db_table = opts.db_table
     if created:
         primary_key = opts.pk
         fields = [(field.get_attname_column()[1], field) for field in opts.fields
@@ -97,14 +99,17 @@ def model_definition_post_save(sender, instance, created, **kwargs):
                 obj.model_def = instance
                 obj.save(force_insert=True, force_create_model_class=False)
             delattr(instance._state, '_create_delayed_save')
-        perform_ddl(model_class, 'create_table', opts.db_table, fields)
-        instance.model_class(force_create=True)
-    elif instance._model_class:
-        old_opts = instance._model_class._meta
-        if old_opts.db_table != opts.db_table:
-            perform_ddl(model_class, 'rename_table', old_opts.db_table, opts.db_table)
-            # It means that the natural key has changed
+        perform_ddl(model_class, 'create_table', db_table, fields)
+        model_class = instance.model_class(force_create=True)
+    else:
+        old_model_class = instance._model_class
+        if old_model_class:
+            old_db_table = old_model_class._meta.db_table
+            if db_table != old_db_table:
+                perform_ddl(model_class, 'rename_table', old_db_table, db_table)
+            remove_from_app_cache(old_model_class)
             ContentType.objects.clear_cache()
+    instance._model_class = model_class.model
 
 
 @receiver(pre_delete, sender=ModelDefinition,
@@ -113,15 +118,21 @@ def model_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_class()
     instance._state._deletion = (
         model_class,
-        model_class._meta.db_table
+        instance.pk,
+        model_class._meta.db_table,
     )
 
 
 @receiver(post_delete, sender=ModelDefinition,
           dispatch_uid='mutant.management.model_definition_post_delete')
 def model_definition_post_delete(sender, instance, **kwargs):
-    model_class, table_name = popattr(instance._state, '_deletion')
+    model_class, pk, table_name = popattr(instance._state, '_deletion')
     perform_ddl(model_class, 'delete_table', table_name)
+    remove_from_app_cache(model_class)
+    model_class.mark_as_obsolete()
+    state_handler.clear_checksum(pk)
+    ContentType.objects.clear_cache()
+    del instance._model_class
 
 
 @receiver(post_save, sender=BaseDefinition,

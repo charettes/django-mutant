@@ -1,63 +1,63 @@
 [
 {
-  "pk": 1337, 
-  "model": "contenttypes.contenttype", 
+  "pk": 1337,
+  "model": "contenttypes.contenttype",
   "fields": {
-    "model": "frommodel", 
-    "app_label": "app"
+    "model": "frommodel",
+    "app_label": "related"
   }
 },
 {
-  "pk": 1843, 
-  "model": "contenttypes.contenttype", 
+  "pk": 1843,
+  "model": "contenttypes.contenttype",
   "fields": {
-    "model": "tomodel", 
-    "app_label": "app"
+    "model": "tomodel",
+    "app_label": "related"
   }
 },
 {
   "pk": 1337,
-  "model": "mutant.modeldefinition", 
+  "model": "mutant.modeldefinition",
   "fields": {
-    "object_name": "FromModel", 
-    "verbose_name": null, 
+    "object_name": "FromModel",
+    "verbose_name": null,
     "verbose_name_plural": null
   }
 },
 {
   "pk": 1843,
-  "model": "mutant.modeldefinition", 
+  "model": "mutant.modeldefinition",
   "fields": {
-    "object_name": "ToModel", 
-    "verbose_name": null, 
+    "object_name": "ToModel",
+    "verbose_name": null,
     "verbose_name_plural": null
   }
 },
 {
-  "pk": 2, 
-  "model": "mutant.fielddefinition", 
+  "pk": 2,
+  "model": "mutant.fielddefinition",
   "fields": {
-    "primary_key": false, 
-    "unique_for_month": null, 
-    "unique": false, 
-    "name": "fk", 
+    "primary_key": false,
+    "unique_for_month": null,
+    "unique": false,
+    "name": "fk",
     "model_def": [
-      "app", 
+      "related",
       "frommodel"
-    ], 
-    "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==", 
-    "editable": true, 
-    "unique_for_year": null, 
+    ],
+    "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==",
+    "editable": true,
+    "unique_for_year": null,
     "content_type": [
-      "mutant", 
+      "mutant",
       "foreignkeydefinition"
-    ], 
-    "blank": false, 
-    "help_text": null, 
-    "db_column": null, 
-    "null": true, 
-    "verbose_name": null, 
-    "unique_for_date": null, 
+    ],
+    "blank": false,
+    "help_text": null,
+    "db_column": null,
+    "null": true,
+    "verbose_name": null,
+    "unique_for_date": null,
     "db_index": false
   }
 },
@@ -67,10 +67,10 @@
   "fields": {
     "related_name": "froms",
     "on_delete": "CASCADE",
-    "one_to_one": false, 
+    "one_to_one": false,
     "to_field": null,
     "to": [
-      "app", 
+      "related",
       "tomodel"
     ],
     "on_delete_set_value": null

@@ -5,7 +5,7 @@
         "fields": {
             "model": "myfixturemodel",
             "name": "my fixture model",
-            "app_label": "myfixtureapp"
+            "app_label": "mutant"
         }
     },
     {
@@ -27,7 +27,7 @@
             "unique": false,
             "name": "fixture_charfield",
             "model_def": [
-                "myfixtureapp",
+                "mutant",
                 "myfixturemodel"
             ],
             "default": "",
@@ -55,7 +55,7 @@
             "unique": false,
             "name": "fixture_integerfield",
             "model_def": [
-                "myfixtureapp",
+                "mutant",
                 "myfixturemodel"
             ],
             "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==",

@@ -5,8 +5,9 @@ from itertools import chain
 import pickle
 
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError, ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
+from django.db.models.loading import get_app
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -233,11 +234,17 @@ class ModelDefinition(ContentType):
         return opts
 
     def get_model_attrs(self):
+        try:
+            app = get_app(self.app_label)
+        except ImproperlyConfigured:
+            __module__ = str("mutant.apps.%s.models" % self.app_label)
+        else:
+            __module__ = app.__name__
         attrs = {
-            '__module__': str("mutant.apps.%s.models" % self.app_label),
+            '__module__': __module__,
             '_definition': (self.__class__, self.pk),
             '_dependencies': set(),
-            '_is_obsolete': False
+            '_is_obsolete': False,
         }
         attrs.update(
             (field_def.name, field_def.construct())
@@ -302,39 +309,12 @@ class ModelDefinition(ContentType):
             self._contenttype_ptr_cache = content_type
         return content_type
 
-    def clean(self):
-        """
-        Ensure app_label doesn't override an installed app one
-        since model collision could occur and would cause a lot of
-        side effects, i. e.:
-
-        Defining a new auth.User, while not tested, could override
-        the existing one and create a beautiful mess in django's
-        internals
-        """
-        try:
-            models.loading.cache.get_app(self.app_label, emptyOK=True)
-        except ImproperlyConfigured:
-            pass
-        else:
-            raise ValidationError(_('Cannot cloak an installed app'))
-
     def save(self, *args, **kwargs):
         self.model = self.object_name.lower()
-        save = super(ModelDefinition, self).save(*args, **kwargs)
-        self._model_class = super(ModelDefinition, self).model_class()
-        return save
-
-    def delete(self, *args, **kwargs):
-        model_class = self.model_class()
-        pk = self.pk
-        delete = super(ModelDefinition, self).delete(*args, **kwargs)
-        remove_from_app_cache(model_class)
-        model_class.mark_as_obsolete()
-        state_handler.clear_checksum(pk)
-        ContentType.objects.clear_cache()
-        del self._model_class
-        return delete
+        model_class = getattr(self, '_model_class', None)
+        if model_class:
+            remove_from_app_cache(model_class)
+        return super(ModelDefinition, self).save(*args, **kwargs)
 
 
 class ModelDefinitionAttribute(models.Model):

@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 
 from contextlib import contextmanager
 from copy import deepcopy
-from itertools import groupby
+from itertools import chain, groupby
 import imp
 from operator import itemgetter
 
 import django
-from django.db import connections, router
+from django.db import connections, models, router
 from django.db.models.loading import cache as app_cache
 from django.utils import six
 from django.utils.datastructures import SortedDict
@@ -84,7 +84,35 @@ def remove_from_app_cache(model_class):
             model = app_models.pop(model_name, False)
             if model:
                 app_cache._get_models_cache.clear()
+                unreference_model(model)
                 return model
+
+
+def unreference_model(model):
+    opts = model._meta
+    for field, field_model in chain(opts.get_fields_with_model(),
+                                    opts.get_m2m_with_model()):
+        rel = field.rel
+        if field_model is None and rel:
+            to = rel.to
+            if isinstance(to, models.base.ModelBase):
+                clear_opts_related_cache(to)
+                rel_is_hidden = rel.is_hidden()
+                # An accessor is added to related classes if they are not
+                # hidden. However o2o fields *always* add an accessor
+                # even if the relationship is hidden.
+                o2o = isinstance(field, models.OneToOneField)
+                if not rel_is_hidden or o2o:
+                    try:
+                        delattr(to, field.related.get_accessor_name())
+                    except AttributeError:
+                        # Hidden related names are not respected for o2o
+                        # thus a tenant models with a o2o pointing to
+                        # a non-tenant one would have a class for multiple
+                        # tenant thus the attribute might be attempted
+                        # to be deleted multiple times.
+                        if not (o2o and rel_is_hidden):
+                            raise
 
 
 def _app_cache_deepcopy(obj):
