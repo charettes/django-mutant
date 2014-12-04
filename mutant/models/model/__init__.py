@@ -94,7 +94,12 @@ class MutableModelProxy(object):
                 finally:
                     supset('refreshing', False)
             except ModelDefinition.DoesNotExist:
-                raise AttributeError('This model definition has been deleted')
+                raise AttributeError(
+                    'The definition of %s.%s has been deleted.' % (
+                        model._meta.app_label,
+                        model._meta.object_name,
+                    )
+                )
             else:
                 proxy = definition.model_class()
                 assert isinstance(proxy, MutableModelProxy)

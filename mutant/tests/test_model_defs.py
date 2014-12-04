@@ -428,10 +428,16 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         self.model_def.delete()
         self.assertTableDoesntExists(db, table_name)
 
-        with self.assertRaises(AttributeError):
+        with self.assertRaisesMessage(
+            AttributeError,
+            'The definition of mutant.Model has been deleted.'
+        ):
             Model(name="name")
 
-        with self.assertRaises(AttributeError):
+        with self.assertRaisesMessage(
+            AttributeError,
+            'The definition of mutant.Model has been deleted.'
+        ):
             Model.objects.all()
 
         with self.assertRaises(ValidationError):
