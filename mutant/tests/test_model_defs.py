@@ -17,7 +17,7 @@ from mutant.models.model import (
     ModelDefinition, OrderingFieldDefinition, UniqueTogetherDefinition,
     BaseDefinition, MutableModelProxy
 )
-from mutant.utils import clear_opts_related_cache
+from mutant.utils import clear_opts_related_cache, remove_from_app_cache
 
 from .utils import BaseModelDefinitionTestCase
 
@@ -748,27 +748,32 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
         another_model_def = ModelDefinition.objects.create(
             app_label='mutant', object_name='AnotherModel'
         )
-        AnotherModel = another_model_def.model_class()
-        auto_pk_column = AnotherModel._meta.pk.get_attname_column()[1]
-        self.assertModelTablesColumnExists(AnotherModel, auto_pk_column)
+        another_model_class = another_model_def.model_class()
+        auto_pk_column = another_model_class._meta.pk.get_attname_column()[1]
+        self.assertModelTablesColumnExists(another_model_class, auto_pk_column)
         with self.assertChecksumChange():
             CharFieldDefinition.objects.create(
                 model_def=self.model_def, name='f1', max_length=25
             )
+        model_class = self.model_def.model_class()
         with self.assertChecksumChange(another_model_def):
             base_definition = BaseDefinition(model_def=another_model_def)
-            base_definition.base = self.model_def.model_class()
+            base_definition.base = model_class
             base_definition.save()
-        self.assertModelTablesColumnDoesntExists(AnotherModel, auto_pk_column)
-        another_model = AnotherModel.objects.create(f1='Martinal')
-        self.assertTrue(AnotherModel.objects.exists())
+        self.assertModelTablesColumnDoesntExists(another_model_class, auto_pk_column)
+        self.assertEqual(model_class.anothermodel.related.model, another_model_class)
+        remove_from_app_cache(another_model_class).mark_as_obsolete()
+        self.assertFalse(hasattr(model_class, 'anothermodel'))
+        another_model = another_model_class.objects.create(f1='Martinal')
+        self.assertTrue(hasattr(model_class, 'anothermodel'))
+        self.assertTrue(another_model_class.objects.exists())
         with self.assertChecksumChange():
             with self.assertChecksumChange(another_model_def):
                 CharFieldDefinition.objects.create(
                     model_def=self.model_def, name='f2', max_length=25,
                     null=True
                 )
-        another_model = AnotherModel.objects.get(pk=another_model.pk)
+        another_model = another_model_class.objects.get(pk=another_model.pk)
         self.assertIsNone(another_model.f2)
         another_model.f2 = 'Placebo'
         another_model.save()
