@@ -13,10 +13,10 @@ from django.db.utils import DatabaseError
 from django.utils.translation import ugettext_lazy as _
 import south
 
+from mutant.contrib.text.models import CharFieldDefinition, TextFieldDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from .models import CharFieldDefinition, TextFieldDefinition
+from .utils import BaseModelDefinitionTestCase
 
 
 class TextFieldDefinitionTestMixin(FieldDefinitionTestMixin):

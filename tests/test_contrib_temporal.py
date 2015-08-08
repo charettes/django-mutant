@@ -7,12 +7,12 @@ from django.test.utils import override_settings
 from django.utils.timezone import make_aware, utc
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
-
-from .models import (
+from mutant.contrib.temporal.models import (
     DateFieldDefinition, DateTimeFieldDefinition, TimeFieldDefinition
 )
+from mutant.test.testcases import FieldDefinitionTestMixin
+
+from .utils import BaseModelDefinitionTestCase
 
 
 class TemporalFieldDefinitionTestMixin(FieldDefinitionTestMixin):

@@ -5,11 +5,10 @@ import sys
 
 from django.utils.translation import ugettext_lazy as _
 
+from mutant.contrib.file import models
 from mutant.test import testcases
-from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from . import models
-
+from .utils import BaseModelDefinitionTestCase
 
 PACKAGE_PATH = os.path.dirname(sys.modules[__name__].__file__)
 MODULE_PATH = os.path.abspath(sys.modules[__name__].__file__)

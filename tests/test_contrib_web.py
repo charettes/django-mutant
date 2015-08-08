@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
-
-from .models import (
+from mutant.contrib.web.models import (
     EmailFieldDefinition, GenericIPAddressFieldDefinition,
-    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition,
+    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition
 )
+from mutant.test.testcases import FieldDefinitionTestMixin
+
+from .utils import BaseModelDefinitionTestCase
 
 
 class WebFieldDefinitionTestMixin(FieldDefinitionTestMixin):

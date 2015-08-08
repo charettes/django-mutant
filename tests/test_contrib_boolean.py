@@ -11,10 +11,10 @@ from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 import south
 
+from mutant.contrib.boolean.models import BooleanFieldDefinition, NullBooleanFieldDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
 
-from .models import BooleanFieldDefinition, NullBooleanFieldDefinition
+from .utils import BaseModelDefinitionTestCase
 
 
 class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):

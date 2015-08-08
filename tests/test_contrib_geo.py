@@ -4,19 +4,21 @@ from django.contrib.gis.geos import (
     GeometryCollection, LineString, Point, Polygon, MultiLineString,
     MultiPoint, MultiPolygon
 )
+from django.db import connection
+from django.test.utils import skipUnless
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models import BaseDefinition
-from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
-
-from .models import (
+from mutant.contrib.geo.models import (
     GeoModel, GeometryFieldDefinition,
     GeometryCollectionFieldDefinition, LineStringFieldDefinition,
     PointFieldDefinition, PolygonFieldDefinition,
     MultiLineStringFieldDefinition, MultiPointFieldDefinition,
     MultiPolygonFieldDefinition
 )
+from mutant.models import BaseDefinition
+from mutant.test.testcases import FieldDefinitionTestMixin
+
+from .utils import BaseModelDefinitionTestCase
 
 
 class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):
@@ -27,6 +29,7 @@ class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):
         BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class GeometryFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                   BaseModelDefinitionTestCase):
     field_definition_cls = GeometryFieldDefinition
@@ -38,12 +41,14 @@ class GeometryFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class PointFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                BaseModelDefinitionTestCase):
     field_definition_cls = PointFieldDefinition
     field_values = (Point(5, 23), Point(13, 37))
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class LineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                     BaseModelDefinitionTestCase):
     field_definition_cls = LineStringFieldDefinition
@@ -53,6 +58,7 @@ class LineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class PolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                  BaseModelDefinitionTestCase):
     field_definition_cls = PolygonFieldDefinition
@@ -66,6 +72,7 @@ class PolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class MultiLineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                          BaseModelDefinitionTestCase):
     field_definition_cls = MultiLineStringFieldDefinition
@@ -82,6 +89,7 @@ class MultiLineStringFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class MultiPointFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                     BaseModelDefinitionTestCase):
     field_definition_cls = MultiPointFieldDefinition
@@ -91,6 +99,7 @@ class MultiPointFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class MultiPolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                       BaseModelDefinitionTestCase):
     field_definition_cls = MultiPolygonFieldDefinition
@@ -117,6 +126,7 @@ class MultiPolygonFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
     )
 
 
+@skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')
 class GeometryCollectionFieldDefinitionTest(GeometryFieldDefinitionTestMixin,
                                             BaseModelDefinitionTestCase):
     field_definition_cls = GeometryCollectionFieldDefinition

@@ -7,10 +7,10 @@ from django.test import SimpleTestCase
 
 from mutant.contrib.numeric.models import IntegerFieldDefinition
 from mutant.contrib.text.models import CharFieldDefinition
-from mutant.models.field import (
-    FieldDefinition, FieldDefinitionChoice, NOT_PROVIDED
-)
-from mutant.tests.utils import BaseModelDefinitionTestCase
+from mutant.models.field import (NOT_PROVIDED, FieldDefinition,
+                                 FieldDefinitionChoice)
+
+from .utils import BaseModelDefinitionTestCase
 
 
 class FieldDefinitionInheritanceTest(BaseModelDefinitionTestCase):

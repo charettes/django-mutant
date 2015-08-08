@@ -4,15 +4,15 @@ from decimal import Decimal
 
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
-
-from .models import (
+from mutant.contrib.numeric.models import (
     BigIntegerFieldDefinition, DecimalFieldDefinition,
     FloatFieldDefinition, IntegerFieldDefinition,
     PositiveIntegerFieldDefinition, PositiveSmallIntegerFieldDefinition,
     SmallIntegerFieldDefinition
 )
+from mutant.test.testcases import FieldDefinitionTestMixin
+
+from .utils import BaseModelDefinitionTestCase
 
 
 class NumericFieldDefinitionTestMixin(FieldDefinitionTestMixin):

@@ -13,12 +13,12 @@ from django.db.models.deletion import ProtectedError
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
+from mutant.contrib.related.models import ForeignKeyDefinition, ManyToManyFieldDefinition
 from mutant.models import ModelDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.tests.utils import BaseModelDefinitionTestCase
 from mutant.utils import app_cache_restorer
 
-from .models import ForeignKeyDefinition, ManyToManyFieldDefinition
+from .utils import BaseModelDefinitionTestCase
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):

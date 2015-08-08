@@ -25,7 +25,7 @@ except ImportError:
 else:
     INSTALLED_APPS.append('django_coverage')
 
-TEST_RUNNER = 'mutant.tests.runners.MutantTestSuiteRunner'
+TEST_RUNNER = 'tests.runners.MutantTestSuiteRunner'
 
 COVERAGE_MODULE_EXCLUDES = [
     '^(?!mutant)',

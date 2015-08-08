@@ -59,7 +59,7 @@ before_script:
   - if echo $BACKEND | grep 'postgis' -q; then psql mutant -U postgres -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"; fi
 
 script:
-  - python -Wonce `which coverage` run `which django-admin.py` test --pythonpath=`pwd` --settings=mutant.tests.settings.$BACKEND -v2
+  - python -Wonce `which coverage` run `which django-admin.py` test --pythonpath=`pwd` --settings=tests.settings.$BACKEND -v2
 
 after_success:
   - coverage report -m
