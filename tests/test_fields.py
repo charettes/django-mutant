@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-import sys
+from unittest import TestCase
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -11,12 +11,6 @@ from mutant.db.fields.translation import LazilyTranslatedField
 from mutant.models import ModelDefinition
 
 from .utils import BaseModelDefinitionTestCase
-
-# TODO: Remove when support for Python 2.6 is dropped
-if sys.version_info >= (2, 7):
-    from unittest import TestCase
-else:
-    from django.utils.unittest import TestCase
 
 
 class LazilyTranslatedFieldTest(TestCase):

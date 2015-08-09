@@ -1,19 +1,13 @@
 from __future__ import unicode_literals
 
-import sys
 import time
 from threading import Thread
+from unittest import skipUnless
 
 from mutant.state import handler as state_handler
 from mutant.state.handlers.pubsub import engines as pubsub_engines
 
 from .utils import BaseModelDefinitionTestCase
-
-# TODO: Remove when support for Python 2.6 is dropped
-if sys.version_info >= (2, 7):
-    from unittest import skipUnless
-else:
-    from django.utils.unittest import skipUnless
 
 try:
     import redis

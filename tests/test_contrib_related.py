@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from unittest import skip
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -15,12 +17,6 @@ from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.utils import app_cache_restorer
 
 from .utils import BaseModelDefinitionTestCase
-
-# TODO: Remove when support for Python 2.6 is dropped
-try:
-    from unittest import skip
-except ImportError:
-    from django.utils.unittest import skip
 
 
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):

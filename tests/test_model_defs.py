@@ -21,22 +21,11 @@ from mutant.utils import clear_opts_related_cache, remove_from_app_cache
 
 from .utils import BaseModelDefinitionTestCase
 
+# Remove when dropping support for Python 2
 try:
-    from test.test_support import captured_stderr
+    from test.support import captured_stderr
 except ImportError:
-    # python 2.6 doesn't provide this helper
-    from contextlib import contextmanager
-    from django.utils.six import StringIO
-    import sys
-
-    @contextmanager
-    def captured_stderr():
-        stderr = sys.stderr
-        try:
-            sys.stderr = StringIO()
-            yield sys.stderr
-        finally:
-            sys.stderr = stderr
+    from test.test_support import captured_stderr
 
 
 class Mixin(object):
