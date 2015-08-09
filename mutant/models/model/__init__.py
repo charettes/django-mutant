@@ -4,9 +4,11 @@ import pickle
 from hashlib import md5
 from itertools import chain
 
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
+from django.db.migrations.state import ModelState
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.loading import get_app
 from django.utils.encoding import python_2_unicode_compatible
@@ -250,26 +252,27 @@ class ModelDefinition(ContentType):
             '_dependencies': set(),
             '_is_obsolete': False,
         }
-        attrs.update(
-            (field_def.name, field_def.construct())
-            for field_def in self.fielddefinitions.select_subclasses()
-        )
         return attrs
 
-    def construct(self, force_create=False, existing_model_class=None):
+    def get_state(self):
+        fields = [
+            (field_def.name, field_def.construct()) for field_def in self.fielddefinitions.select_subclasses()
+        ]
+        options = self.get_model_opts()
         bases = self.get_model_bases()
-        opts = self.get_model_opts()
+        return ModelState(self.app_label, self.object_name, fields=fields, options=options, bases=bases)
+
+    def construct(self, force_create=False, existing_model_class=None):
+        state = self.get_state()
         attrs = self.get_model_attrs()
 
         identifier = (
-            self.pk, self.object_name, opts, dict(
-                (name, attr.deconstruct())
-                for name, attr in attrs.items()
-                if hasattr(attr, 'deconstruct')
+            self.pk, self.object_name, state.options, dict(
+                (name, field.deconstruct()) for name, field in state.fields
             ), [
                 MutableModelProxy(base).checksum()
                 if base is not MutableModel and issubclass(base, MutableModel) else base
-                for base in bases
+                for base in state.bases
             ]
         )
         checksum = md5(pickle.dumps(identifier)).hexdigest()
@@ -282,11 +285,10 @@ class ModelDefinition(ContentType):
             remove_from_app_cache(existing_model_class)
             existing_model_class.mark_as_obsolete()
 
-        attrs.update(
-            Meta=type(str('Meta'), (), opts),
-            _checksum=checksum
-        )
-        model_class = type(str(self.object_name), bases, attrs)
+        model_class = state.render(apps)
+        model_class._checksum = checksum
+        for attr, value in attrs.items():
+            setattr(model_class, attr, value)
 
         mutable_class_prepared.send(
             sender=model_class, definition=self,
