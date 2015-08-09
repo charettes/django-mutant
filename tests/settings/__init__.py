@@ -5,7 +5,6 @@ SECRET_KEY = 'secret'
 INSTALLED_APPS = [
     'django.contrib.auth',  # This is needed because of django bug
     'django.contrib.contenttypes',
-    'south',
     'polymodels',
     'mutant',
     'mutant.contrib.boolean',
