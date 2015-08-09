@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
+import imp
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import chain, groupby
-import imp
 from operator import itemgetter
 
 import django
@@ -13,7 +13,6 @@ from django.utils import six
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
-
 
 # TODO: Remove `allow_syncdb` alternative when support for 1.6 is dropped
 if django.VERSION >= (1, 7):

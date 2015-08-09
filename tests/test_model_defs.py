@@ -10,12 +10,12 @@ from django.db.utils import IntegrityError
 from django.test.utils import CaptureQueriesContext
 from django.utils.translation import ugettext as _
 
-from mutant.contrib.text.models import CharFieldDefinition
 from mutant.contrib.related.models import ForeignKeyDefinition
+from mutant.contrib.text.models import CharFieldDefinition
 from mutant.db.models import MutableModel
 from mutant.models.model import (
-    ModelDefinition, OrderingFieldDefinition, UniqueTogetherDefinition,
-    BaseDefinition, MutableModelProxy
+    BaseDefinition, ModelDefinition, MutableModelProxy,
+    OrderingFieldDefinition, UniqueTogetherDefinition,
 )
 from mutant.utils import clear_opts_related_cache, remove_from_app_cache
 

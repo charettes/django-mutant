@@ -5,7 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from mutant.models import FieldDefinition, FieldDefinitionManager
 
-
 srid_help_text = _('Spatial Reference System Identity')
 spatial_index_help_text = _('Creates a spatial index for the given '
                             'geometry field.')

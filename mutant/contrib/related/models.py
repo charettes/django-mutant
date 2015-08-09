@@ -9,9 +9,7 @@ from picklefield.fields import PickledObjectField
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
 from ...models import FieldDefinition, FieldDefinitionManager, ModelDefinition
-
 from .managers import ForeignKeyDefinitionManager
-
 
 related_name_help_text = _('The name to use for the relation from the '
                            'related object back to this one.')

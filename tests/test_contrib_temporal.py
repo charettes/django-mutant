@@ -8,7 +8,7 @@ from django.utils.timezone import make_aware, utc
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.temporal.models import (
-    DateFieldDefinition, DateTimeFieldDefinition, TimeFieldDefinition
+    DateFieldDefinition, DateTimeFieldDefinition, TimeFieldDefinition,
 )
 from mutant.test.testcases import FieldDefinitionTestMixin
 

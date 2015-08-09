@@ -10,6 +10,7 @@ services:
 
 env:
   - TOXENV=flake8
+  - TOXENV=isort
   - TOXENV=py26-1.6-sqlite
   - TOXENV=py26-1.6-postgresql
   - TOXENV=py26-1.6-postgis

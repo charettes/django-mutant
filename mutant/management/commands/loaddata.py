@@ -6,7 +6,6 @@ from django.core.serializers.base import DeserializationError
 
 from ...models import ModelDefinition
 
-
 # Monkey patch `_get_model` to attempt loading a matching model definition
 # when no existing model is found.
 _python_serializer_get_model = python_serializer._get_model

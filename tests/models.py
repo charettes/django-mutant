@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.models import FieldDefinition
 from mutant.db.fields import FieldDefinitionTypeField
+from mutant.models import FieldDefinition
 
 
 class CustomFieldDefinition(FieldDefinition):

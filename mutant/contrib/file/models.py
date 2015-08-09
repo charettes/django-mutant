@@ -5,9 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from ...db.fields.python import DirectoryPathField, RegExpStringField
 from ...models.field.managers import FieldDefinitionManager
-
 from ..text.models import CharFieldDefinition
-
 
 path_help_text = _('The absolute filesystem path to a directory from which '
                    'this field should get its choices.')

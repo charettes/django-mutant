@@ -5,10 +5,9 @@ from decimal import Decimal
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.numeric.models import (
-    BigIntegerFieldDefinition, DecimalFieldDefinition,
-    FloatFieldDefinition, IntegerFieldDefinition,
-    PositiveIntegerFieldDefinition, PositiveSmallIntegerFieldDefinition,
-    SmallIntegerFieldDefinition
+    BigIntegerFieldDefinition, DecimalFieldDefinition, FloatFieldDefinition,
+    IntegerFieldDefinition, PositiveIntegerFieldDefinition,
+    PositiveSmallIntegerFieldDefinition, SmallIntegerFieldDefinition,
 )
 from mutant.test.testcases import FieldDefinitionTestMixin
 

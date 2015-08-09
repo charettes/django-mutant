@@ -5,7 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from ...models import FieldDefinition, FieldDefinitionManager
 
-
 auto_now_help_text = _('Automatically set the field to now every time the '
                        'object is saved.')
 auto_now_add_help_text = _('Automatically set the field to now when the '

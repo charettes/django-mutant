@@ -1,19 +1,18 @@
 from __future__ import unicode_literals
 
 from django.contrib.gis.geos import (
-    GeometryCollection, LineString, Point, Polygon, MultiLineString,
-    MultiPoint, MultiPolygon
+    GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon,
+    Point, Polygon,
 )
 from django.db import connection
 from django.test.utils import skipUnless
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.geo.models import (
-    GeoModel, GeometryFieldDefinition,
-    GeometryCollectionFieldDefinition, LineStringFieldDefinition,
+    GeometryCollectionFieldDefinition, GeometryFieldDefinition, GeoModel,
+    LineStringFieldDefinition, MultiLineStringFieldDefinition,
+    MultiPointFieldDefinition, MultiPolygonFieldDefinition,
     PointFieldDefinition, PolygonFieldDefinition,
-    MultiLineStringFieldDefinition, MultiPointFieldDefinition,
-    MultiPolygonFieldDefinition
 )
 from mutant.models import BaseDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin

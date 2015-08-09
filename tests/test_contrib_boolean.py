@@ -1,20 +1,23 @@
 from __future__ import unicode_literals
 
 import sys
+
+import south
+from django.db import connection
+from django.utils.translation import ugettext_lazy as _
+
+from mutant.contrib.boolean.models import (
+    BooleanFieldDefinition, NullBooleanFieldDefinition,
+)
+from mutant.test.testcases import FieldDefinitionTestMixin
+
+from .utils import BaseModelDefinitionTestCase
+
 # TODO: Remove when support for Python 2.6 is dropped
 if sys.version_info >= (2, 7):
     from unittest import skipIf
 else:
     from django.utils.unittest import skipIf
-
-from django.db import connection
-from django.utils.translation import ugettext_lazy as _
-import south
-
-from mutant.contrib.boolean.models import BooleanFieldDefinition, NullBooleanFieldDefinition
-from mutant.test.testcases import FieldDefinitionTestMixin
-
-from .utils import BaseModelDefinitionTestCase
 
 
 class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):

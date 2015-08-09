@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import fields
+from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 
 from ...models import ModelDefinition
-from django.db.models.fields import FieldDoesNotExist
 
 
 class ModelClassAttributeDescriptor(object):

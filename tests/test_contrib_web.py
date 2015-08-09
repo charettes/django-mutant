@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.web.models import (
     EmailFieldDefinition, GenericIPAddressFieldDefinition,
-    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition
+    IPAddressFieldDefinition, SlugFieldDefinition, URLFieldDefinition,
 )
 from mutant.test.testcases import FieldDefinitionTestMixin
 
