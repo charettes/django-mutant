@@ -16,6 +16,4 @@ INSTALLED_APPS = [
     'mutant.contrib.related',
 ]
 
-TEST_RUNNER = 'tests.runners.MutantTestSuiteRunner'
-
 SILENCED_SYSTEM_CHECKS = ['1_7.W001']
