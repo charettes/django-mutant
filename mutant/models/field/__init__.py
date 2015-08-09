@@ -206,6 +206,11 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
             'unique_for_date', 'unique_for_month', 'unique_for_year'
         )
 
+    def __init__(self, *args, **kwargs):
+        super(FieldDefinition, self).__init__(*args, **kwargs)
+        if self.pk:
+            self._saved_name = self.name
+
     def natural_key(self):
         return self.model_def.natural_key() + (self.name,)
     natural_key.dependencies = ('mutant.modeldefinition',)
@@ -213,7 +218,9 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
     def save(self, *args, **kwargs):
         if self.pk:
             self._state._pre_save_field = self.get_bound_field()
-        return super(FieldDefinition, self).save(*args, **kwargs)
+        saved = super(FieldDefinition, self).save(*args, **kwargs)
+        self._saved_name = self.name
+        return saved
 
     def delete(self, *args, **kwargs):
         opts = self._meta
@@ -296,21 +303,13 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
         options = self.get_field_options(**overrides)
         options.update(overrides)
         instance = cls(**options)
-        setattr(instance, self.FIELD_DEFINITION_PK_ATTR, self.pk)
-        # On Django < 1.7 field don't have a deconstruct method thus we provide
-        # one to allow model checksum generation
-        if not hasattr(instance, 'deconstruct'):
-            path = "%s.%s" % (cls.__module__, cls.__name__)
-
-            def deconstruct():
-                return instance.name, path, [], options
-            instance.deconstruct = deconstruct
+        instance.set_attributes_from_name(self.name)
         return instance
 
     def get_bound_field(self):
         opts = self.model_def.model_class()._meta
         for field in opts.fields:
-            if getattr(field, self.FIELD_DEFINITION_PK_ATTR, None) == self.pk:
+            if field.name == self._saved_name:
                 return field
 
     def _south_ready_field_instance(self):
