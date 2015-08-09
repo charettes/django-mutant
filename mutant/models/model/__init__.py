@@ -403,12 +403,12 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
             elif not opts.proxy:
                 # This is a concrete model base, we must declare a o2o
                 attr_name = '%s_ptr' % opts.model_name
-                fields.append(
-                    models.OneToOneField(
-                        self.base, name=attr_name,
-                        auto_created=True, parent_link=True
-                    )
+                parent_link = models.OneToOneField(
+                    self.base, name=attr_name,
+                    auto_created=True, parent_link=True
                 )
+                parent_link.set_attributes_from_name(attr_name)
+                fields.append(parent_link)
         return tuple(fields)
 
 
