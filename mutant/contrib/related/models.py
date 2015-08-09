@@ -96,10 +96,7 @@ class RelatedFieldDefinition(FieldDefinition):
         South add_column choke when passing 'self' or 'app.Model' to `to` kwarg,
         so we have to create a special version for it.
         """
-        cls = self.get_field_class()
-        options = self.get_field_options()
-        options['to'] = self.to.model_class()
-        return cls(**options)
+        return self.construct(to=self.to.model_class())
 
     def save(self, *args, **kwargs):
         save = super(RelatedFieldDefinition, self).save()
