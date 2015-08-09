@@ -93,9 +93,10 @@ class FieldDefinitionTypeFieldTests(TestCase):
         self.assertEqual(
             list(field.choices), [
                 ('', 'Empty'),
+            ] + sorted([
                 (self.field_definition_ct.pk, 'None'),
                 (self.custom_field_ct.pk, ugettext('Custom description'))
-            ]
+            ])
         )
 
     def test_group_by_category_choices(self):
