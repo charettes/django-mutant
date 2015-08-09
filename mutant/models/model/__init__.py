@@ -220,9 +220,11 @@ class ModelDefinition(ContentType):
         if self.verbose_name_plural is not None:
             opts['verbose_name_plural'] = self.verbose_name_plural
         # Unique together
-        unique_together = filter(bool, (
-            ut_def.construct() for ut_def in self.uniquetogetherdefinitions.all()
-        ))
+        unique_together = [
+            ut for ut in (
+                ut_def.construct() for ut_def in self.uniquetogetherdefinitions.all()
+            ) if ut
+        ]
         if unique_together:
             opts['unique_together'] = unique_together
         # Ordering
