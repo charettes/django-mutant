@@ -220,10 +220,9 @@ class ModelDefinition(ContentType):
         if self.verbose_name_plural is not None:
             opts['verbose_name_plural'] = self.verbose_name_plural
         # Unique together
-        unique_together = tuple(
-            ut_def.construct()
-            for ut_def in self.uniquetogetherdefinitions.all()
-        )
+        unique_together = filter(bool, (
+            ut_def.construct() for ut_def in self.uniquetogetherdefinitions.all()
+        ))
         if unique_together:
             opts['unique_together'] = unique_together
         # Ordering
@@ -473,4 +472,4 @@ class UniqueTogetherDefinition(ModelDefinitionAttribute):
                 raise ValidationError({'field_defs': [msg]})
 
     def construct(self):
-        return self.field_defs.names()
+        return tuple(self.field_defs.names())

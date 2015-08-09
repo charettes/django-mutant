@@ -627,10 +627,9 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
             self.f2 = CharFieldDefinition.objects.create(
                 model_def=self.model_def, name='f2', max_length=25
             )
-        with self.assertChecksumChange():
-            self.ut = UniqueTogetherDefinition.objects.create(
-                model_def=self.model_def
-            )
+        self.ut = UniqueTogetherDefinition.objects.create(
+            model_def=self.model_def
+        )
         self.model_class = self.model_def.model_class()
 
     def test_repr(self):
