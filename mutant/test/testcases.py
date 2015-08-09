@@ -2,9 +2,8 @@ from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections, router, transaction
-from django.db.utils import DEFAULT_DB_ALIAS, IntegrityError
+from django.db.utils import IntegrityError
 from django.test.testcases import TestCase
-from south.db import dbs as south_dbs
 
 from ..models.model import ModelDefinition
 from ..utils import remove_from_app_cache
@@ -21,8 +20,7 @@ class DDLTestCase(TestCase):
         """
         Returns True if all implied connections have DDL transactions support.
         """
-        db_names = connections if getattr(self, 'multi_db', False) else [DEFAULT_DB_ALIAS]
-        return all(south_dbs[name].has_ddl_transactions for name in db_names)
+        return all(connection.features.can_rollback_ddl for connection in connections.all())
 
     def _fixture_setup(self):
         if (not self.manual_transaction and
