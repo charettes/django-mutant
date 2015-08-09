@@ -1,9 +1,5 @@
 from __future__ import unicode_literals
 
-from unittest import skipIf
-
-import south
-from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.contrib.boolean.models import (
@@ -17,11 +13,6 @@ from .utils import BaseModelDefinitionTestCase
 class BooleanFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _('Boolean')
 
-    @skipIf(
-        connection.settings_dict['ENGINE'] == 'django.db.backends.sqlite3' and
-        south.__version__ in ('0.8.1', '0.8.2', '0.8.3', '0.8.4', '1.0', '1.0.1'),
-        "This version of South doesn't escape added column default value correctly on SQLite3."
-    )
     def test_create_with_default(self):
         super(BooleanFieldDefinitionTestMixin, self).test_create_with_default()
 

@@ -4,7 +4,6 @@ from django.db.models import Q, signals
 from django.db.models.fields.related import RelatedField
 from django.dispatch.dispatcher import receiver
 from django.utils.six import string_types
-from south.db import dbs
 
 from ....db.models import MutableModel
 from ....models import ModelDefinition
@@ -67,7 +66,8 @@ def many_to_many_field_definition_pre_delete(sender, instance, **kwargs):
           dispatch_uid='mutant.contrib.related.management.many_to_many_field_definition_post_delete')
 def many_to_many_field_definition_post_delete(sender, instance, **kwargs):
     aliases, intermediary_table_name = instance._state._m2m_deletion
-    for alias in aliases:
-        db = dbs[alias]
-        db.delete_table(intermediary_table_name)
+    # FIXME: Issue a delete_model
+#     for alias in aliases:
+#         db = dbs[alias]
+#         db.delete_table(intermediary_table_name)
     del instance._state._m2m_deletion
