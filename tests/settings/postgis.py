@@ -9,5 +9,3 @@ INSTALLED_APPS.extend([
     'django.contrib.gis',
     'mutant.contrib.geo',
 ])
-
-COVERAGE_MODULE_EXCLUDES.remove('mutant.contrib.geo')

@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-
 SECRET_KEY = 'secret'
 
 INSTALLED_APPS = [
@@ -18,20 +17,4 @@ INSTALLED_APPS = [
     'mutant.contrib.related',
 ]
 
-try:
-    import django_coverage  # NOQA
-except ImportError:
-    pass
-else:
-    INSTALLED_APPS.append('django_coverage')
-
 TEST_RUNNER = 'tests.runners.MutantTestSuiteRunner'
-
-COVERAGE_MODULE_EXCLUDES = [
-    '^(?!mutant)',
-    'tests$',
-    'locale$',
-    'fixtures$',
-    'hacks$',
-    'mutant.contrib.geo',
-]
