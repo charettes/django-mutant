@@ -1,16 +1,15 @@
 from __future__ import unicode_literals
 
-import imp
+from collections import defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import chain, groupby
 from operator import itemgetter
 
 import django
+from django.apps import AppConfig, apps
 from django.db import connections, models, router
-from django.db.models.loading import cache as app_cache
 from django.utils import six
-from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 
@@ -66,25 +65,29 @@ def get_db_table(app_label, model):
 
 
 @contextmanager
-def app_cache_lock():
-    try:
-        imp.acquire_lock()
+def apps_lock():
+    # The registry lock is not re-entrant so we must avoid acquiring it
+    # during the initialization phase in order to prevent deadlocks.
+    if apps.ready:
+        with apps._lock:
+            yield
+    else:
         yield
-    finally:
-        imp.release_lock()
 
 
-def remove_from_app_cache(model_class):
+def remove_from_app_cache(model_class, quiet=False):
     opts = model_class._meta
+    apps = opts.apps
     app_label, model_name = opts.app_label, opts.model_name
-    with app_cache_lock():
-        app_models = app_cache.app_models.get(app_label, False)
-        if app_models:
-            model = app_models.pop(model_name, False)
-            if model:
-                app_cache._get_models_cache.clear()
-                unreference_model(model)
-                return model
+    with apps_lock():
+        try:
+            model_class = apps.app_configs[app_label].models.pop(model_name)
+        except KeyError:
+            if not quiet:
+                raise ValueError("%r is not cached" % model_class)
+        apps.clear_cache()
+        unreference_model(model_class)
+    return model_class
 
 
 def unreference_model(model):
@@ -114,17 +117,25 @@ def unreference_model(model):
                             raise
 
 
+class Empty(object):
+    pass
+
+
 def _app_cache_deepcopy(obj):
     """
     An helper that correctly deepcopy model cache state
     """
-    if isinstance(obj, dict):
-        return dict((_app_cache_deepcopy(key), _app_cache_deepcopy(val))
-                    for key, val in obj.items())
+    if isinstance(obj, defaultdict):
+        return deepcopy(obj)
+    elif isinstance(obj, dict):
+        return type(obj)((_app_cache_deepcopy(key), _app_cache_deepcopy(val)) for key, val in obj.items())
     elif isinstance(obj, list):
         return list(_app_cache_deepcopy(val) for val in obj)
-    elif isinstance(obj, SortedDict):
-        return deepcopy(obj)
+    elif isinstance(obj, AppConfig):
+        app_conf = Empty()
+        app_conf.__class__ = AppConfig
+        app_conf.__dict__ = _app_cache_deepcopy(obj.__dict__)
+        return app_conf
     return obj
 
 
@@ -134,12 +145,17 @@ def app_cache_restorer():
     A context manager that restore model cache state as it was before
     entering context.
     """
-    state = _app_cache_deepcopy(app_cache.__dict__)
+    state = _app_cache_deepcopy(apps.__dict__)
     try:
         yield state
     finally:
-        with app_cache_lock():
-            app_cache.__dict__ = state
+        with apps_lock():
+            apps.__dict__ = state
+            # Rebind the app registry models cache to
+            # individual app config ones.
+            for app_conf in apps.get_app_configs():
+                app_conf.models = apps.all_models[app_conf.label]
+            apps.clear_cache()
 
 
 group_item_getter = itemgetter('group')
