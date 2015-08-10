@@ -1,22 +1,17 @@
 from __future__ import unicode_literals
 
+import pickle
 from hashlib import md5
 from itertools import chain
-import pickle
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import models
-from django.db.models.loading import get_app
 from django.db.models.fields import FieldDoesNotExist
+from django.db.models.loading import get_app
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
-
-try:
-    from django.db.models.constants import LOOKUP_SEP
-except ImportError:
-    from django.db.models.sql.constants import LOOKUP_SEP
 
 from ... import logger
 from ...db.deletion import CASCADE_MARK_ORIGIN
@@ -25,10 +20,13 @@ from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
 from ...utils import get_db_table, remove_from_app_cache
-
 from ..ordered import OrderedModel
-
 from .managers import ModelDefinitionManager
+
+try:
+    from django.db.models.constants import LOOKUP_SEP
+except ImportError:
+    from django.db.models.sql.constants import LOOKUP_SEP
 
 
 def _model_class_from_pk(definition_cls, definition_pk):

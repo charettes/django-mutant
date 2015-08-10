@@ -10,7 +10,6 @@ from ....db.models import MutableModel
 from ....models import ModelDefinition
 from ....signals import mutable_class_prepared
 from ....utils import allow_migrate, clear_opts_related_cache
-
 from ..models import ManyToManyFieldDefinition
 
 

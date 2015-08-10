@@ -6,13 +6,15 @@ import django
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
-from django.db.models.signals import m2m_changed, pre_delete, post_delete, post_save
+from django.db.models.signals import (
+    m2m_changed, post_delete, post_save, pre_delete,
+)
 from django.dispatch.dispatcher import receiver
 from south.db import dbs
 
 from .. import logger
 from ..models import (
-    ModelDefinition, BaseDefinition, FieldDefinition, UniqueTogetherDefinition
+    BaseDefinition, FieldDefinition, ModelDefinition, UniqueTogetherDefinition,
 )
 from ..state import handler as state_handler
 from ..utils import allow_migrate, popattr, remove_from_app_cache

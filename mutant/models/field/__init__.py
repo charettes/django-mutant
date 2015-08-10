@@ -8,21 +8,18 @@ from django.db import models
 from django.db.models import signals
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
-from picklefield.fields import dbsafe_encode, PickledObjectField
+from picklefield.fields import PickledObjectField, dbsafe_encode
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields
 
 from ...db.fields import (
-    FieldDefinitionTypeField, LazilyTranslatedField, PythonIdentifierField
+    FieldDefinitionTypeField, LazilyTranslatedField, PythonIdentifierField,
 )
 from ...hacks import patch_model_option_verbose_name_raw
 from ...utils import lazy_string_format, popattr
-
-from ..ordered import OrderedModel
 from ..model import ModelDefinitionAttribute
-
+from ..ordered import OrderedModel
 from .managers import FieldDefinitionChoiceManager, FieldDefinitionManager
-
 
 patch_model_option_verbose_name_raw()
 
