@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.core.cache import get_cache
+from django.core.cache import caches
 
 from ...settings import STATE_CACHE_ALIAS
 
@@ -10,7 +10,7 @@ class CacheStateHandler(object):
     checksum of a definition."""
 
     def __init__(self):
-        self.cache = get_cache(STATE_CACHE_ALIAS)
+        self.cache = caches[STATE_CACHE_ALIAS]
 
     def get_cache_key(self, definition_pk):
         return "mutant-%s" % definition_pk
