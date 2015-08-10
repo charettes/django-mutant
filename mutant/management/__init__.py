@@ -124,6 +124,7 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
             if add_columns:
                 auto_pk = isinstance(opts.pk, models.AutoField)
                 for field in declared_fields:
+                    field.model = model_class
                     if auto_pk and field.rel and field.rel.parent_link:
                         auto_pk = False
                         field.primary_key = True
@@ -132,6 +133,7 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                         perform_ddl('add_field', model_class, field)
         else:
             for field in declared_fields:
+                field.model = model_class
                 try:
                     old_field = opts.get_field(field.name)
                 except FieldDoesNotExist:
