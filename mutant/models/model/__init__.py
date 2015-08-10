@@ -395,7 +395,9 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
                 )
                 for field, model in base_fields:
                     if model is None or model._meta.abstract:
-                        fields.append(field)
+                        clone = field.clone()
+                        clone.set_attributes_from_name(field.name)
+                        fields.append(clone)
             elif not opts.proxy:
                 # This is a concrete model base, we must declare a o2o
                 attr_name = '%s_ptr' % opts.model_name
