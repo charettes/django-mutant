@@ -218,6 +218,10 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
         add_column = popattr(instance._state, '_add_column', True)
         if add_column:
             perform_ddl('add_field', model_class, field)
+            # If the field definition is raw we must re-create the model class
+            # since ModelDefinitionAttribute.save won't be called
+            if raw:
+                model_class.mark_as_obsolete()
     else:
         old_field = instance._state._pre_save_field
         delattr(instance._state, '_pre_save_field')
