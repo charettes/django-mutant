@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import warnings
 
+from django.apps.registry import Apps
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
@@ -33,10 +34,12 @@ class FieldDefinitionDeclarationTest(SimpleTestCase):
         Make sure a warning is raised when declaring a `FieldDefinition`
         subclass that override the `delete` method.
         """
+        test_apps = Apps()
         with self.assertRaises(TypeError):
             with warnings.catch_warnings(record=True) as catched_warnings:
                 class CustomFieldDefinition(FieldDefinition):
                     class Meta:
+                        apps = test_apps
                         app_label = 'mutant'
 
                     def delete(self, *args, **kwargs):
@@ -44,6 +47,7 @@ class FieldDefinitionDeclarationTest(SimpleTestCase):
 
                 class CustomFieldDefinitionProxy(CustomFieldDefinition):
                     class Meta:
+                        apps = test_apps
                         app_label = 'mutant'
                         proxy = True
 
