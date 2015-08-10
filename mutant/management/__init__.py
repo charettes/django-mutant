@@ -86,7 +86,6 @@ def model_definition_post_save(sender, instance, created, **kwargs):
             old_db_table = old_model_class._meta.db_table
             if db_table != old_db_table:
                 perform_ddl('alter_db_table', model_class, old_db_table, db_table)
-            remove_from_app_cache(old_model_class)
             ContentType.objects.clear_cache()
     instance._model_class = model_class.model
 
