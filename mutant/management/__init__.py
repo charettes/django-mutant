@@ -2,8 +2,10 @@ from __future__ import unicode_literals
 
 from functools import wraps
 
+from django.apps.registry import Apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections, models, transaction
+from django.db.migrations.state import ModelState
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import (
     m2m_changed, post_delete, post_save, pre_delete,
@@ -117,7 +119,10 @@ def model_definition_post_delete(sender, instance, **kwargs):
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
     declared_fields = instance.get_declared_fields()
     if declared_fields:
-        model_class = instance.model_def.model_class()
+        # Make sure to flatten abstract bases since Django
+        # migrations can't deal with them.
+        state = ModelState.from_model(instance.model_def.model_class())
+        model_class = state.render(Apps())
         opts = model_class._meta
         if created:
             add_columns = popattr(instance._state, '_add_columns', True)
@@ -133,7 +138,6 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                         perform_ddl('add_field', model_class, field)
         else:
             for field in declared_fields:
-                field.model = model_class
                 try:
                     old_field = opts.get_field(field.name)
                 except FieldDoesNotExist:
@@ -167,7 +171,10 @@ def base_definition_post_delete(sender, instance, **kwargs):
     Make sure to delete fields inherited from an abstract model base.
     """
     if hasattr(instance._state, '_deletion'):
-        model = popattr(instance._state, '_deletion')
+        # Make sure to flatten abstract bases since Django
+        # migrations can't deal with them.
+        state = ModelState.from_model(popattr(instance._state, '_deletion'))
+        model = state.render(Apps())
         for field in instance.base._meta.fields:
             perform_ddl('remove_field', model, field)
 
