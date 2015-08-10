@@ -6,24 +6,17 @@ from copy import deepcopy
 from itertools import chain, groupby
 from operator import itemgetter
 
-import django
 from django.apps import AppConfig, apps
 from django.db import connections, models, router
 from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 
-# TODO: Remove `allow_syncdb` alternative when support for 1.6 is dropped
-if django.VERSION >= (1, 7):
-    def allow_migrate(model):
-        for db in connections:
-            if router.allow_migrate(db, model):
-                yield db
-else:
-    def allow_migrate(model):
-        for db in connections:
-            if router.allow_syncdb(db, model):
-                yield db
+
+def allow_migrate(model):
+    for db in connections:
+        if router.allow_migrate(db, model):
+            yield db
 
 
 NOT_PROVIDED = object()
