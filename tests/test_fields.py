@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from unittest import TestCase
 
+from django.apps.registry import Apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -51,20 +52,25 @@ class ModelWithModelDefinitionReference(models.Model):
 
 class ModelDefinitionReferenceTest(BaseModelDefinitionTestCase):
     def test_manager_name_clash(self):
+        test_apps = Apps()
+        options = type(str('Meta'), (), {'apps': test_apps, 'app_label': 'mutant'})
         # Inexistent field
         with self.assertRaises(ImproperlyConfigured):
             class InexistentModelDefField(models.Model):
                 objs = ModelClassAttributeDescriptor('model_def', 'objects')
+                Meta = options
         # Non-FK field
         with self.assertRaises(ImproperlyConfigured):
             class NonFKModelDefField(models.Model):
                 name = models.CharField(max_length=100)
                 objs = ModelClassAttributeDescriptor('name', 'objects')
+                Meta = options
         # FK not pointing to ModelDefinition
         with self.assertRaises(ImproperlyConfigured):
             class NonModelDefFKField(models.Model):
                 model_def = models.ForeignKey('self')
                 objs = ModelClassAttributeDescriptor('model_def', 'objects')
+                Meta = options
 
     def test_manager_descriptor(self):
         obj = ModelWithModelDefinitionReference()
