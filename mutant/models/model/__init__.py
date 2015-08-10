@@ -6,12 +6,11 @@ from itertools import chain
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.migrations.state import ModelState
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
-from django.db.models.loading import get_app
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
@@ -237,11 +236,11 @@ class ModelDefinition(ContentType):
 
     def get_model_attrs(self):
         try:
-            app = get_app(self.app_label)
-        except ImproperlyConfigured:
+            app = apps.get_app_config(self.app_label)
+        except LookupError:
             __module__ = str("mutant.apps.%s.models" % self.app_label)
         else:
-            __module__ = app.__name__
+            __module__ = str("%s.models" % app.module.__name__)
         attrs = {
             '__module__': __module__,
             '_definition': (self.__class__, self.pk),
