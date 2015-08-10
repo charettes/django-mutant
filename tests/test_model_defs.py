@@ -98,12 +98,12 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         db, table_name = self.get_model_db_table_name(self.model_def)
 
         with self.assertChecksumChange():
-            self.model_def.app_label = 'not-installed'
+            self.model_def.app_label = 'contenttypes'
             self.model_def.save(update_fields=['app_label'])
 
         self.assertEqual(
             self.model_def.model_class().__module__,
-            'mutant.apps.not-installed.models'
+            'django.contrib.contenttypes.models'
         )
 
         self.assertTableDoesntExists(db, table_name)
