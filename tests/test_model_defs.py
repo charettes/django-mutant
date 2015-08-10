@@ -42,6 +42,7 @@ class ConcreteModel(models.Model):
 
 class ProxyModel(ConcreteModel):
     class Meta:
+        app_label = 'mutant'
         proxy = True
 
 
