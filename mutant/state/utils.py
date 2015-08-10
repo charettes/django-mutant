@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from threading import local
 
-from django.utils.module_loading import import_by_path
+from django.utils.module_loading import import_string
 
 
 class HandlerProxy(object):
@@ -21,6 +21,6 @@ class HandlerProxy(object):
         try:
             handler = getattr(handlers, path)
         except AttributeError:
-            handler = import_by_path(path, 'MUTANT_STATE_HANDLER ')()
+            handler = import_string(path)()
             setattr(handlers, path, handler)
         return getattr(handler, name)

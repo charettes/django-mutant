@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from time import time
 
-from django.utils.module_loading import import_by_path
+from django.utils.module_loading import import_string
 
 from mutant import settings
 
@@ -15,7 +15,7 @@ class PubSubStateHandler(MemoryStateHandler):
     def __init__(self):
         super(PubSubStateHandler, self).__init__()
         dotted_path, options = settings.STATE_PUBSUB
-        engine_cls = import_by_path(dotted_path)
+        engine_cls = import_string(dotted_path)
         self.engine = engine_cls(self.receive, **options)
         self.engine.start()
 
