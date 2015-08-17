@@ -12,13 +12,13 @@ class _BooleanMeta:
 
 class BooleanFieldDefinition(FieldDefinition):
     class Meta(_BooleanMeta):
-        app_label = 'mutant'
+        app_label = 'boolean'
         proxy = True
         defined_field_class = fields.BooleanField
 
 
 class NullBooleanFieldDefinition(FieldDefinition):
     class Meta(_BooleanMeta):
-        app_label = 'mutant'
+        app_label = 'boolean'
         proxy = True
         defined_field_class = fields.NullBooleanField

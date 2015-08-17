@@ -15,7 +15,7 @@ class CharFieldDefinition(FieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'text'
         defined_field_class = fields.CharField
         defined_field_options = ('max_length',)
         defined_field_description = _('String')
@@ -24,6 +24,6 @@ class CharFieldDefinition(FieldDefinition):
 
 class TextFieldDefinition(CharFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'text'
         proxy = True
         defined_field_class = fields.TextField

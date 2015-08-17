@@ -19,6 +19,7 @@ from mutant.models.model import (
 )
 from mutant.utils import clear_opts_related_cache, remove_from_app_cache
 
+from .models import AbstractConcreteModelSubclass, AbstractModel, ProxyModel, Mixin, ModelSubclassWithTextField
 from .utils import BaseModelDefinitionTestCase
 
 # Remove when dropping support for Python 2
@@ -26,49 +27,6 @@ try:
     from test.support import captured_stderr
 except ImportError:
     from test.test_support import captured_stderr
-
-
-class Mixin(object):
-    def method(self):
-        return 'Mixin'
-
-
-class ConcreteModel(models.Model):
-    concrete_model_field = models.NullBooleanField()
-
-    class Meta:
-        app_label = 'mutant'
-
-
-class ProxyModel(ConcreteModel):
-    class Meta:
-        app_label = 'mutant'
-        proxy = True
-
-
-class AbstractModel(models.Model):
-    abstract_model_field = models.CharField(max_length=5)
-
-    class Meta:
-        abstract = True
-
-    def method(self):
-        return 'AbstractModel'
-
-
-class AbstractConcreteModelSubclass(ConcreteModel):
-    abstract_concrete_model_subclass_field = models.CharField(max_length=5)
-
-    class Meta:
-        abstract = True
-
-
-class ModelSubclassWithTextField(models.Model):
-    abstract_model_field = models.TextField()
-    second_field = models.NullBooleanField()
-
-    class Meta:
-        abstract = True
 
 
 class ModelDefinitionTest(BaseModelDefinitionTestCase):
@@ -147,11 +105,11 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
         )
         self.assertTrue(
             ModelDefinition.objects.filter(
-                app_label='mutant', object_name='MyFixtureModel'
+                app_label='tests', object_name='MyFixtureModel'
             ).exists()
         )
         model_def = ModelDefinition.objects.get(
-            app_label='mutant', object_name='MyFixtureModel'
+            app_label='tests', object_name='MyFixtureModel'
         )
         MyFixtureModel = model_def.model_class()
         self.assertModelTablesExist(MyFixtureModel)

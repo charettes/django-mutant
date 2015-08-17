@@ -143,7 +143,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                 verbosity=0, commit=False
             )
         to_model_def = ModelDefinition.objects.get_by_natural_key(
-            'related', 'tomodel'
+            'tests', 'tomodel'
         )
         to_model_class = to_model_def.model_class()
         # Make sure the origin's model class was created

@@ -25,7 +25,7 @@ class FilePathFieldDefinition(CharFieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'file'
         defined_field_class = fields.FilePathField
         defined_field_options = ('path', 'match', 'recursive')
         defined_field_category = _('File')

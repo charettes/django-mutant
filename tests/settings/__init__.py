@@ -7,6 +7,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'polymodels',
     'mutant',
+    'tests',
     'mutant.contrib.boolean',
     'mutant.contrib.temporal',
     'mutant.contrib.file',

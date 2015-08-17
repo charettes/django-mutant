@@ -9,8 +9,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from mutant.db.fields.related import ModelClassAttributeDescriptor
 from mutant.db.fields.translation import LazilyTranslatedField
-from mutant.models import ModelDefinition
 
+from .models import ModelWithModelDefinitionReference
 from .utils import BaseModelDefinitionTestCase
 
 
@@ -33,21 +33,6 @@ class LazilyTranslatedFieldTest(TestCase):
         self.assertEqual(self.field.get_prep_value('hello'), 'hello')
         self.assertEqual(self.field.get_prep_value('hello'), 'hello')
         self.assertEqual(self.field.get_prep_value(1), '1')
-
-
-class ModelWithModelDefinitionReference(models.Model):
-    model_def = models.OneToOneField(ModelDefinition, related_name='+')
-    model_objects = ModelClassAttributeDescriptor('model_def', 'objects')
-
-    nullable_model_def = models.ForeignKey(
-        ModelDefinition, related_name='+', null=True
-    )
-    nullable_objects = ModelClassAttributeDescriptor(
-        'nullable_model_def', 'objects'
-    )
-
-    class Meta:
-        app_label = 'mutant'
 
 
 class ModelDefinitionReferenceTest(BaseModelDefinitionTestCase):

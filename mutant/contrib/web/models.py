@@ -14,21 +14,21 @@ class _WebMeta:
 
 class EmailFieldDefinition(CharFieldDefinition):
     class Meta(_WebMeta):
-        app_label = 'mutant'
+        app_label = 'web'
         proxy = True
         defined_field_class = fields.EmailField
 
 
 class URLFieldDefinition(CharFieldDefinition):
     class Meta(_WebMeta):
-        app_label = 'mutant'
+        app_label = 'web'
         proxy = True
         defined_field_class = fields.URLField
 
 
 class SlugFieldDefinition(CharFieldDefinition):
     class Meta(_WebMeta):
-        app_label = 'mutant'
+        app_label = 'web'
         proxy = True
         defined_field_class = fields.SlugField
         defined_field_description = _('slug')
@@ -36,7 +36,7 @@ class SlugFieldDefinition(CharFieldDefinition):
 
 class IPAddressFieldDefinition(CharFieldDefinition):
     class Meta(_WebMeta):
-        app_label = 'mutant'
+        app_label = 'web'
         proxy = True
         defined_field_class = fields.IPAddressField
 
@@ -66,7 +66,7 @@ class GenericIPAddressFieldDefinition(CharFieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta(_WebMeta):
-        app_label = 'mutant'
+        app_label = 'web'
         defined_field_class = fields.GenericIPAddressField
         defined_field_options = ('protocol', 'unpack_ipv4',)
         defined_field_description = _('generic IP address')

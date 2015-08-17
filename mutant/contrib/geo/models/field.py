@@ -34,7 +34,7 @@ class GeometryFieldDefinition(FieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         defined_field_options = ('srid', 'spatial_index', 'dim', 'geography')
         defined_field_category = _('Geometry')
         defined_field_class = models.GeometryField
@@ -42,48 +42,48 @@ class GeometryFieldDefinition(FieldDefinition):
 
 class PointFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.PointField
 
 
 class LineStringFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.LineStringField
 
 
 class PolygonFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.PolygonField
 
 
 class MultiPointFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.MultiPointField
 
 
 class MultiLineStringFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.MultiLineStringField
 
 
 class MultiPolygonFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.MultiPolygonField
 
 
 class GeometryCollectionFieldDefinition(GeometryFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'geo'
         proxy = True
         defined_field_class = models.GeometryCollectionField

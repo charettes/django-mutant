@@ -25,7 +25,7 @@ class RelatedFieldDefinition(FieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'related'
         abstract = True
         defined_field_options = ('related_name',)
         defined_field_category = _('Related')
@@ -157,7 +157,7 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
     objects = ForeignKeyDefinitionManager(one_to_one=False)
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'related'
         defined_field_class = fields.related.ForeignKey
         defined_field_options = ('to_field',)
 
@@ -199,7 +199,7 @@ class OneToOneFieldDefinition(ForeignKeyDefinition):
     objects = ForeignKeyDefinitionManager(one_to_one=True)
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'related'
         proxy = True
         defined_field_class = fields.related.OneToOneField
 
@@ -224,7 +224,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
                                 help_text=db_table_help_text)
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'related'
         defined_field_class = fields.related.ManyToManyField
         defined_field_options = ('symmetrical', 'db_table')
 

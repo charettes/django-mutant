@@ -4,7 +4,7 @@
   "model": "contenttypes.contenttype",
   "fields": {
     "model": "frommodel",
-    "app_label": "related"
+    "app_label": "tests"
   }
 },
 {
@@ -12,7 +12,7 @@
   "model": "contenttypes.contenttype",
   "fields": {
     "model": "tomodel",
-    "app_label": "related"
+    "app_label": "tests"
   }
 },
 {
@@ -42,14 +42,14 @@
     "unique": false,
     "name": "fk",
     "model_def": [
-      "related",
+      "tests",
       "frommodel"
     ],
     "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==",
     "editable": true,
     "unique_for_year": null,
     "content_type": [
-      "mutant",
+      "related",
       "foreignkeydefinition"
     ],
     "blank": false,
@@ -63,14 +63,14 @@
 },
 {
   "pk": 2,
-  "model": "mutant.foreignkeydefinition",
+  "model": "related.foreignkeydefinition",
   "fields": {
     "related_name": "froms",
     "on_delete": "CASCADE",
     "one_to_one": false,
     "to_field": null,
     "to": [
-      "related",
+      "tests",
       "tomodel"
     ],
     "on_delete_set_value": null

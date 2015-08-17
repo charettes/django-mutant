@@ -5,7 +5,7 @@
         "fields": {
             "model": "myfixturemodel",
             "name": "my fixture model",
-            "app_label": "mutant"
+            "app_label": "tests"
         }
     },
     {
@@ -27,14 +27,14 @@
             "unique": false,
             "name": "fixture_charfield",
             "model_def": [
-                "mutant",
+                "tests",
                 "myfixturemodel"
             ],
             "default": "",
             "editable": true,
             "unique_for_year": null,
             "content_type": [
-                "mutant",
+                "text",
                 "charfielddefinition"
             ],
             "blank": true,
@@ -55,14 +55,14 @@
             "unique": false,
             "name": "fixture_integerfield",
             "model_def": [
-                "mutant",
+                "tests",
                 "myfixturemodel"
             ],
             "default": "gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==",
             "editable": true,
             "unique_for_year": null,
             "content_type": [
-                "mutant",
+                "numeric",
                 "integerfielddefinition"
             ],
             "blank": true,
@@ -76,7 +76,7 @@
     },
     {
         "pk": 9999,
-        "model": "mutant.charfielddefinition",
+        "model": "text.charfielddefinition",
         "fields": {
             "max_length": 255
         }

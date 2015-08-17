@@ -20,7 +20,7 @@ class DateFieldDefinition(FieldDefinition):
     objects = FieldDefinitionManager()
 
     class Meta:
-        app_label = 'mutant'
+        app_label = 'temporal'
         defined_field_class = fields.DateField
         defined_field_options = ('auto_now', 'auto_now_add',)
         defined_field_category = _('Temporal')
@@ -28,13 +28,13 @@ class DateFieldDefinition(FieldDefinition):
 
 class TimeFieldDefinition(DateFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'temporal'
         proxy = True
         defined_field_class = fields.TimeField
 
 
 class DateTimeFieldDefinition(DateFieldDefinition):
     class Meta:
-        app_label = 'mutant'
+        app_label = 'temporal'
         proxy = True
         defined_field_class = fields.DateTimeField
