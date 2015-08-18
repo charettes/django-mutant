@@ -59,14 +59,17 @@ class AwareDateTimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
         timezone support is turned on correctly raise a warning instead
         of throwing an exception. refs #23"""
         naive_default = datetime.datetime(1990, 8, 31, 23, 46)
-        with warnings.catch_warnings(record=True) as messages:
+        with warnings.catch_warnings(record=True) as catched_warnings:
             DateTimeFieldDefinition.objects.create_with_default(
                 model_def=self.model_def,
                 name='field_created_with_naive_default',
                 default=naive_default
             )
-        self.assertEqual(len(messages), 1)
-        self.assertIn('received a naive datetime', messages[0].message.args[0])
+        for warning in catched_warnings:
+            if 'received a naive datetime' in warning.message.args[0]:
+                break
+        else:
+            self.fail('No naive datetime warning issued.')
 
 
 class TimeFieldDefinitionTest(TemporalFieldDefinitionTestMixin,
