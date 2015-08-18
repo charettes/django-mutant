@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import re
 
+import django
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.fields import CharField
@@ -33,7 +34,10 @@ class RegExpStringField(CharField):
             return value
 
 
-class PythonIdentifierField(six.with_metaclass(models.SubfieldBase, CharField)):
+PythonIdentifierFieldBase = type if django.VERSION >= (1, 8) else models.SubfieldBase
+
+
+class PythonIdentifierField(six.with_metaclass(PythonIdentifierFieldBase, CharField)):
     default_validators = [validate_python_identifier]
     description = _('Python identifier')
 
