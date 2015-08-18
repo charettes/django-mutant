@@ -1,2 +1,1 @@
-# Make sure signals are always registered
-from . import management  # NOQA
+default_app_config = 'mutant.contrib.related.apps.RelatedConfig'

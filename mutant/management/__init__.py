@@ -7,14 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connections, models, transaction
 from django.db.migrations.state import ModelState
 from django.db.models.fields import FieldDoesNotExist
-from django.db.models.signals import (
-    m2m_changed, post_delete, post_save, pre_delete,
-)
-from django.dispatch.dispatcher import receiver
 
-from ..models import (
-    BaseDefinition, FieldDefinition, ModelDefinition, UniqueTogetherDefinition,
-)
 from ..state import handler as state_handler
 from ..utils import allow_migrate, popattr, remove_from_app_cache
 
@@ -43,8 +36,6 @@ def nonraw_instance(receiver):
     return wrapper
 
 
-@receiver(post_save, sender=ModelDefinition,
-          dispatch_uid='mutant.management.model_definition_post_save')
 @nonraw_instance
 def model_definition_post_save(sender, instance, created, **kwargs):
     model_class = instance.model_class(force_create=True)
@@ -92,8 +83,6 @@ def model_definition_post_save(sender, instance, created, **kwargs):
     instance._model_class = model_class.model
 
 
-@receiver(pre_delete, sender=ModelDefinition,
-          dispatch_uid='mutant.management.model_definition_pre_delete')
 def model_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_class()
     instance._state._deletion = (
@@ -102,8 +91,6 @@ def model_definition_pre_delete(sender, instance, **kwargs):
     )
 
 
-@receiver(post_delete, sender=ModelDefinition,
-          dispatch_uid='mutant.management.model_definition_post_delete')
 def model_definition_post_delete(sender, instance, **kwargs):
     model_class, pk = popattr(instance._state, '_deletion')
     perform_ddl('delete_model', model_class)
@@ -114,8 +101,6 @@ def model_definition_post_delete(sender, instance, **kwargs):
     del instance._model_class
 
 
-@receiver(post_save, sender=BaseDefinition,
-          dispatch_uid='mutant.management.base_definition_post_save')
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
     declared_fields = instance.get_declared_fields()
     if declared_fields:
@@ -146,8 +131,6 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                     perform_ddl('alter_field', model_class, old_field, field, strict=True)
 
 
-@receiver(pre_delete, sender=BaseDefinition,
-          dispatch_uid='mutant.management.base_definition_pre_delete')
 def base_definition_pre_delete(sender, instance, **kwargs):
     """
     This is used to pass data required for deletion to the post_delete
@@ -164,8 +147,6 @@ def base_definition_pre_delete(sender, instance, **kwargs):
         instance._state._deletion = instance.model_def.model_class()
 
 
-@receiver(post_delete, sender=BaseDefinition,
-          dispatch_uid='mutant.management.base_definition_post_delete')
 def base_definition_post_delete(sender, instance, **kwargs):
     """
     Make sure to delete fields inherited from an abstract model base.
@@ -179,8 +160,6 @@ def base_definition_post_delete(sender, instance, **kwargs):
             perform_ddl('remove_field', model, field)
 
 
-@receiver(m2m_changed, sender=UniqueTogetherDefinition.field_defs.through,
-          dispatch_uid='mutant.management.unique_together_field_defs_changed')
 def unique_together_field_defs_changed(instance, action, model, **kwargs):
     model_class = instance.model_def.model_class()
     if action.startswith('post_'):
@@ -193,8 +172,6 @@ def unique_together_field_defs_changed(instance, action, model, **kwargs):
         model_class.mark_as_obsolete()
 
 
-@receiver(post_save, sender=FieldDefinition,
-          dispatch_uid='mutant.management.raw_field_definition_proxy_post_save')
 def raw_field_definition_proxy_post_save(sender, instance, raw, **kwargs):
     """
     When proxy field definitions are loaded from a fixture they're not
@@ -239,8 +216,6 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
 FIELD_DEFINITION_POST_SAVE_UID = "mutant.management.%s_post_save"
 
 
-@receiver(pre_delete, sender=FieldDefinition,
-          dispatch_uid='mutant.management.field_definition_pre_delete')
 def field_definition_pre_delete(sender, instance, **kwargs):
     # see CASCADE_MARK_ORIGIN's docstring
     cascade_deletion_origin = popattr(
@@ -254,8 +229,6 @@ def field_definition_pre_delete(sender, instance, **kwargs):
     instance._state._deletion = (model_class, field)
 
 
-@receiver(post_delete, sender=FieldDefinition,
-          dispatch_uid='mutant.management.field_definition_post_delete')
 def field_definition_post_delete(sender, instance, **kwargs):
     if hasattr(instance._state, '_deletion'):
         model, field = popattr(instance._state, '_deletion')

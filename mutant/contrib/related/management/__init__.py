@@ -1,18 +1,14 @@
 from __future__ import unicode_literals
 
-from django.db.models import Q, signals
+from django.db.models import Q
 from django.db.models.fields.related import RelatedField
-from django.dispatch.dispatcher import receiver
 from django.utils.six import string_types
 
 from ....db.models import MutableModel
 from ....models import ModelDefinition
-from ....signals import mutable_class_prepared
 from ....utils import allow_migrate, clear_opts_related_cache
-from ..models import ManyToManyFieldDefinition
 
 
-@receiver(mutable_class_prepared)
 def mutable_model_prepared(signal, sender, definition, existing_model_class,
                            **kwargs):
     """
@@ -50,8 +46,6 @@ def mutable_model_prepared(signal, sender, definition, existing_model_class,
         clear_opts_related_cache(model_class)
 
 
-@receiver(signals.pre_delete, sender=ManyToManyFieldDefinition,
-          dispatch_uid='mutant.contrib.related.management.many_to_many_field_definition_pre_delete')
 def many_to_many_field_definition_pre_delete(sender, instance, **kwargs):
     model_class = instance.model_def.model_class()
     field = model_class._meta.get_field(str(instance.name))
@@ -62,8 +56,6 @@ def many_to_many_field_definition_pre_delete(sender, instance, **kwargs):
     )
 
 
-@receiver(signals.post_delete, sender=ManyToManyFieldDefinition,
-          dispatch_uid='mutant.contrib.related.management.many_to_many_field_definition_post_delete')
 def many_to_many_field_definition_post_delete(sender, instance, **kwargs):
     aliases, intermediary_table_name = instance._state._m2m_deletion
     # FIXME: Issue a delete_model
