@@ -9,6 +9,13 @@ from ..models.model import ModelDefinition
 from ..utils import remove_from_app_cache
 
 
+def connections_can_rollback_ddl():
+    """
+    Returns True if all implied connections have DDL transactions support.
+    """
+    return all(connection.features.can_rollback_ddl for connection in connections.all())
+
+
 class DDLTestCase(TestCase):
     """
     A class that behaves like `TestCase` if all connections support DDL
@@ -16,22 +23,32 @@ class DDLTestCase(TestCase):
     """
     manual_transaction = False
 
-    def connections_have_ddl_transactions(self):
-        """
-        Returns True if all implied connections have DDL transactions support.
-        """
-        return all(connection.features.can_rollback_ddl for connection in connections.all())
+    @classmethod
+    def _use_transactions(cls):
+        return not cls.manual_transaction and connections_can_rollback_ddl()
+
+    @classmethod
+    def setUpClass(cls):
+        if cls._use_transactions():
+            return super(DDLTestCase, cls).setUpClass()
+        else:
+            return super(TestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._use_transactions():
+            return super(DDLTestCase, cls).tearDownClass()
+        else:
+            return super(TestCase, cls).tearDownClass()
 
     def _fixture_setup(self):
-        if (not self.manual_transaction and
-                self.connections_have_ddl_transactions()):
+        if self._use_transactions():
             return super(DDLTestCase, self)._fixture_setup()
         else:
             return super(TestCase, self)._fixture_setup()
 
     def _fixture_teardown(self):
-        if (not self.manual_transaction and
-                self.connections_have_ddl_transactions()):
+        if self._use_transactions():
             return super(DDLTestCase, self)._fixture_teardown()
         else:
             return super(TestCase, self)._fixture_teardown()
@@ -39,8 +56,7 @@ class DDLTestCase(TestCase):
 
 class ModelDefinitionDDLTestCase(DDLTestCase):
     def tearDown(self):
-        if (self.manual_transaction or
-                not self.connections_have_ddl_transactions()):
+        if not self._use_transactions():
             # Remove all the extra tables since `TransactionTestCase` only
             # truncate data on teardown.
             ModelDefinition.objects.all().delete()
