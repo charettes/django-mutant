@@ -17,9 +17,14 @@ from mutant.models.model import (
     BaseDefinition, ModelDefinition, MutableModelProxy,
     OrderingFieldDefinition, UniqueTogetherDefinition,
 )
-from mutant.utils import clear_opts_related_cache, remove_from_app_cache
+from mutant.utils import (
+    clear_opts_related_cache, get_related_model, remove_from_app_cache,
+)
 
-from .models import AbstractConcreteModelSubclass, AbstractModel, ProxyModel, Mixin, ModelSubclassWithTextField
+from .models import (
+    AbstractConcreteModelSubclass, AbstractModel, Mixin,
+    ModelSubclassWithTextField, ProxyModel,
+)
 from .utils import BaseModelDefinitionTestCase
 
 # Remove when dropping support for Python 2
@@ -708,7 +713,7 @@ class BaseDefinitionTest(BaseModelDefinitionTestCase):
             base_definition.base = model_class
             base_definition.save()
         self.assertModelTablesColumnDoesntExists(another_model_class, auto_pk_column)
-        self.assertEqual(model_class.anothermodel.related.model, another_model_class)
+        self.assertEqual(get_related_model(model_class.anothermodel.related), another_model_class)
         remove_from_app_cache(another_model_class).mark_as_obsolete()
         self.assertFalse(hasattr(model_class, 'anothermodel'))
         another_model = another_model_class.objects.create(f1='Martinal')

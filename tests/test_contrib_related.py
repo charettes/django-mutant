@@ -14,7 +14,7 @@ from mutant.contrib.related.models import (
 )
 from mutant.models import ModelDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.utils import app_cache_restorer
+from mutant.utils import app_cache_restorer, get_related_model
 
 from .utils import BaseModelDefinitionTestCase
 
@@ -59,7 +59,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
                 include_hidden=True
             )
             return any(
-                related_obj.model == model_class for related_obj in related_objs
+                get_related_model(related_obj) == model_class for related_obj in related_objs
             )
         self.assertTrue(is_related_object_of_ct(self.model_def.model_class()))
         super(ForeignKeyDefinitionTest, self).test_field_deletion()
@@ -148,7 +148,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         to_model_class = to_model_def.model_class()
         # Make sure the origin's model class was created
         self.assertTrue(hasattr(to_model_class, 'froms'))
-        from_model_class = to_model_class.froms.related.model
+        from_model_class = get_related_model(to_model_class.froms.related)
         try:
             fk_field = from_model_class._meta.get_field('fk')
         except FieldDoesNotExist:

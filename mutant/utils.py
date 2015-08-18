@@ -4,8 +4,9 @@ from collections import defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
 from itertools import chain, groupby
-from operator import itemgetter
+from operator import attrgetter, itemgetter
 
+import django
 from django.apps import AppConfig, apps
 from django.db import connections, models, router
 from django.utils import six
@@ -87,7 +88,7 @@ def unreference_model(model):
     opts = model._meta
     for field, field_model in chain(opts.get_fields_with_model(),
                                     opts.get_m2m_with_model()):
-        rel = field.rel
+        rel = getattr(field, 'rel', None)
         if field_model is None and rel:
             to = rel.to
             if isinstance(to, models.base.ModelBase):
@@ -165,28 +166,41 @@ def choices_from_dict(choices):
             )
 
 
-_opts_related_cache_attrs = [
-    '_related_objects_cache',
-    '_related_objects_proxy_cache',
-    '_related_many_to_many_cache',
-    '_name_map',
-]
+get_related_model = attrgetter('related_model' if django.VERSION >= (1, 8) else 'model')
 
 
-def clear_opts_related_cache(model_class):
-    """
-    Clear the specified model and its children opts related cache.
-    """
-    opts = model_class._meta
-    children = [
-        related_object.model
-        for related_object in opts.get_all_related_objects()
-        if related_object.field.rel.parent_link
+if django.VERSION >= (1, 8):
+    def clear_opts_related_cache(model_class):
+        opts = model_class._meta
+        children = [
+            related_object.related_model
+            for related_object in opts.related_objects if related_object.parent_link
+        ]
+        opts._expire_cache()
+        for child in children:
+            clear_opts_related_cache(child)
+else:
+    _opts_related_cache_attrs = [
+        '_related_objects_cache',
+        '_related_objects_proxy_cache',
+        '_related_many_to_many_cache',
+        '_name_map',
     ]
-    for attr in _opts_related_cache_attrs:
-        try:
-            delattr(opts, attr)
-        except AttributeError:
-            pass
-    for child in children:
-        clear_opts_related_cache(child)
+
+    def clear_opts_related_cache(model_class):
+        """
+        Clear the specified model and its children opts related cache.
+        """
+        opts = model_class._meta
+        children = [
+            related_object.model
+            for related_object in opts.get_all_related_objects()
+            if related_object.field.rel.parent_link
+        ]
+        for attr in _opts_related_cache_attrs:
+            try:
+                delattr(opts, attr)
+            except AttributeError:
+                pass
+        for child in children:
+            clear_opts_related_cache(child)
