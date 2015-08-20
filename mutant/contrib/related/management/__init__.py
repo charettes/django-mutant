@@ -6,7 +6,7 @@ from django.utils.six import string_types
 
 from ....db.models import MutableModel
 from ....models import ModelDefinition
-from ....utils import allow_migrate, clear_opts_related_cache
+from ....utils import clear_opts_related_cache
 
 
 def mutable_model_prepared(signal, sender, definition, existing_model_class,
@@ -44,22 +44,3 @@ def mutable_model_prepared(signal, sender, definition, existing_model_class,
     # Clear the referenced models opts related cache
     for model_class in referenced_models:
         clear_opts_related_cache(model_class)
-
-
-def many_to_many_field_definition_pre_delete(sender, instance, **kwargs):
-    model_class = instance.model_def.model_class()
-    field = model_class._meta.get_field(str(instance.name))
-    intermediary_table_name = field.rel.through._meta.db_table
-    instance._state._m2m_deletion = (
-        allow_migrate(model_class),
-        intermediary_table_name
-    )
-
-
-def many_to_many_field_definition_post_delete(sender, instance, **kwargs):
-    aliases, intermediary_table_name = instance._state._m2m_deletion
-    # FIXME: Issue a delete_model
-#     for alias in aliases:
-#         db = dbs[alias]
-#         db.delete_table(intermediary_table_name)
-    del instance._state._m2m_deletion
