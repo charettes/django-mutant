@@ -174,6 +174,9 @@ if django.VERSION >= (1, 8):
     def get_rel_accessor_name(field):
         return field.rel.get_accessor_name()
 
+    def get_related_objects(opts):
+        return opts._get_fields(forward=False, reverse=True, include_hidden=True)
+
     def clear_opts_related_cache(model_class):
         opts = model_class._meta
         children = [
@@ -192,6 +195,9 @@ else:
 
     def get_rel_accessor_name(field):
         return field.related.get_accessor_name()
+
+    def get_related_objects(opts):
+        return opts.get_all_related_objects(include_hidden=True)
 
     _opts_related_cache_attrs = [
         '_related_objects_cache',

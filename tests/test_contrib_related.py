@@ -14,7 +14,9 @@ from mutant.contrib.related.models import (
 )
 from mutant.models import ModelDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.utils import app_cache_restorer, get_related_model
+from mutant.utils import (
+    app_cache_restorer, get_related_model, get_related_objects,
+)
 
 from .utils import BaseModelDefinitionTestCase
 
@@ -55,11 +57,9 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
 
     def test_field_deletion(self):
         def is_related_object_of_ct(model_class):
-            related_objs = ContentType._meta.get_all_related_objects(
-                include_hidden=True
-            )
+            related_objects = get_related_objects(ContentType._meta)
             return any(
-                get_related_model(related_obj) == model_class for related_obj in related_objs
+                get_related_model(related_object) == model_class for related_object in related_objects
             )
         self.assertTrue(is_related_object_of_ct(self.model_def.model_class()))
         super(ForeignKeyDefinitionTest, self).test_field_deletion()

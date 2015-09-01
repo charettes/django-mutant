@@ -406,7 +406,7 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         """Make sure model refreshing that occurs when a model class is
         obsolete doesn't hang when a model class in the app_cache points to
         the obsolete one thus triggering a chain of refreshing indirectly
-        caused by `ModelDefinition._opts.get_all_related_objects`."""
+        caused by related objects cache."""
         proxy = self.model_def.model_class()
         model = proxy.model
         # Create a FK pointing to a  model class that will become obsolete
