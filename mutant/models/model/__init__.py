@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import pickle
 from hashlib import md5
-from itertools import chain
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
@@ -21,7 +20,7 @@ from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
-from ...utils import get_db_table, remove_from_app_cache
+from ...utils import get_db_table, get_fields, remove_from_app_cache
 from ..ordered import OrderedModel
 from .managers import ModelDefinitionManager
 
@@ -388,12 +387,8 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
             if opts.abstract:
                 # Add fields inherited from base's abstract parent and
                 # local fields.
-                base_fields = chain(
-                    opts.get_fields_with_model(),
-                    opts.get_m2m_with_model()
-                )
-                for field, model in base_fields:
-                    if model is None or model._meta.abstract:
+                for field in get_fields(opts):
+                    if field.model is self.base or field.model._meta.abstract:
                         clone = field.clone()
                         clone.set_attributes_from_name(field.name)
                         fields.append(clone)

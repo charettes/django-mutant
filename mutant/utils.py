@@ -85,11 +85,9 @@ def remove_from_app_cache(model_class, quiet=False):
 
 
 def unreference_model(model):
-    opts = model._meta
-    for field, field_model in chain(opts.get_fields_with_model(),
-                                    opts.get_m2m_with_model()):
+    for field in get_fields(model._meta):
         rel = getattr(field, 'rel', None)
-        if field_model is None and rel:
+        if field.model is model and rel:
             to = rel.to
             if isinstance(to, models.base.ModelBase):
                 clear_opts_related_cache(to)
@@ -170,6 +168,9 @@ get_related_model = attrgetter('related_model' if django.VERSION >= (1, 8) else 
 
 
 if django.VERSION >= (1, 8):
+    def get_fields(opts):
+        return opts.get_fields()
+
     def clear_opts_related_cache(model_class):
         opts = model_class._meta
         children = [
@@ -180,6 +181,12 @@ if django.VERSION >= (1, 8):
         for child in children:
             clear_opts_related_cache(child)
 else:
+    def get_fields(opts):
+        return chain(
+            opts.fields,
+            opts.many_to_many
+        )
+
     _opts_related_cache_attrs = [
         '_related_objects_cache',
         '_related_objects_proxy_cache',
