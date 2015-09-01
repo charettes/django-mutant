@@ -396,8 +396,8 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
                 # This is a concrete model base, we must declare a o2o
                 attr_name = '%s_ptr' % opts.model_name
                 parent_link = models.OneToOneField(
-                    self.base, name=attr_name,
-                    auto_created=True, parent_link=True
+                    self.base, on_delete=models.CASCADE,
+                    name=attr_name, auto_created=True, parent_link=True
                 )
                 parent_link.set_attributes_from_name(attr_name)
                 fields.append(parent_link)

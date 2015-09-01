@@ -14,7 +14,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CharFieldDefinition',
             fields=[
-                ('fielddefinition_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='mutant.FieldDefinition')),
+                ('fielddefinition_ptr', models.OneToOneField(
+                    to='mutant.FieldDefinition', on_delete=models.CASCADE, parent_link=True, auto_created=True,
+                    primary_key=True, serialize=False
+                )),
                 ('max_length', models.PositiveSmallIntegerField(null=True, verbose_name='max length', blank=True)),
             ],
             options={

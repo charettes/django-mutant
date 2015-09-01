@@ -63,7 +63,9 @@ class Migration(migrations.Migration):
                 ('group', mutant.db.fields.translation.LazilyTranslatedField(null=True, verbose_name='group', blank=True)),
                 ('value', picklefield.fields.PickledObjectField(verbose_name='value', editable=False)),
                 ('label', mutant.db.fields.translation.LazilyTranslatedField(verbose_name='label')),
-                ('field_def', models.ForeignKey(related_name='choices', to='mutant.FieldDefinition')),
+                ('field_def', models.ForeignKey(
+                    to='mutant.FieldDefinition', on_delete=models.CASCADE, related_name='choices'
+                )),
             ],
             options={
                 'ordering': ['order'],
@@ -75,7 +77,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ModelDefinition',
             fields=[
-                ('contenttype_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='contenttypes.ContentType')),
+                ('contenttype_ptr', models.OneToOneField(
+                    to='contenttypes.ContentType', on_delete=models.CASCADE, parent_link=True, auto_created=True,
+                    primary_key=True, serialize=False
+                )),
                 ('object_name', mutant.db.fields.python.PythonIdentifierField(max_length=255, verbose_name='object name')),
                 ('db_table', models.CharField(max_length=63, null=True, verbose_name='database table', blank=True)),
                 ('managed', models.BooleanField(default=False, verbose_name='managed')),
@@ -120,7 +125,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fielddefinition',
             name='content_type',
-            field=models.ForeignKey(related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition'), to='contenttypes.ContentType'),
+            field=models.ForeignKey(
+                to='contenttypes.ContentType', on_delete=models.CASCADE,
+                related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition')
+            ),
             preserve_default=True,
         ),
         migrations.AddField(

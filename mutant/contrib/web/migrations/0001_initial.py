@@ -14,7 +14,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GenericIPAddressFieldDefinition',
             fields=[
-                ('charfielddefinition_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='text.CharFieldDefinition')),
+                ('charfielddefinition_ptr', models.OneToOneField(
+                    to='text.CharFieldDefinition', on_delete=models.CASCADE, parent_link=True, auto_created=True,
+                    primary_key=True, serialize=False
+                )),
                 ('protocol', models.CharField(default='both', max_length=4, verbose_name='protocol', choices=[('both', 'both'), ('IPv4', 'IPv4'), ('IPv6', 'IPv6')])),
                 ('unpack_ipv4', models.BooleanField(default=False, verbose_name='unpack ipv4')),
             ],

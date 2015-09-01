@@ -343,7 +343,7 @@ class FieldDefinitionChoice(OrderedModel):
     """
     A Model to allow specifying choices for a field definition instance
     """
-    field_def = models.ForeignKey(FieldDefinition, related_name='choices')
+    field_def = models.ForeignKey(FieldDefinition, on_delete=models.CASCADE, related_name='choices')
     group = LazilyTranslatedField(_('group'), blank=True, null=True)
     value = PickledObjectField(_('value'), editable=True)
     label = LazilyTranslatedField(_('label'))

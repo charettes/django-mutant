@@ -14,7 +14,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DateFieldDefinition',
             fields=[
-                ('fielddefinition_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='mutant.FieldDefinition')),
+                ('fielddefinition_ptr', models.OneToOneField(
+                    to='mutant.FieldDefinition', on_delete=models.CASCADE, parent_link=True, auto_created=True,
+                    primary_key=True, serialize=False
+                )),
                 ('auto_now', models.BooleanField(default=False, help_text='Automatically set the field to now every time the object is saved.', verbose_name='auto now')),
                 ('auto_now_add', models.BooleanField(default=False, help_text='Automatically set the field to now when the object is first created.', verbose_name='auto now add')),
             ],

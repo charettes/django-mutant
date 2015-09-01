@@ -23,11 +23,11 @@ class FieldDefinitionModel(models.Model):
 
 
 class ModelWithModelDefinitionReference(models.Model):
-    model_def = models.OneToOneField(ModelDefinition, related_name='+')
+    model_def = models.OneToOneField(ModelDefinition, on_delete=models.CASCADE, related_name='+')
     model_objects = ModelClassAttributeDescriptor('model_def', 'objects')
 
     nullable_model_def = models.ForeignKey(
-        ModelDefinition, related_name='+', null=True
+        ModelDefinition, on_delete=models.SET_NULL, related_name='+', null=True
     )
     nullable_objects = ModelClassAttributeDescriptor(
         'nullable_model_def', 'objects'

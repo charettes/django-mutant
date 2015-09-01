@@ -16,8 +16,9 @@ related_name_help_text = _('The name to use for the relation from the '
 
 
 class RelatedFieldDefinition(FieldDefinition):
-    to = fields.related.ForeignKey(ContentType, verbose_name=_('to'),
-                                   related_name='+')
+    to = fields.related.ForeignKey(
+        ContentType, on_delete=deletion.CASCADE, verbose_name=_('to'), related_name='+'
+    )
     related_name = PythonIdentifierField(_('related name'),
                                          blank=True, null=True,
                                          help_text=related_name_help_text)
@@ -216,9 +217,9 @@ db_table_help_text = _('The name of the table to create for storing the '
 
 class ManyToManyFieldDefinition(RelatedFieldDefinition):
     symmetrical = fields.NullBooleanField(_('symmetrical'))
-    through = fields.related.ForeignKey(ContentType, blank=True, null=True,
-                                        related_name='+',
-                                        help_text=through_help_text)
+    through = fields.related.ForeignKey(
+        ContentType, on_delete=deletion.CASCADE, blank=True, null=True, related_name='+', help_text=through_help_text
+    )
     # TODO: This should not be a SlugField
     db_table = fields.SlugField(max_length=30, blank=True, null=True,
                                 help_text=db_table_help_text)

@@ -53,13 +53,13 @@ class ModelDefinitionReferenceTest(BaseModelDefinitionTestCase):
         # FK not pointing to ModelDefinition
         with self.assertRaises(ImproperlyConfigured):
             class NonModelDefFKField(models.Model):
-                model_def = models.ForeignKey('self')
+                model_def = models.ForeignKey('self', on_delete=models.CASCADE)
                 objs = ModelClassAttributeDescriptor('model_def', 'objects')
                 Meta = options
         # Lazy FK not pointing to ModelDefinition
         with self.assertRaises(ImproperlyConfigured):
             class LazyNonModelDefFKField(models.Model):
-                model_def = models.ForeignKey('mutant.fielddefinition')
+                model_def = models.ForeignKey('mutant.fielddefinition', on_delete=models.CASCADE)
                 objs = ModelClassAttributeDescriptor('model_def', 'objects')
                 Meta = options
 

@@ -410,7 +410,7 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
         proxy = self.model_def.model_class()
         model = proxy.model
         # Create a FK pointing to a  model class that will become obsolete
-        fk = models.ForeignKey(to=proxy)
+        fk = models.ForeignKey(to=proxy, on_delete=models.CASCADE)
         fk.contribute_to_class(model, 'fk')
         model.mark_as_obsolete()
         # Clear up the related cache of ModelDefiniton to make sure

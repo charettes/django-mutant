@@ -26,7 +26,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CustomFieldDefinition',
             fields=[
-                ('fielddefinition_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='mutant.FieldDefinition')),
+                ('fielddefinition_ptr', models.OneToOneField(
+                    to='mutant.FieldDefinition', on_delete=models.CASCADE, parent_link=True, auto_created=True,
+                    primary_key=True, serialize=False
+                )),
             ],
             options={
             },
@@ -36,7 +39,10 @@ class Migration(migrations.Migration):
             name='FieldDefinitionModel',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('field_type', models.ForeignKey(related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition'), to='contenttypes.ContentType')),
+                ('field_type', models.ForeignKey(
+                    to='contenttypes.ContentType', on_delete=models.CASCADE,
+                    related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition')
+                )),
             ],
             options={
             },
@@ -46,8 +52,12 @@ class Migration(migrations.Migration):
             name='ModelWithModelDefinitionReference',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('model_def', models.OneToOneField(related_name='+', to='mutant.ModelDefinition')),
-                ('nullable_model_def', models.ForeignKey(related_name='+', to='mutant.ModelDefinition', null=True)),
+                ('model_def', models.OneToOneField(
+                    to='mutant.ModelDefinition', on_delete=models.CASCADE, related_name='+'
+                )),
+                ('nullable_model_def', models.ForeignKey(
+                    to='mutant.ModelDefinition', on_delete=models.SET_NULL, related_name='+', null=True
+                )),
             ],
             options={
             },
