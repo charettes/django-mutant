@@ -98,7 +98,7 @@ def unreference_model(model):
                 o2o = isinstance(field, models.OneToOneField)
                 if not rel_is_hidden or o2o:
                     try:
-                        delattr(to, field.related.get_accessor_name())
+                        delattr(to, get_rel_accessor_name(field))
                     except AttributeError:
                         # Hidden related names are not respected for o2o
                         # thus a tenant models with a o2o pointing to
@@ -171,6 +171,9 @@ if django.VERSION >= (1, 8):
     def get_fields(opts):
         return opts.get_fields()
 
+    def get_rel_accessor_name(field):
+        return field.rel.get_accessor_name()
+
     def clear_opts_related_cache(model_class):
         opts = model_class._meta
         children = [
@@ -186,6 +189,9 @@ else:
             opts.fields,
             opts.many_to_many
         )
+
+    def get_rel_accessor_name(field):
+        return field.related.get_accessor_name()
 
     _opts_related_cache_attrs = [
         '_related_objects_cache',
