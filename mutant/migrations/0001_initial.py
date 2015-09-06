@@ -8,6 +8,7 @@ from django.db import migrations, models
 import mutant.db.deletion
 import mutant.db.fields.python
 import mutant.db.fields.translation
+import mutant.models.field
 
 
 class Migration(migrations.Migration):
@@ -41,7 +42,7 @@ class Migration(migrations.Migration):
                 ('db_column', models.SlugField(max_length=30, null=True, verbose_name='db column', blank=True)),
                 ('db_index', models.BooleanField(default=False, verbose_name='db index')),
                 ('editable', models.BooleanField(default=True, verbose_name='editable')),
-                ('default', picklefield.fields.PickledObjectField(default=b'gAJjZGphbmdvLmRiLm1vZGVscy5maWVsZHMKTk9UX1BST1ZJREVECnEBLg==', verbose_name='default', null=True, editable=False)),
+                ('default', picklefield.fields.PickledObjectField(default=mutant.models.field.NOT_PROVIDED, verbose_name='default', null=True, editable=False)),
                 ('primary_key', models.BooleanField(default=False, verbose_name='primary key')),
                 ('unique', models.BooleanField(default=False, verbose_name='unique')),
                 ('unique_for_date', mutant.db.fields.python.PythonIdentifierField(max_length=255, null=True, verbose_name='unique for date', blank=True)),

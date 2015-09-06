@@ -79,7 +79,7 @@ class FieldDefaultTest(BaseModelDefinitionTestCase):
         Model = self.model_def.model_class()
         self.assertEqual(Model.objects.create().field,
                          module_level_pickable_default.incr)
-        field.default = NOT_PROVIDED
+        field.default = NOT_PROVIDED()
         field.save()
         with self.assertRaises(ValidationError):
             obj = Model()

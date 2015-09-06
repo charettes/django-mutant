@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import signals
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
-from picklefield.fields import dbsafe_encode, PickledObjectField
+from picklefield.fields import PickledObjectField
 from polymodels.models import BasePolymorphicModel
 from polymodels.utils import copy_fields
 
@@ -24,7 +24,8 @@ from .managers import FieldDefinitionChoiceManager, FieldDefinitionManager
 patch_model_option_verbose_name_raw()
 
 
-NOT_PROVIDED = dbsafe_encode(models.NOT_PROVIDED)
+def NOT_PROVIDED():
+    return models.NOT_PROVIDED
 
 
 class FieldDefinitionBase(models.base.ModelBase):
