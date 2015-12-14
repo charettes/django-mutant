@@ -38,6 +38,19 @@ env:
 
 matrix:
   fast_finish: true
+  include:
+    - python: 3.5
+      env: TOXENV=py35-1.9-sqlite
+    - python: 3.5
+      env: TOXENV=py35-1.9-postgresql
+    - python: 3.5
+      env: TOXENV=py35-1.9-postgis
+    - python: 3.5
+      env: TOXENV=py35-master-sqlite
+    - python: 3.5
+      env: TOXENV=py35-master-postgresql
+    - python: 3.5
+      env: TOXENV=py35-master-postgis
   allow_failures:
     - env: TOXENV=py27-master-sqlite
     - env: TOXENV=py27-master-postgresql
@@ -45,6 +58,9 @@ matrix:
     - env: TOXENV=py34-master-sqlite
     - env: TOXENV=py34-master-postgresql
     - env: TOXENV=py34-master-postgis
+    - env: TOXENV=py35-master-sqlite
+    - env: TOXENV=py35-master-postgresql
+    - env: TOXENV=py35-master-postgis
 
 install:
   - pip install tox coveralls
