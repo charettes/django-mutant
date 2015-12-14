@@ -148,7 +148,10 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         to_model_class = to_model_def.model_class()
         # Make sure the origin's model class was created
         self.assertTrue(hasattr(to_model_class, 'froms'))
-        from_model_class = get_related_model(to_model_class.froms.related)
+        try:
+            from_model_class = to_model_class.froms.field.model
+        except AttributeError:
+            from_model_class = get_related_model(to_model_class.froms.related)
         try:
             fk_field = from_model_class._meta.get_field('fk')
         except FieldDoesNotExist:
