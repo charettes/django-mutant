@@ -2,7 +2,11 @@ from __future__ import unicode_literals
 
 import logging
 
-__version__ = VERSION = (0, 1, 3, 'alpha', 0)
+from django.utils.version import get_version
+
+VERSION = (0, 2, 0, 'alpha', 0)
+
+__version__ = get_version(VERSION)
 
 logger = logging.getLogger('mutant')
 
