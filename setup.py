@@ -27,7 +27,7 @@ for requirement in (l.strip() for l in open(os.path.join(MODULE_PATH, 'requireme
 
 setup(
     name='django-mutant',
-    version='.'.join(str(v) for v in __version__),
+    version=__version__,
     description='Dynamic model definition and alteration (evolving schemas)',
     long_description=open(os.path.join(MODULE_PATH, 'README.rst')).read(),
     url='https://github.com/charettes/django-mutant',
