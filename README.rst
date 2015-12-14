@@ -46,6 +46,22 @@ your ``INSTALLED_APPS``
 
     INSTALLED_APPS += ('django.contrib.contenttypes', 'mutant')
 
+
+**********************************************
+Migrating to django-mutant 0.2 and Django 1.7+
+**********************************************
+
+If you used ``mutant`` with Django < 1.7 and are willing to migrate forward
+you'll have to run the following steps in order to make sure you database
+schema is synchronized with Django's migration state.
+
+1. Fake the initial ``mutant`` migration.
+2. For every ``mutant.contrib`` application you installed make sure to fake
+   their initial migration and run their following migration. For example,
+   if you had the ``mutant.contrib.boolean`` application installed you want to
+   run ``manage.py migrate boolean --fake 0001 && manage.py migrate boolean``
+
+
 **********
 Resources
 **********
