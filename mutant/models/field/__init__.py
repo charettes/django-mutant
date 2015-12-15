@@ -45,15 +45,6 @@ class FieldDefinitionBase(models.base.ModelBase):
     def __new__(cls, name, parents, attrs):
         super_new = super(FieldDefinitionBase, cls).__new__
 
-        # TODO: Remove when support for Django 1.6 is dropped.
-        # Deal with the intermediary class created by six.with_metaclass.
-        if name == 'NewBase' and not attrs:
-            attrs = {
-                '__module__': __name__,
-                'Meta': type(str('Meta'), (), {'abstract': True}),
-            }
-            return super_new(cls, name, parents, attrs)
-
         if 'Meta' in attrs:
             Meta = attrs['Meta']
 
