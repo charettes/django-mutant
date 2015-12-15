@@ -15,12 +15,13 @@ from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
 from ... import logger
+from ...compat import get_fields
 from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
-from ...utils import get_db_table, get_fields, remove_from_app_cache
+from ...utils import get_db_table, remove_from_app_cache
 from ..ordered import OrderedModel
 from .managers import ModelDefinitionManager
 
