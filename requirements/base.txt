@@ -1,2 +1,0 @@
-django-picklefield>=0.3.2
-django-polymodels>=1.4

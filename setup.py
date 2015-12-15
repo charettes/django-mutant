@@ -1,29 +1,10 @@
 #!/usr/bin/env python
 import os
-import re
 from setuptools import find_packages, setup
 
 from mutant import __version__
 
-
 MODULE_PATH = os.path.abspath(os.path.dirname(__file__))
-
-LINK_REQUIREMENT = re.compile(
-    r'^https://.+#egg=(?P<package>.+)-(?P<version>\d(?:\.\d)*)$'
-)
-
-
-install_requires = ['django>=1.7']
-dependency_links = []
-
-for requirement in (l.strip() for l in open(os.path.join(MODULE_PATH, 'requirements/base.txt'))):
-    match = LINK_REQUIREMENT.match(requirement)
-    if match:
-        install_requires.append("%(package)s==%(version)s" % match.groupdict())
-        dependency_links.append(match.group())
-    else:
-        install_requires.append(requirement)
-
 
 setup(
     name='django-mutant',
@@ -33,8 +14,11 @@ setup(
     url='https://github.com/charettes/django-mutant',
     author='Simon Charette',
     author_email='charette.s@gmail.com',
-    install_requires=install_requires,
-    dependency_links=dependency_links,
+    install_requires=[
+        'django>=1.7',
+        'django-picklefield>=0.3.2',
+        'django-polymodels>=1.4',
+    ],
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
     license='MIT License',

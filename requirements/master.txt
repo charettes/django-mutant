@@ -1,2 +1,0 @@
--r base.txt
-https://github.com/django/django/archive/master.tar.gz

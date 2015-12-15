@@ -1,2 +1,0 @@
--r base.txt
-django>=1.9,<1.10

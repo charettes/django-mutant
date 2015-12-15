@@ -1,2 +1,0 @@
--r master.txt
-psycopg2
