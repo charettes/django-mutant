@@ -6,6 +6,7 @@ from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 from django.utils import six
 
+from ...compat import get_remote_field
 from ...models import ModelDefinition
 
 
@@ -27,10 +28,11 @@ class ModelClassAttributeDescriptor(object):
                                        "'%s'" % (opts.app_label, opts.object_name,
                                                  self.name, self.model_def_name))
         else:
+            remote_field = get_remote_field(field)
             if (not isinstance(field, fields.related.ForeignKey) or
-                    (isinstance(field.rel.to, six.string_types) and
-                        field.rel.to.lower() != 'mutant.modeldefinition') or
-                    not issubclass(field.rel.to, ModelDefinition)):
+                    (isinstance(remote_field.to, six.string_types) and
+                        remote_field.to.lower() != 'mutant.modeldefinition') or
+                    not issubclass(remote_field.to, ModelDefinition)):
                 raise ImproperlyConfigured("%s.%s.%s must refer to a ForeignKey "
                                            "to `ModelDefinition`"
                                            % (opts.app_label, opts.object_name,

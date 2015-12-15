@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from contextlib import contextmanager
 from copy import deepcopy
-from itertools import groupby
+from itertools import chain, groupby
 from operator import itemgetter
 
 from django.apps import AppConfig, apps
@@ -12,7 +12,9 @@ from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 
-from .compat import clear_opts_related_cache, get_fields, get_rel_accessor_name
+from .compat import (
+    clear_opts_related_cache, get_rel_accessor_name, get_remote_field,
+)
 
 
 def allow_migrate(model):
@@ -85,14 +87,21 @@ def remove_from_app_cache(model_class, quiet=False):
     return model_class
 
 
+def get_foward_fields(opts):
+    return chain(
+        opts.fields,
+        opts.many_to_many
+    )
+
+
 def unreference_model(model):
-    for field in get_fields(model._meta):
-        rel = getattr(field, 'rel', None)
-        if field.model is model and rel:
-            to = rel.to
+    for field in get_foward_fields(model._meta):
+        remote_field = get_remote_field(field)
+        if field.model is model and remote_field:
+            to = remote_field.to
             if isinstance(to, models.base.ModelBase):
                 clear_opts_related_cache(to)
-                rel_is_hidden = rel.is_hidden()
+                rel_is_hidden = remote_field.is_hidden()
                 # An accessor is added to related classes if they are not
                 # hidden. However o2o fields *always* add an accessor
                 # even if the relationship is hidden.

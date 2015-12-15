@@ -6,6 +6,7 @@ from django.db.models import deletion, fields
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
+from ...compat import get_remote_field
 from ...db.fields import PythonIdentifierField
 from ...db.models import MutableModel
 from ...models import FieldDefinition, FieldDefinitionManager, ModelDefinition
@@ -256,7 +257,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
             through_class = self.through.model_class()
             from_model = self.model_def.cached_model
             for field in through_class._meta.fields:
-                rel_to = getattr(field.rel, 'to', None)
+                rel_to = getattr(get_remote_field(field), 'to', None)
                 if rel_to == from_model:
                     seen_from += 1
                 elif rel_to == to_model:

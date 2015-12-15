@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from itertools import chain
 from operator import attrgetter
 
 import django
@@ -9,11 +8,8 @@ get_related_model = attrgetter('related_model' if django.VERSION >= (1, 8) else 
 
 
 if django.VERSION >= (1, 8):
-    def get_fields(opts):
-        return opts.get_fields()
-
     def get_rel_accessor_name(field):
-        return field.rel.get_accessor_name()
+        return get_remote_field(field).get_accessor_name()
 
     def get_related_objects(opts):
         return opts._get_fields(forward=False, reverse=True, include_hidden=True)
@@ -28,12 +24,6 @@ if django.VERSION >= (1, 8):
         for child in children:
             clear_opts_related_cache(child)
 else:
-    def get_fields(opts):
-        return chain(
-            opts.fields,
-            opts.many_to_many
-        )
-
     def get_rel_accessor_name(field):
         return field.related.get_accessor_name()
 
@@ -64,3 +54,5 @@ else:
                 pass
         for child in children:
             clear_opts_related_cache(child)
+
+get_remote_field = attrgetter('remote_field' if django.VERSION >= (1, 9) else 'rel')

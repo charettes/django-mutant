@@ -8,6 +8,7 @@ from django.db import connections, models, transaction
 from django.db.migrations.state import ModelState
 from django.db.models.fields import FieldDoesNotExist
 
+from ..compat import get_remote_field
 from ..state import handler as state_handler
 from ..utils import allow_migrate, popattr, remove_from_app_cache
 
@@ -51,10 +52,11 @@ def model_definition_post_save(sender, instance, created, **kwargs):
             pass
         else:
             for column, field in extra_fields:
+                remote_field = get_remote_field(field)
                 if field.primary_key:
                     assert isinstance(primary_key, models.AutoField)
                     primary_key = field
-                elif (field.rel and field.rel.parent_link and
+                elif (remote_field and remote_field.parent_link and
                       isinstance(primary_key, models.AutoField)):
                     field.primary_key = True
                     primary_key = field
@@ -115,7 +117,8 @@ def base_definition_post_save(sender, instance, created, raw, **kwargs):
                 auto_pk = isinstance(opts.pk, models.AutoField)
                 for field in declared_fields:
                     field.model = model_class
-                    if auto_pk and field.rel and field.rel.parent_link:
+                    remote_field = get_remote_field(field)
+                    if auto_pk and remote_field and remote_field.parent_link:
                         auto_pk = False
                         field.primary_key = True
                         perform_ddl('alter_field', model_class, opts.pk, field, strict=True)

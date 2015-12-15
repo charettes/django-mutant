@@ -15,13 +15,13 @@ from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
 from ... import logger
-from ...compat import get_fields
+from ...compat import get_remote_field
 from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
 from ...signals import mutable_class_prepared
 from ...state import handler as state_handler
-from ...utils import get_db_table, remove_from_app_cache
+from ...utils import get_db_table, get_foward_fields, remove_from_app_cache
 from ..ordered import OrderedModel
 from .managers import ModelDefinitionManager
 
@@ -388,7 +388,7 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
             if opts.abstract:
                 # Add fields inherited from base's abstract parent and
                 # local fields.
-                for field in get_fields(opts):
+                for field in get_foward_fields(opts):
                     if field.model is self.base or field.model._meta.abstract:
                         clone = field.clone()
                         clone.set_attributes_from_name(field.name)
@@ -433,7 +433,7 @@ class OrderingFieldDefinition(OrderedModelDefinitionAttribute):
                     valid = False
                 else:
                     if isinstance(field, models.ForeignKey):
-                        opts = field.rel.to._meta
+                        opts = get_remote_field(field).to._meta
                     elif len(lookups):  # Cannot go any deeper
                         valid = False
                 finally:
