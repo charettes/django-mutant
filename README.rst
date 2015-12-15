@@ -4,11 +4,11 @@ django-mutant
 
 Dynamic model definition and alteration (evolving schemas).
 
-.. image:: https://travis-ci.org/charettes/django-mutant.png?branch=master
-    :target: http://travis-ci.org/charettes/django-mutant
+.. image:: https://travis-ci.org/charettes/django-mutant.svg?branch=master
+    :target: https://travis-ci.org/charettes/django-mutant
 
-.. image:: https://coveralls.io/repos/charettes/django-mutant/badge.png?branch=master
-   :target: https://coveralls.io/r/charettes/django-mutant
+.. image:: https://coveralls.io/repos/charettes/django-mutant/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/charettes/django-mutant?branch=master
 
 ********
 Overview
