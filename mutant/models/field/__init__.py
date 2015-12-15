@@ -313,10 +313,9 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
             if field.name == self._saved_name:
                 return field
 
-    def _south_ready_field_instance(self):
+    def construct_for_migrate(self):
         """
-        South api sometimes needs to have modified version of fields to work.
-        i. e. You can't pass a ForeignKey(to='self') to add_column
+        Provide a suitable field to be used in migrations.
         """
         return self.construct()
 

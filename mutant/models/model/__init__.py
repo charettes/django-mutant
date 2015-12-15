@@ -174,7 +174,7 @@ class ModelDefinition(ContentType):
             delayed_save.append(base)
         for field in fields:
             assert field.pk is None, 'Cannot associate already existing FieldDefinition'
-            field_instance = field._south_ready_field_instance()
+            field_instance = field.construct_for_migrate()
             extra_fields.append(
                 (field_instance.get_attname_column()[1], field_instance)
             )

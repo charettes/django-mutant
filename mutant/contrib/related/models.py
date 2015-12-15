@@ -92,11 +92,8 @@ class RelatedFieldDefinition(FieldDefinition):
             )
         return options
 
-    def _south_ready_field_instance(self):
-        """
-        South add_column choke when passing 'self' or 'app.Model' to `to` kwarg,
-        so we have to create a special version for it.
-        """
+    def construct_for_migrate(self):
+        # Migrations require a resolved reference.
         return self.construct(to=self.to.model_class())
 
     def save(self, *args, **kwargs):

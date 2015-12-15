@@ -195,7 +195,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     see comment in FieldDefinitionBase for more details
     """
     model_class = instance.model_def.model_class()
-    field = instance._south_ready_field_instance()
+    field = instance.construct_for_migrate()
     field.model = model_class
     if created:
         if hasattr(instance._state, '_creation_default_value'):
