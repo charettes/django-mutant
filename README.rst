@@ -14,7 +14,7 @@ Dynamic model definition and alteration (evolving schemas).
 Overview
 ********
 
-`Django`_ provides a great ORM and with the power of `South`_ one can easily perform schema alteration.
+`Django`_ provides a great ORM and with the power of `migrations`_ one can easily perform schema alteration.
 
 However, some projects may require *runtime* schema alteration and that's what `django-mutant`_ ought to provide.
 
@@ -24,7 +24,7 @@ The main concept was inspired by those projects:
 - And by `django-dynamo`_.
 
 .. _`Django`: https://www.djangoproject.com/
-.. _`South`: http://south.aeracode.org/
+.. _`migrations`: https://docs.djangoproject.com/en/stable/topics/migrations/
 .. _`django-mutant`: https://github.com/charettes/django-mutant
 .. _`dynamic-models`: https://github.com/willhardy/dynamic-models
 .. _`documentation`: http://dynamic-models.readthedocs.org/en/latest/index.html
@@ -71,12 +71,6 @@ Resources
 .. _DjangoCon Europe 2013 talk: https://www.youtube.com/watch?v=67wcGdk4aCc
 .. _A getting started guide: http://integricho.github.io/2013/07/22/mutant-introduction/
 
-************************
-Direction of the project
-************************
-`django-mutant`_ is actually using `South`_ under the hood to provide schema migrations. Since the `schema editor code is being merged`_ into the main `Django`_ code base the next major version of mutant will rely on it instead thus dropping the external dependency on `South`.
-
-.. _`schema editor code is being merged`: http://www.kickstarter.com/projects/andrewgodwin/schema-migrations-for-django
 
 ***************************
 Get in touch and contribute
