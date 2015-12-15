@@ -15,10 +15,13 @@ from polymodels.utils import copy_fields
 from ...db.fields import (
     FieldDefinitionTypeField, LazilyTranslatedField, PythonIdentifierField,
 )
+from ...hacks import patch_model_option_verbose_name_raw
 from ...utils import lazy_string_format, popattr
 from ..model import ModelDefinitionAttribute
 from ..ordered import OrderedModel
 from .managers import FieldDefinitionChoiceManager, FieldDefinitionManager
+
+patch_model_option_verbose_name_raw()
 
 
 def NOT_PROVIDED():
