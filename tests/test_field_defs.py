@@ -35,24 +35,14 @@ class FieldDefinitionDeclarationTest(SimpleTestCase):
         subclass that override the `delete` method.
         """
         test_apps = Apps()
-        with self.assertRaises(TypeError):
-            with warnings.catch_warnings(record=True) as catched_warnings:
-                class CustomFieldDefinition(FieldDefinition):
-                    class Meta:
-                        apps = test_apps
-                        app_label = 'mutant'
+        with warnings.catch_warnings(record=True) as catched_warnings:
+            class CustomFieldDefinition(FieldDefinition):
+                class Meta:
+                    apps = test_apps
+                    app_label = 'mutant'
 
-                    def delete(self, *args, **kwargs):
-                        pass
-
-                class CustomFieldDefinitionProxy(CustomFieldDefinition):
-                    class Meta:
-                        apps = test_apps
-                        app_label = 'mutant'
-                        proxy = True
-
-                    def delete(self, *args, **kwargs):
-                        pass
+                def delete(self, *args, **kwargs):
+                    pass
 
         self.assertIn('Avoid overriding the `delete` method on '
                       '`FieldDefinition` subclass `CustomFieldDefinition`',

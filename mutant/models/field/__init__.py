@@ -78,7 +78,6 @@ class FieldDefinitionBase(models.base.ModelBase):
             has_verbose_name_plural = False
 
         definition = super_new(cls, name, parents, attrs)
-        opts = definition._meta
 
         # Store the FieldDefinition cls
         if cls._base_definition is None:
@@ -113,22 +112,6 @@ class FieldDefinitionBase(models.base.ModelBase):
             # overriding the delete methods since it might not be called
             # when deleting the associated model definition.
             if definition.delete != base_definition.delete:
-                concrete_model = opts.concrete_model
-                if (opts.proxy and
-                        concrete_model.delete != base_definition.delete):
-                    # Because of the workaround for django #18083 in
-                    # FieldDefinition, overriding the `delete` method on a proxy
-                    # of a concrete FieldDefinition that also override the
-                    # delete method might call some deletion code twice.
-                    # Until #18083 is fixed and the workaround is removed we
-                    # raise a `TypeError` to prevent this from happening.
-                    msg = ("Proxy model deletion is partially broken until "
-                           "django #18083 is fixed. To work around this issue, "
-                           "mutant make sure to call the concrete `FieldDefinition`"
-                           "you are proxying, in this case `%(concrete_cls)s`. "
-                           "However, this can trigger a double execution of "
-                           "`%(concrete_cls)s.delete`, thus it is prohibited.")
-                    raise TypeError(msg % {'concrete_cls': concrete_model.__name__})
                 def_name = definition.__name__
                 warnings.warn("Avoid overriding the `delete` method on "
                               "`FieldDefinition` subclass `%s` since it won't "
