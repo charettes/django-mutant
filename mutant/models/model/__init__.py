@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
 from ... import logger
-from ...compat import get_remote_field
+from ...compat import get_remote_field_model
 from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
@@ -433,7 +433,7 @@ class OrderingFieldDefinition(OrderedModelDefinitionAttribute):
                     valid = False
                 else:
                     if isinstance(field, models.ForeignKey):
-                        opts = get_remote_field(field).to._meta
+                        opts = get_remote_field_model(field)._meta
                     elif len(lookups):  # Cannot go any deeper
                         valid = False
                 finally:

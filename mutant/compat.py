@@ -56,3 +56,11 @@ else:
             clear_opts_related_cache(child)
 
 get_remote_field = attrgetter('remote_field' if django.VERSION >= (1, 9) else 'rel')
+
+
+if django.VERSION >= (1, 9):
+    def get_remote_field_model(field):
+        return field.remote_field.model
+else:
+    def get_remote_field_model(field):
+        return field.rel.to

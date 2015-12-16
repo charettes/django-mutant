@@ -10,7 +10,7 @@ from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.compat import (
-    get_related_model, get_reverse_fields, get_remote_field,
+    get_related_model, get_remote_field_model, get_reverse_fields,
 )
 from mutant.contrib.related.models import (
     ForeignKeyDefinition, ManyToManyFieldDefinition,
@@ -131,7 +131,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         )
         self.assertTrue(fk.is_recursive_relationship)
         Model = self.model_def.model_class()
-        self.assertEqual(get_remote_field(Model._meta.get_field('f1')).to, Model)
+        self.assertEqual(get_remote_field_model(Model._meta.get_field('f1')), Model)
         obj1 = Model.objects.create()
         obj2 = Model.objects.create(f1=obj1)
         obj1.f1 = obj2
@@ -158,7 +158,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         except FieldDoesNotExist:
             self.fail('The fk field should be created')
         to_model_class = to_model_def.model_class()
-        self.assertEqual(get_remote_field(fk_field).to, to_model_class)
+        self.assertEqual(get_remote_field_model(fk_field), to_model_class)
         to_instance = to_model_class.objects.create()
         from_instance = from_model_class.objects.create(fk=to_instance)
         self.assertEqual(to_instance.froms.get(), from_instance)

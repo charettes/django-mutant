@@ -14,6 +14,7 @@ from django.utils.functional import lazy
 
 from .compat import (
     clear_opts_related_cache, get_remote_field, get_remote_field_accessor_name,
+    get_remote_field_model,
 )
 
 
@@ -98,9 +99,9 @@ def unreference_model(model):
     for field in get_foward_fields(model._meta):
         remote_field = get_remote_field(field)
         if field.model is model and remote_field:
-            to = remote_field.to
-            if isinstance(to, models.base.ModelBase):
-                clear_opts_related_cache(to)
+            remote_field_model = get_remote_field_model(field)
+            if isinstance(remote_field_model, models.base.ModelBase):
+                clear_opts_related_cache(remote_field_model)
                 rel_is_hidden = remote_field.is_hidden()
                 # An accessor is added to related classes if they are not
                 # hidden. However o2o fields *always* add an accessor
@@ -108,7 +109,7 @@ def unreference_model(model):
                 o2o = isinstance(field, models.OneToOneField)
                 if not rel_is_hidden or o2o:
                     try:
-                        delattr(to, get_remote_field_accessor_name(field))
+                        delattr(remote_field_model, get_remote_field_accessor_name(field))
                     except AttributeError:
                         # Hidden related names are not respected for o2o
                         # thus a tenant models with a o2o pointing to
