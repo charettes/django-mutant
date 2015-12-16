@@ -10,7 +10,7 @@ from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.compat import (
-    get_related_model, get_related_objects, get_remote_field,
+    get_related_model, get_reverse_fields, get_remote_field,
 )
 from mutant.contrib.related.models import (
     ForeignKeyDefinition, ManyToManyFieldDefinition,
@@ -57,14 +57,14 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         return value.pk
 
     def test_field_deletion(self):
-        def is_related_object_of_ct(model_class):
-            related_objects = get_related_objects(ContentType._meta)
+        def has_reverse_field_on_ct(model_class):
+            reverse_fields = get_reverse_fields(ContentType._meta)
             return any(
-                get_related_model(related_object) == model_class for related_object in related_objects
+                get_related_model(reverse_field) == model_class for reverse_field in reverse_fields
             )
-        self.assertTrue(is_related_object_of_ct(self.model_def.model_class()))
+        self.assertTrue(has_reverse_field_on_ct(self.model_def.model_class()))
         super(ForeignKeyDefinitionTest, self).test_field_deletion()
-        self.assertFalse(is_related_object_of_ct(self.model_def.model_class()))
+        self.assertFalse(has_reverse_field_on_ct(self.model_def.model_class()))
 
     def test_foreign_key_between_mutable_models(self):
         first_model_def = self.model_def

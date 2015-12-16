@@ -13,7 +13,7 @@ from django.utils.encoding import force_text
 from django.utils.functional import lazy
 
 from .compat import (
-    clear_opts_related_cache, get_rel_accessor_name, get_remote_field,
+    clear_opts_related_cache, get_remote_field, get_remote_field_accessor_name,
 )
 
 
@@ -108,7 +108,7 @@ def unreference_model(model):
                 o2o = isinstance(field, models.OneToOneField)
                 if not rel_is_hidden or o2o:
                     try:
-                        delattr(to, get_rel_accessor_name(field))
+                        delattr(to, get_remote_field_accessor_name(field))
                     except AttributeError:
                         # Hidden related names are not respected for o2o
                         # thus a tenant models with a o2o pointing to

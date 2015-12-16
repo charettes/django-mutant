@@ -8,10 +8,10 @@ get_related_model = attrgetter('related_model' if django.VERSION >= (1, 8) else 
 
 
 if django.VERSION >= (1, 8):
-    def get_rel_accessor_name(field):
+    def get_remote_field_accessor_name(field):
         return get_remote_field(field).get_accessor_name()
 
-    def get_related_objects(opts):
+    def get_reverse_fields(opts):
         return opts._get_fields(forward=False, reverse=True, include_hidden=True)
 
     def clear_opts_related_cache(model_class):
@@ -24,10 +24,10 @@ if django.VERSION >= (1, 8):
         for child in children:
             clear_opts_related_cache(child)
 else:
-    def get_rel_accessor_name(field):
+    def get_remote_field_accessor_name(field):
         return field.related.get_accessor_name()
 
-    def get_related_objects(opts):
+    def get_reverse_fields(opts):
         return opts.get_all_related_objects(include_hidden=True)
 
     _opts_related_cache_attrs = [
