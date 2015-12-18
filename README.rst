@@ -16,7 +16,7 @@ Overview
 
 `Django`_ provides a great ORM and with the power of `migrations`_ one can easily perform schema alteration.
 
-However, some projects may require *runtime* schema alteration and that's what `django-mutant`_ ought to provide.
+However, some projects may require *runtime* schema alteration and that's what `django-mutant`_ provides.
 
 The main concept was inspired by those projects:
 
