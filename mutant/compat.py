@@ -18,7 +18,7 @@ if django.VERSION >= (1, 8):
         opts = model_class._meta
         children = [
             related_object.related_model
-            for related_object in opts.related_objects if related_object.parent_link
+            for related_object in opts.__dict__.get('related_objects', []) if related_object.parent_link
         ]
         opts._expire_cache()
         for child in children:
