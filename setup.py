@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'django>=1.7',
         'django-picklefield>=0.3.2',
-        'django-polymodels>=1.4',
+        'django-polymodels>=1.4.1',
     ],
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
