@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from contextlib import contextmanager
 from operator import attrgetter
 
 import django
@@ -23,6 +24,8 @@ if django.VERSION >= (1, 8):
         opts._expire_cache()
         for child in children:
             clear_opts_related_cache(child)
+
+    from django.db.migrations.state import StateApps
 else:
     def get_remote_field_accessor_name(field):
         return field.related.get_accessor_name()
@@ -55,12 +58,61 @@ else:
         for child in children:
             clear_opts_related_cache(child)
 
+    from django.apps.registry import Apps
+    from django.db.migrations.state import InvalidBasesError
+
+    class StateApps(Apps):
+        def __init__(self, *args, **kwargs):
+            super(StateApps, self).__init__([])
+
+        @contextmanager
+        def bulk_update(self):
+            # Avoid clearing each model's cache for each change. Instead, clear
+            # all caches when we're finished updating the model instances.
+            ready = self.ready
+            self.ready = False
+            try:
+                yield
+            finally:
+                self.ready = ready
+                self.clear_cache()
+
+        def render_multiple(self, model_states):
+            # We keep trying to render the models in a loop, ignoring invalid
+            # base errors, until the size of the unrendered models doesn't
+            # decrease by at least one, meaning there's a base dependency loop/
+            # missing base.
+            if not model_states:
+                return
+            # Prevent that all model caches are expired for each render.
+            with self.bulk_update():
+                unrendered_models = model_states
+                while unrendered_models:
+                    new_unrendered_models = []
+                    for model in unrendered_models:
+                        try:
+                            model.render(self)
+                        except InvalidBasesError:
+                            new_unrendered_models.append(model)
+                    if len(new_unrendered_models) == len(unrendered_models):
+                        raise InvalidBasesError(
+                            "Cannot resolve bases for %r\nThis can happen if you are inheriting models from an "
+                            "app with migrations (e.g. contrib.auth)\n in an app with no migrations; see "
+                            "https://docs.djangoproject.com/en/%s/topics/migrations/#dependencies "
+                            "for more" % (new_unrendered_models, '1.7')
+                        )
+                    unrendered_models = new_unrendered_models
+
 get_remote_field = attrgetter('remote_field' if django.VERSION >= (1, 9) else 'rel')
 
 
 if django.VERSION >= (1, 9):
     def get_remote_field_model(field):
-        return field.remote_field.model
+        model = getattr(field, 'model', None)
+        if model:
+            return field.remote_field.model
+        else:
+            return field.related_model
 else:
     def get_remote_field_model(field):
-        return field.rel.to
+        return getattr(getattr(field, 'rel', None), 'to', None)

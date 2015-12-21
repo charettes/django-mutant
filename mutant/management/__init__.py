@@ -2,10 +2,8 @@ from __future__ import unicode_literals
 
 from functools import wraps
 
-from django.apps.registry import Apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import connections, models, transaction
-from django.db.migrations.state import ModelState
 from django.db.models.fields import FieldDoesNotExist
 
 from ..compat import get_remote_field
@@ -106,10 +104,7 @@ def model_definition_post_delete(sender, instance, **kwargs):
 def base_definition_post_save(sender, instance, created, raw, **kwargs):
     declared_fields = instance.get_declared_fields()
     if declared_fields:
-        # Make sure to flatten abstract bases since Django
-        # migrations can't deal with them.
-        state = ModelState.from_model(instance.model_def.model_class())
-        model_class = state.render(Apps())
+        model_class = instance.model_def.model_class().render_state()
         opts = model_class._meta
         if created:
             add_columns = popattr(instance._state, '_add_columns', True)
@@ -147,7 +142,7 @@ def base_definition_pre_delete(sender, instance, **kwargs):
         return
     if (instance.base and issubclass(instance.base, models.Model) and
             instance.base._meta.abstract):
-        instance._state._deletion = instance.model_def.model_class()
+        instance._state._deletion = instance.model_def.model_class().render_state()
 
 
 def base_definition_post_delete(sender, instance, **kwargs):
@@ -157,8 +152,7 @@ def base_definition_post_delete(sender, instance, **kwargs):
     if hasattr(instance._state, '_deletion'):
         # Make sure to flatten abstract bases since Django
         # migrations can't deal with them.
-        state = ModelState.from_model(popattr(instance._state, '_deletion'))
-        model = state.render(Apps())
+        model = popattr(instance._state, '_deletion')
         for field in instance.base._meta.fields:
             perform_ddl('remove_field', model, field)
 
@@ -197,7 +191,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
     This signal is connected by all FieldDefinition subclasses
     see comment in FieldDefinitionBase for more details
     """
-    model_class = instance.model_def.model_class()
+    model_class = instance.model_def.model_class().render_state()
     field = instance.construct_for_migrate()
     field.model = model_class
     if created:
@@ -210,7 +204,7 @@ def field_definition_post_save(sender, instance, created, raw, **kwargs):
             # If the field definition is raw we must re-create the model class
             # since ModelDefinitionAttribute.save won't be called
             if raw:
-                model_class.mark_as_obsolete()
+                instance.model_def.model_class().mark_as_obsolete()
     else:
         old_field = instance._state._pre_save_field
         delattr(instance._state, '_pre_save_field')
