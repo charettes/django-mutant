@@ -18,7 +18,7 @@ def _update_field_def_cts_app_label(from_app_label, to_app_label, apps, schema_e
         'smallintegerfielddefinition',
     ]
     cts.filter(
-        app_label=from_app_label, model=model_names
+        app_label=from_app_label, model__in=model_names
     ).update(app_label=to_app_label)
 
 
