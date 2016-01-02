@@ -280,7 +280,12 @@ class ModelDefinition(ContentType):
             remove_from_app_cache(existing_model_class)
             existing_model_class.mark_as_obsolete()
 
-        model_class = state.render(apps)
+        try:
+            model_class = state.render(apps)
+        except RuntimeError:
+            # Account for race conditions between the removal from the apps
+            # and the rendering of the new state.
+            return apps.get_model(state.app_label, state.name)
         model_class._checksum = checksum
         for attr, value in attrs.items():
             setattr(model_class, attr, value)

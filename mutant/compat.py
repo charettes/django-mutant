@@ -45,11 +45,14 @@ else:
         Clear the specified model and its children opts related cache.
         """
         opts = model_class._meta
-        children = [
-            related_object.model
-            for related_object in opts.get_all_related_objects()
-            if related_object.field.rel.parent_link
-        ]
+        if hasattr(opts, '_related_objects_cache'):
+            children = [
+                related_object.model
+                for related_object in opts.get_all_related_objects()
+                if related_object.field.rel.parent_link
+            ]
+        else:
+            children = []
         for attr in _opts_related_cache_attrs:
             try:
                 delattr(opts, attr)
@@ -76,6 +79,11 @@ else:
             finally:
                 self.ready = ready
                 self.clear_cache()
+
+        def get_model(self, app_label, model_name=None):
+            if model_name is None:
+                app_label, model_name = app_label.split('.')
+            return self.all_models[app_label][model_name]
 
         def render_multiple(self, model_states):
             # We keep trying to render the models in a loop, ignoring invalid

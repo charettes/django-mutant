@@ -40,7 +40,6 @@ class MutableModel(models.Model):
 
     @classmethod
     def render_state(cls):
-        apps = StateApps([], {})
         state = cls.get_model_state()
         model_states = {(state.app_label, state.name): state}
         for _name, field in state.fields:
@@ -56,6 +55,7 @@ class MutableModel(models.Model):
                             cls._meta.apps.get_model(base), exclude_rels=True
                         )
                         model_states[base_model_state.app_label, base_model_state.name] = base_model_state
+        apps = StateApps([], {})
         apps.render_multiple(model_states.values())
         return apps.all_models[state.app_label][state.name.lower()]
 
