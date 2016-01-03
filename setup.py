@@ -20,7 +20,9 @@ setup(
         'django-polymodels>=1.4.1',
     ],
     packages=find_packages(exclude=['tests', 'tests.*']),
-    include_package_data=True,
+    package_data={
+        '': ['locale/*/LC_MESSAGES/*'],
+    },
     license='MIT License',
     classifiers=[
         'Development Status :: 4 - Beta',
