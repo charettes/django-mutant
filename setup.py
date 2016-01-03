@@ -19,7 +19,7 @@ setup(
         'django-picklefield>=0.3.2',
         'django-polymodels>=1.4.1',
     ],
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     license='MIT License',
     classifiers=[
