@@ -35,28 +35,37 @@ class MutableModel(models.Model):
         )
 
     @classmethod
-    def get_model_state(cls):
-        return ModelState.from_model(cls)
+    def get_model_state(cls, **kwargs):
+        return ModelState.from_model(cls, **kwargs)
+
+    @classmethod
+    def get_related_model_states(cls, model_state):
+        model_states = {}
+        for _name, field in model_state.fields:
+            related_model_reference = get_remote_field_model(field)
+            if related_model_reference:
+                related_model = cls._meta.apps.get_model(related_model_reference)
+                if issubclass(related_model, MutableModel):
+                    related_model_state = related_model.get_model_state(exclude_rels=True)
+                else:
+                    related_model_state = ModelState.from_model(related_model, exclude_rels=True)
+                model_states[related_model_state.app_label, related_model_state.name] = related_model_state
+                for base in related_model_state.bases:
+                    if isinstance(base, string_types):
+                        base_model = cls._meta.apps.get_model(base)
+                        if issubclass(base_model, MutableModel):
+                            base_model_state = base_model.get_model_state(exclude_rels=True)
+                        else:
+                            base_model_state = ModelState.from_model(base_model, exclude_rels=True)
+                        model_states[base_model_state.app_label, base_model_state.name] = base_model_state
+        return list(model_states.values())
 
     @classmethod
     def render_state(cls):
         state = cls.get_model_state()
-        model_states = {(state.app_label, state.name): state}
-        for _name, field in state.fields:
-            related_model = get_remote_field_model(field)
-            if related_model:
-                related_model_state = ModelState.from_model(
-                    cls._meta.apps.get_model(related_model), exclude_rels=True
-                )
-                model_states[related_model_state.app_label, related_model_state.name] = related_model_state
-                for base in related_model_state.bases:
-                    if isinstance(base, string_types):
-                        base_model_state = ModelState.from_model(
-                            cls._meta.apps.get_model(base), exclude_rels=True
-                        )
-                        model_states[base_model_state.app_label, base_model_state.name] = base_model_state
+        related_states = cls.get_related_model_states(state)
         apps = StateApps([], {})
-        apps.render_multiple(model_states.values())
+        apps.render_multiple(related_states + [state])
         return apps.all_models[state.app_label][state.name.lower()]
 
     @classmethod
