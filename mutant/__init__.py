@@ -4,7 +4,7 @@ import logging
 
 from django.utils.version import get_version
 
-VERSION = (0, 2, 1, 'final', 0)
+VERSION = (0, 2, 2, 'alpha', 0)
 
 __version__ = get_version(VERSION)
 
