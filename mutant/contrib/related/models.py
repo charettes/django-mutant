@@ -291,7 +291,7 @@ class ManyToManyFieldDefinition(RelatedFieldDefinition):
         return options
 
     def get_bound_field(self):
-        opts = self.model_def.model_class(force_create=True)._meta
+        opts = self.model_def.model_class()._meta
         for field in opts.many_to_many:
-            if getattr(field, self.FIELD_DEFINITION_PK_ATTR, None) == self.pk:
+            if field.name == self._saved_name:
                 return field

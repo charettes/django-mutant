@@ -141,9 +141,6 @@ class FieldDefinitionBase(models.base.ModelBase):
 
 class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicModel,
                                          ModelDefinitionAttribute)):
-
-    FIELD_DEFINITION_PK_ATTR = '_mutant_field_definition_pk'
-
     CONTENT_TYPE_FIELD = 'content_type'
     content_type = FieldDefinitionTypeField()
 
