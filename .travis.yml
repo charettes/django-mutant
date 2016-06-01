@@ -75,7 +75,7 @@ matrix:
     - env: TOXENV=py35-master-postgis
 
 install:
-  - pip install tox coveralls
+  - pip install tox coveralls "virtualenv<14.0"
 
 before_script:
   - if echo $TOXENV | grep -E '(-postgresql|-postgis)' -q; then psql -U postgres -c "CREATE DATABASE mutant;"; fi
