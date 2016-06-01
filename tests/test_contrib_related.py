@@ -9,15 +9,13 @@ from django.db.models.deletion import ProtectedError
 from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
-from mutant.compat import (
-    get_related_model, get_remote_field_model, get_reverse_fields,
-)
+from mutant.compat import get_remote_field_model
 from mutant.contrib.related.models import (
     ForeignKeyDefinition, ManyToManyFieldDefinition,
 )
 from mutant.models import ModelDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
-from mutant.utils import app_cache_restorer
+from mutant.utils import app_cache_restorer, get_reverse_fields
 
 from .utils import BaseModelDefinitionTestCase
 
@@ -60,7 +58,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         def has_reverse_field_on_ct(model_class):
             reverse_fields = get_reverse_fields(ContentType._meta)
             return any(
-                get_related_model(reverse_field) == model_class for reverse_field in reverse_fields
+                reverse_field.related_model == model_class for reverse_field in reverse_fields
             )
         self.assertTrue(has_reverse_field_on_ct(self.model_def.model_class()))
         super(ForeignKeyDefinitionTest, self).test_field_deletion()
@@ -152,7 +150,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
         try:
             from_model_class = to_model_class.froms.field.model
         except AttributeError:
-            from_model_class = get_related_model(to_model_class.froms.related)
+            from_model_class = to_model_class.froms.related.related_model
         try:
             fk_field = from_model_class._meta.get_field('fk')
         except FieldDoesNotExist:

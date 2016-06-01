@@ -15,9 +15,9 @@ setup(
     author='Simon Charette',
     author_email='charette.s@gmail.com',
     install_requires=[
-        'django>=1.7',
+        'django>=1.8',
         'django-picklefield>=0.3.2',
-        'django-polymodels>=1.4.1',
+        'django-polymodels>=1.4.4',
     ],
     packages=find_packages(exclude=['tests', 'tests.*']),
     package_data={
@@ -28,7 +28,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 1.7',
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
         'Intended Audience :: Developers',

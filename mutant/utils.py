@@ -12,10 +12,7 @@ from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 
-from .compat import (
-    clear_opts_related_cache, get_remote_field, get_remote_field_accessor_name,
-    get_remote_field_model,
-)
+from .compat import get_remote_field, get_remote_field_model
 
 
 def allow_migrate(model):
@@ -95,6 +92,21 @@ def get_foward_fields(opts):
     )
 
 
+def get_reverse_fields(opts):
+    return opts._get_fields(forward=False, reverse=True, include_hidden=True)
+
+
+def clear_opts_related_cache(model_class):
+    opts = model_class._meta
+    children = [
+        related_object.related_model
+        for related_object in opts.__dict__.get('related_objects', []) if related_object.parent_link
+    ]
+    opts._expire_cache()
+    for child in children:
+        clear_opts_related_cache(child)
+
+
 def unreference_model(model):
     for field in get_foward_fields(model._meta):
         remote_field = get_remote_field(field)
@@ -109,7 +121,7 @@ def unreference_model(model):
                 o2o = isinstance(field, models.OneToOneField)
                 if not rel_is_hidden or o2o:
                     try:
-                        delattr(remote_field_model, get_remote_field_accessor_name(field))
+                        delattr(remote_field_model, get_remote_field(field).get_accessor_name())
                     except AttributeError:
                         # Hidden related names are not respected for o2o
                         # thus a tenant models with a o2o pointing to

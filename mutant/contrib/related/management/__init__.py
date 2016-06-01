@@ -4,9 +4,10 @@ from django.db.models import Q
 from django.db.models.fields.related import RelatedField
 from django.utils.six import string_types
 
-from ....compat import clear_opts_related_cache, get_remote_field_model
+from ....compat import get_remote_field_model
 from ....db.models import MutableModel
 from ....models import ModelDefinition
+from ....utils import clear_opts_related_cache
 
 
 def mutable_model_prepared(signal, sender, definition, existing_model_class,
