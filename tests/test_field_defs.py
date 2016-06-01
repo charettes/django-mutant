@@ -44,9 +44,8 @@ class FieldDefinitionDeclarationTest(SimpleTestCase):
                 def delete(self, *args, **kwargs):
                     pass
 
-        self.assertIn('Avoid overriding the `delete` method on '
-                      '`FieldDefinition` subclass `CustomFieldDefinition`',
-                      catched_warnings[0].message.args[0])
+        msg = 'Avoid overriding the `delete` method on `FieldDefinition` subclass `CustomFieldDefinition`'
+        self.assertTrue(any(msg in warning.message.args[0] for warning in catched_warnings))
 
 
 def module_level_pickable_default():
