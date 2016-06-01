@@ -12,7 +12,7 @@ class OrderedModel(models.Model):
         ordering = ['order']
 
     def get_ordering_queryset(self):
-        return self._default_manager.all()
+        return self.__class__._default_manager.all()
 
     def save(self, *args, **kwargs):
         if self.order is None:
