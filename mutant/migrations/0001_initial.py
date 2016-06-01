@@ -6,6 +6,7 @@ import polymodels.fields
 from django.db import migrations, models
 
 import mutant.db.deletion
+import mutant.db.fields.generic
 import mutant.db.fields.python
 import mutant.db.fields.translation
 import mutant.models.field
@@ -125,10 +126,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fielddefinition',
             name='content_type',
-            field=models.ForeignKey(
-                to='contenttypes.ContentType', on_delete=models.CASCADE,
-                related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition')
-            ),
+            field=mutant.db.fields.generic.FieldDefinitionTypeField(),
             preserve_default=True,
         ),
         migrations.AddField(

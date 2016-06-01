@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import polymodels.fields
 from django.db import migrations, models
+
+from mutant.db.fields.generic import FieldDefinitionTypeField
 
 
 class Migration(migrations.Migration):
@@ -39,10 +40,7 @@ class Migration(migrations.Migration):
             name='FieldDefinitionModel',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('field_type', models.ForeignKey(
-                    to='contenttypes.ContentType', on_delete=models.CASCADE,
-                    related_name='+', default=polymodels.fields.ContentTypeReference('mutant', 'fielddefinition')
-                )),
+                ('field_type', FieldDefinitionTypeField()),
             ],
             options={
             },
