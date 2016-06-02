@@ -1,26 +1,11 @@
 from __future__ import unicode_literals
 
-from threading import local
-
-from django.utils.module_loading import import_string
+from django.apps import apps
 
 
 class HandlerProxy(object):
-    def __init__(self, path):
-        self._handlers = local()
-        self.path = path
-
     def __getattribute__(self, name):
-        get = super(HandlerProxy, self).__getattribute__
-        try:
-            return get(name)
-        except AttributeError:
-            pass
-        handlers = get('_handlers')
-        path = get('path')
-        try:
-            handler = getattr(handlers, path)
-        except AttributeError:
-            handler = import_string(path)()
-            setattr(handlers, path, handler)
+        if not apps.apps_ready:
+            raise AttributeError
+        handler = apps.get_app_config('mutant').state_handler
         return getattr(handler, name)

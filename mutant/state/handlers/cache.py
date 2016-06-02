@@ -6,8 +6,10 @@ from ...settings import STATE_CACHE_ALIAS
 
 
 class CacheStateHandler(object):
-    """State handlers that relies on cache to store and retrieve the current
-    checksum of a definition."""
+    """
+    State handlers that relies on cache to store and retrieve the current
+    checksum of a definition."
+    """
 
     def __init__(self):
         self.cache = caches[STATE_CACHE_ALIAS]

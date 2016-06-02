@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import logging
 from contextlib import contextmanager
 
 from django.db import connections
@@ -90,3 +91,35 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
         table = model._meta.db_table
         for db in allow_migrate(model):
             self.assertColumnDoesntExists(db, table, column)
+
+
+class Recorder(logging.Handler):
+    """Logging handler that stores emitted records."""
+
+    def __init__(self):
+        super(Recorder, self).__init__()
+        self.emitted_records = []
+
+    def emit(self, record):
+        self.emitted_records.append(record)
+
+
+class LoggingTestMixin(object):
+    @contextmanager
+    def handle(self, logger, handler, level=logging.INFO):
+        """Context manager that attach a handler to a logger."""
+        original_level = logger.level
+        logger.setLevel(level)
+        logger.addHandler(handler)
+        try:
+            yield
+        finally:
+            logger.setLevel(original_level)
+            logger.removeHandler(handler)
+
+    @contextmanager
+    def record(self, logger, level=logging.INFO):
+        """Context manager that capture the logger emitted records."""
+        recorder = Recorder()
+        with self.handle(logger, recorder, level):
+            yield recorder.emitted_records

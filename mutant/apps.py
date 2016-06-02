@@ -2,12 +2,17 @@ from __future__ import unicode_literals
 
 from django.apps import AppConfig
 from django.db import models
+from django.utils.module_loading import import_string
+
+from . import settings
 
 
 class MutantConfig(AppConfig):
     name = 'mutant'
 
     def ready(self):
+        self.state_handler = import_string(settings.STATE_HANDLER)()
+
         from . import management
 
         ModelDefinition = self.get_model('ModelDefinition')
