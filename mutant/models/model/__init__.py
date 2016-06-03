@@ -186,7 +186,7 @@ class ModelDefinition(ContentType):
         self._state._create_extra_fields = extra_fields
         self._state._create_delayed_save = delayed_save
         if self.pk:
-            self._model_class = super(ModelDefinition, self).model_class()
+            self._model_class = self.model_class().model
 
     def get_model_bases(self):
         """Build a tuple of bases for the constructed definition"""

@@ -42,32 +42,20 @@ class RelatedFieldDefinition(FieldDefinition):
         """
         Whether or not `to` points to this field's model definition
         """
-        try:
-            model_def = self.model_def
-        except ModelDefinition.DoesNotExist:
-            return False
-        else:
-            return self.to_id == model_def.contenttype_ptr_id
+        return self.to_id == self.model_def_id
 
     @property
     def to_model_class_is_mutable(self):
         to_model_class = self.to.model_class()
         if to_model_class is None:
-            try:
-                getattr(self.to, 'modeldefinition')
-            except ModelDefinition.DoesNotExist:
-                return False
-            else:
-                return True
-        else:
-            return issubclass(to_model_class, MutableModel)
+            return ModelDefinition.objects.filter(pk=self.to_id).exists()
+        return issubclass(to_model_class, MutableModel)
 
     @property
     def to_model_class(self):
         if self.to_model_class_is_mutable:
             return self.to.modeldefinition.model_class()
-        else:
-            return self.to.model_class()
+        return self.to.model_class()
 
     def clean(self):
         if (None not in (self.related_name, self.to_id) and
@@ -81,15 +69,17 @@ class RelatedFieldDefinition(FieldDefinition):
             if self.is_recursive_relationship:
                 options['to'] = fields.related.RECURSIVE_RELATIONSHIP_CONSTANT
             else:
-                model_def = self.to.modeldefinition
-                options['to'] = "%s.%s" % (
-                    model_def.app_label, model_def.object_name
-                )
+                # Avoid creating a ModelDefinition instance as it might
+                # trigger its model class creation.
+                app_label, object_name = ModelDefinition.objects.values_list(
+                    'app_label', 'object_name'
+                ).get(pk=self.to_id)
+                options['to'] = "%s.%s" % (app_label, object_name)
         else:
             opts = self.to._meta
             options.update(
                 to="%s.%s" % (opts.app_label, opts.object_name),
-                related_name='+'
+                related_name='+',
             )
         return options
 
