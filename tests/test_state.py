@@ -125,12 +125,13 @@ class PubsubHandlerTest(MemoryHandlerTest):
 
 @skipUnless(redis, 'This state handler requires redis to be installed.')
 class RedisPubSubHandlerEngineTests(LoggingTestMixin, SimpleTestCase):
-    class TimesoutRedis(pubsub_engines.Redis):
+    class TestRedis(pubsub_engines.Redis):
         initialized = False
+        exception = redis.RedisError
 
         def _run(self):
             self._run = functools.partial(pubsub_engines.Redis._run, self)
-            raise redis.TimeoutError
+            raise self.exception
 
     def test_timeout_reconnects(self):
         messages = []
@@ -141,7 +142,8 @@ class RedisPubSubHandlerEngineTests(LoggingTestMixin, SimpleTestCase):
         def collect_messages(*args):
             messages.append(args)
 
-        engine = self.TimesoutRedis(initialize, collect_messages, channel=str(self))
+        engine = self.TestRedis(initialize, collect_messages, channel=str(self))
+        engine.exception = redis.TimeoutError
         with self.record(pubsub_engines.logger) as records:
             engine.start()
             while not engine.ready:
@@ -150,7 +152,37 @@ class RedisPubSubHandlerEngineTests(LoggingTestMixin, SimpleTestCase):
         self.assertEqual(len(records), 3)
         first_record, second_record, third_record = records
         self.assertEqual(first_record.levelno, logging.WARNING)
-        self.assertEqual(first_record.msg, 'Connection timed out.')
+        self.assertEqual(first_record.msg, 'Unexpected connection timeout.')
+        self.assertEqual(second_record.levelno, logging.INFO)
+        self.assertEqual(second_record.msg, 'Attempting to reconnect.')
+        self.assertEqual(third_record.levelno, logging.INFO)
+        self.assertEqual(third_record.msg, 'Successfully reconnected.')
+        engine.publish('foo', 'bar')
+        while len(messages) == 0:
+            time.sleep(0.1)
+        self.assertEqual(messages, [('foo', 'bar')])
+        engine.stop()
+
+    def test_disconnect_reconnects(self):
+        messages = []
+
+        def initialize():
+            engine.initialized = True
+
+        def collect_messages(*args):
+            messages.append(args)
+
+        engine = self.TestRedis(initialize, collect_messages, channel=str(self))
+        engine.exception = redis.ConnectionError
+        with self.record(pubsub_engines.logger) as records:
+            engine.start()
+            while not engine.ready:
+                time.sleep(0.1)
+        self.assertTrue(engine.initialized)
+        self.assertEqual(len(records), 3)
+        first_record, second_record, third_record = records
+        self.assertEqual(first_record.levelno, logging.WARNING)
+        self.assertEqual(first_record.msg, 'Connection error.')
         self.assertEqual(second_record.levelno, logging.INFO)
         self.assertEqual(second_record.msg, 'Attempting to reconnect.')
         self.assertEqual(third_record.levelno, logging.INFO)

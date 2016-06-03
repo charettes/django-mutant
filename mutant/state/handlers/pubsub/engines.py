@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+import math
 import time
 from threading import Thread
 
@@ -39,6 +40,7 @@ class Redis(BaseEngine):
             retry_on_timeout=False,
             **options
         )
+        self.socket_timeout = socket_timeout
         self.channel = channel
         self.pubsub = self.redis.pubsub()
         self.pubsub.subscribe(self.channel)
@@ -50,30 +52,39 @@ class Redis(BaseEngine):
                 args = json.loads(force_str(event['data']))
                 self.callback(*args)
 
+    def _reconnect(self):
+        connection = self.pubsub.connection
+        if connection:
+            connection.disconnect()
+        while True:
+            logger.info('Attempting to reconnect.')
+            try:
+                connection.connect()
+            except redis.ConnectionError:
+                logger.exception('Failed to reconnect, will re-attempt in 5 seconds.')
+                time.sleep(5)
+            else:
+                logger.info('Successfully reconnected.')
+                break
+
     def run(self):
+        start = time.time()
         try:
             self._run()
         except redis.TimeoutError:
-            logger.warning('Connection timed out.')
-            connection = self.pubsub.connection
-            if connection:
-                connection.disconnect()
-            while True:
-                logger.info('Attempting to reconnect.')
-                try:
-                    connection.connect()
-                except redis.ConnectionError:
-                    logger.exception('Failed to reconnect, will re-attempt in 1 second.')
-                    time.sleep(1)
-                else:
-                    logger.info('Successfully reconnected.')
-                    break
+            if math.ceil(time.time() - start) < self.socket_timeout:
+                logger.warning('Unexpected connection timeout.')
+            self._reconnect()
+            self.run()
+        except redis.ConnectionError:
+            logger.warning('Connection error.')
+            self._reconnect()
             self.run()
 
     def publish(self, *args):
         message = json.dumps(args)
         self.redis.publish(self.channel, message)
 
-    def stop(self, timeout=None):
+    def join(self, timeout=None):
         self.pubsub.unsubscribe(self.channel)
-        super(Redis, self).stop(timeout)
+        super(Redis, self).join(timeout=None)
