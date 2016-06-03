@@ -23,12 +23,13 @@ from .utils import BaseModelDefinitionTestCase
 class RelatedFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _('Related')
 
-    def setUp(self):
-        self.field_definition_init_kwargs = {
+    @classmethod
+    def setUpTestData(cls):
+        cls.field_definition_init_kwargs = {
             'to': ContentType.objects.get_for_model(ContentType),
-            'null': True
+            'null': True,
         }
-        super(RelatedFieldDefinitionTestMixin, self).setUp()
+        super(RelatedFieldDefinitionTestMixin, cls).setUpTestData()
 
     def test_field_clean(self):
         # Refs charettes/django-mutant#5

@@ -18,14 +18,12 @@ from .utils import BaseModelDefinitionTestCase
 class GeometryFieldDefinitionTestMixin(FieldDefinitionTestMixin):
     field_definition_category = _('Geometry')
 
-    @property
-    def field_definition_cls(self):
-        return import_string("mutant.contrib.geo.models.%s" % self.field_definition_cls_name)
-
-    def setUp(self):
-        super(GeometryFieldDefinitionTestMixin, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
+        cls.field_definition_cls = import_string("mutant.contrib.geo.models.%s" % cls.field_definition_cls_name)
+        super(GeometryFieldDefinitionTestMixin, cls).setUpTestData()
         from mutant.contrib.geo.models import GeoModel
-        BaseDefinition.objects.create(model_def=self.model_def, base=GeoModel)
+        BaseDefinition.objects.create(model_def_id=cls.model_def_pk, base=GeoModel)
 
 
 @skipUnless(connection.settings_dict['ENGINE'] == 'django.contrib.gis.db.backends.postgis', 'Requires GIS backend.')

@@ -9,21 +9,15 @@ from django.core.serializers.json import Serializer as JSONSerializer
 from django.utils.encoding import force_bytes
 from django.utils.six import StringIO
 
-from mutant.models import ModelDefinition
-from mutant.test.testcases import ModelDefinitionDDLTestCase
 from mutant.utils import remove_from_app_cache
 
+from .utils import BaseModelDefinitionTestCase
 
-class DataCommandTestCase(ModelDefinitionDDLTestCase):
+
+class DataCommandTestCase(BaseModelDefinitionTestCase):
     def setUp(self):
-        self.model_def = ModelDefinition.objects.create(
-            app_label='mutant', object_name='Model'
-        )
+        super(DataCommandTestCase, self).setUp()
         self.model_cls = self.model_def.model_class()
-
-    def tearDown(self):
-        if self.model_def.pk:
-            self.model_def.delete()
 
 
 class DumpDataTestCase(DataCommandTestCase):

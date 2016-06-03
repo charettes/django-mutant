@@ -18,34 +18,37 @@ def table_columns_iterator(db, table_name):
 
 
 class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
-    def setUp(self):
-        self.model_def = ModelDefinition.objects.create(
-            app_label='mutant',
-            object_name='Model'
-        )
+    @classmethod
+    def setUpTestData(cls):
+        model_def = ModelDefinition.objects.create(app_label='mutant', object_name='Model')
+        cls.model_def_pk = model_def.pk
 
+    def setUp(self):
+        self.model_def = ModelDefinition.objects.get(pk=self.model_def_pk)
+
+    @classmethod
     @contextmanager
-    def assertChecksumChange(self, model_def=None):
-        model_def = model_def or self.model_def
+    def assertChecksumChange(cls, model_def=None):
+        if not model_def:
+            model_def = ModelDefinition.objects.get(pk=cls.model_def_pk)
         checksum = model_def.model_class().checksum()
         yield
-        self.assertNotEqual(
-            model_def.model_class().checksum(), checksum,
-            "Checksum of model %s should have changed." % model_def
-        )
+        if model_def.model_class().checksum() == checksum:
+            raise AssertionError("Checksum of model %s should have changed." % model_def)
 
+    @classmethod
     @contextmanager
-    def assertChecksumDoesntChange(self, model_def=None):
+    def assertChecksumDoesntChange(cls, model_def=None):
+        if not model_def:
+            model_def = ModelDefinition.objects.get(pk=cls.model_def_pk)
         try:
-            with self.assertChecksumChange(model_def):
+            with cls.assertChecksumChange(model_def):
                 yield
         except AssertionError:
             pass
         else:
-            model_class = (model_def or self.model_def).model_class()
-            self.fail(
-                "Checksum of model %s shouldn't have changed." % model_class
-            )
+            model_class = model_def.model_class()
+            raise AssertionError("Checksum of model %s shouldn't have changed." % model_class)
 
     def assertTableExists(self, db, table):
         tables = connections[db].introspection.table_names()
@@ -53,7 +56,9 @@ class BaseModelDefinitionTestCase(ModelDefinitionDDLTestCase):
         self.assertTrue(table in tables, msg % (db, table, tables))
 
     def assertTableDoesntExists(self, db, table):
-        self.assertRaises(AssertionError, self.assertTableExists, db, table)
+        tables = connections[db].introspection.table_names()
+        msg = "Table '%s.%s' exists, existing tables are %s"
+        self.assertFalse(table in tables, msg % (db, table, tables))
 
     def assertModelTablesExist(self, model):
         table = model._meta.db_table

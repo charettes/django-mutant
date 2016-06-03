@@ -41,10 +41,17 @@ class DDLTestCase(TestCase):
         else:
             return super(TestCase, cls).tearDownClass()
 
+    def _should_reload_connections(self):
+        if self._use_transactions():
+            return super(DDLTestCase, self)._should_reload_connections()
+        else:
+            return super(TestCase, self)._should_reload_connections()
+
     def _fixture_setup(self):
         if self._use_transactions():
             return super(DDLTestCase, self)._fixture_setup()
         else:
+            self.setUpTestData()
             return super(TestCase, self)._fixture_setup()
 
     def _fixture_teardown(self):
@@ -70,13 +77,18 @@ class FieldDefinitionTestMixin(object):
     field_definition_init_kwargs = {}
     field_values = ()
 
+    @classmethod
+    def setUpTestData(cls):
+        super(FieldDefinitionTestMixin, cls).setUpTestData()
+        with cls.assertChecksumChange():
+            cls.field_pk = cls.field_definition_cls._default_manager.create(
+                model_def_id=cls.model_def_pk, name='field',
+                **cls.field_definition_init_kwargs
+            ).pk
+
     def setUp(self):
         super(FieldDefinitionTestMixin, self).setUp()
-        with self.assertChecksumChange():
-            self.field = self.field_definition_cls._default_manager.create(
-                model_def=self.model_def, name='field',
-                **self.field_definition_init_kwargs
-            )
+        self.field = self.field_definition_cls._default_manager.get(pk=self.field_pk)
 
     def get_field_value(self, instance, name='field'):
         return getattr(instance, name)

@@ -59,7 +59,7 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_app_label_rename(self):
         db, table_name = self.get_model_db_table_name(self.model_def)
 
-        with self.assertChecksumChange():
+        with self.assertChecksumChange(self.model_def):
             self.model_def.app_label = 'contenttypes'
             self.model_def.save(update_fields=['app_label'])
 
@@ -75,7 +75,7 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
     def test_object_name_rename(self):
         db, table_name = self.get_model_db_table_name(self.model_def)
 
-        with self.assertChecksumChange():
+        with self.assertChecksumChange(self.model_def):
             self.model_def.object_name = 'MyModel'
             self.model_def.save(update_fields=['object_name', 'model'])
 
@@ -422,17 +422,23 @@ class MutableModelProxyTest(BaseModelDefinitionTestCase):
 
 
 class OrderingDefinitionTest(BaseModelDefinitionTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(OrderingDefinitionTest, cls).setUpTestData()
+        with cls.assertChecksumChange():
+            cls.f1_pk = CharFieldDefinition.objects.create(
+                model_def_id=cls.model_def_pk, name='f1', max_length=25
+            ).pk
+        ct_ct = ContentType.objects.get_for_model(ContentType)
+        with cls.assertChecksumChange():
+            cls.f2_pk = ForeignKeyDefinition.objects.create(
+                model_def_id=cls.model_def_pk, null=True, name='f2', to=ct_ct
+            ).pk
+
     def setUp(self):
         super(OrderingDefinitionTest, self).setUp()
-        with self.assertChecksumChange():
-            self.f1 = CharFieldDefinition.objects.create(
-                model_def=self.model_def, name='f1', max_length=25
-            )
-        ct_ct = ContentType.objects.get_for_model(ContentType)
-        with self.assertChecksumChange():
-            self.f2 = ForeignKeyDefinition.objects.create(
-                model_def=self.model_def, null=True, name='f2', to=ct_ct
-            )
+        self.f1 = CharFieldDefinition.objects.get(pk=self.f1_pk)
+        self.f2 = ForeignKeyDefinition.objects.get(pk=self.f2_pk)
 
     def test_clean(self):
         ordering = OrderingFieldDefinition(model_def=self.model_def)
@@ -568,19 +574,26 @@ class OrderingDefinitionTest(BaseModelDefinitionTestCase):
 
 
 class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super(UniqueTogetherDefinitionTest, cls).setUpTestData()
+        with cls.assertChecksumChange():
+            cls.f1_pk = CharFieldDefinition.objects.create(
+                model_def_id=cls.model_def_pk, name='f1', max_length=25
+            ).pk
+        with cls.assertChecksumChange():
+            cls.f2_pk = CharFieldDefinition.objects.create(
+                model_def_id=cls.model_def_pk, name='f2', max_length=25
+            ).pk
+        cls.ut_pk = UniqueTogetherDefinition.objects.create(
+            model_def_id=cls.model_def_pk
+        ).pk
+
     def setUp(self):
         super(UniqueTogetherDefinitionTest, self).setUp()
-        with self.assertChecksumChange():
-            self.f1 = CharFieldDefinition.objects.create(
-                model_def=self.model_def, name='f1', max_length=25
-            )
-        with self.assertChecksumChange():
-            self.f2 = CharFieldDefinition.objects.create(
-                model_def=self.model_def, name='f2', max_length=25
-            )
-        self.ut = UniqueTogetherDefinition.objects.create(
-            model_def=self.model_def
-        )
+        self.f1 = CharFieldDefinition.objects.get(pk=self.f1_pk)
+        self.f2 = CharFieldDefinition.objects.get(pk=self.f2_pk)
+        self.ut = UniqueTogetherDefinition.objects.get(pk=self.ut_pk)
         self.model_class = self.model_def.model_class()
 
     def test_repr(self):
