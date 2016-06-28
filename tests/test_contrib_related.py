@@ -11,9 +11,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from mutant.compat import get_remote_field_model
 from mutant.contrib.related.models import (
-    ForeignKeyDefinition, ManyToManyFieldDefinition,
+    ForeignKeyDefinition, ManyToManyFieldDefinition, OneToOneFieldDefinition,
 )
-from mutant.models import ModelDefinition
+from mutant.models import BaseDefinition, ModelDefinition
 from mutant.test.testcases import FieldDefinitionTestMixin
 from mutant.utils import app_cache_restorer, get_reverse_fields
 
@@ -223,6 +223,29 @@ class ForeignKeyDefinitionOnDeleteTest(BaseModelDefinitionTestCase):
         obj2 = Model.objects.create(f1=obj1)
         obj1.delete()
         self.assertEqual(Model.objects.get(pk=obj2.pk).f1.pk, default)
+
+
+class OneToOneFieldDefinitionTests(BaseModelDefinitionTestCase):
+    def test_parent_link_to_mutable_model(self):
+        first_model_def = self.model_def
+        second_model_def = ModelDefinition.objects.create(
+            app_label='related',
+            object_name='SecondModel',
+            bases=[BaseDefinition(base=first_model_def.model_class())],
+            fields=[
+                OneToOneFieldDefinition(
+                    name='model',
+                    to=first_model_def,
+                    related_name='second',
+                    parent_link=True,
+                ),
+            ],
+        )
+        SecondModel = second_model_def.model_class()
+        second_model_instance = SecondModel.objects.create()
+        first_model_instance = self.model_def.model_class().objects.get()
+        self.assertEqual(second_model_instance.model, first_model_instance)
+        self.assertEqual(first_model_instance.second, second_model_instance)
 
 
 @skip('Incomplete support for many to many field.')

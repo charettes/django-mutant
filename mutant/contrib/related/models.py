@@ -76,7 +76,7 @@ class RelatedFieldDefinition(FieldDefinition):
                 ).get(pk=self.to_id)
                 options['to'] = "%s.%s" % (app_label, object_name)
         else:
-            opts = self.to._meta
+            opts = self.to.model_class()._meta
             options.update(
                 to="%s.%s" % (opts.app_label, opts.object_name),
                 related_name='+',
@@ -185,12 +185,14 @@ class ForeignKeyDefinition(RelatedFieldDefinition):
 
 
 class OneToOneFieldDefinition(ForeignKeyDefinition):
+    parent_link = fields.BooleanField(_('parent link'), default=False)
+
     objects = ForeignKeyDefinitionManager(one_to_one=True)
 
     class Meta:
         app_label = 'related'
-        proxy = True
         defined_field_class = fields.related.OneToOneField
+        defined_field_options = ('parent_link',)
 
     def save(self, *args, **kwargs):
         self.one_to_one = True

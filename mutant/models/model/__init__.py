@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
 from ... import logger
-from ...compat import get_remote_field_model
+from ...compat import get_opts_label, get_remote_field_model
 from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
@@ -169,7 +169,7 @@ class ModelDefinition(ContentType):
         for base in bases:
             assert base.pk is None, 'Cannot associate already existing BaseDefinition'
             extra_fields.extend(
-                [(f.get_attname_column()[1], f) for f in base.get_declared_fields()]
+                [(f.get_attname_column()[1], f) for f in base.get_declared_fields(fields)]
             )
             base._state._add_columns = False
             delayed_save.append(base)
@@ -386,7 +386,10 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
             return self.base.__get__()
         return self.base
 
-    def get_declared_fields(self):
+    def get_declared_fields(self, field_defs=None):
+        if field_defs is None:
+            field_defs = self.model_def.fielddefinitions.select_subclasses()
+        existing_fields = [field.construct() for field in field_defs]
         fields = []
         if issubclass(self.base, models.Model):
             opts = self.base._meta
@@ -398,7 +401,11 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
                         clone = field.clone()
                         clone.set_attributes_from_name(field.name)
                         fields.append(clone)
-            elif not opts.proxy:
+            elif not opts.proxy and not any(
+                    isinstance(field, models.OneToOneField) and
+                    field.rel.parent_link and
+                    get_remote_field_model(field) == get_opts_label(opts)
+                    for field in existing_fields):
                 # This is a concrete model base, we must declare a o2o
                 attr_name = '%s_ptr' % opts.model_name
                 parent_link = models.OneToOneField(

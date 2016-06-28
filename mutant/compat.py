@@ -13,6 +13,12 @@ if django.VERSION >= (1, 9):
             return field.remote_field.model
         else:
             return field.related_model
+
+    def get_opts_label(opts):
+        return opts.label
 else:
     def get_remote_field_model(field):
         return getattr(getattr(field, 'rel', None), 'to', None)
+
+    def get_opts_label(opts):
+        return "%s.%s" % (opts.app_label, opts.object_name)
