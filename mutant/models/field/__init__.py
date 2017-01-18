@@ -185,6 +185,8 @@ class FieldDefinition(six.with_metaclass(FieldDefinitionBase, BasePolymorphicMod
     natural_key.dependencies = ('mutant.modeldefinition',)
 
     def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.content_type = self.get_content_type()
         if self.pk:
             self._state._pre_save_field = self.get_bound_field()
         saved = super(FieldDefinition, self).save(*args, **kwargs)
