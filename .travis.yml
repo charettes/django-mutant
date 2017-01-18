@@ -20,9 +20,9 @@ env:
   - TOXENV=py27-1.10-sqlite
   - TOXENV=py27-1.10-postgresql
   - TOXENV=py27-1.10-postgis
-  - TOXENV=py27-master-sqlite
-  - TOXENV=py27-master-postgresql
-  - TOXENV=py27-master-postgis
+  - TOXENV=py27-1.11-sqlite
+  - TOXENV=py27-1.11-postgresql
+  - TOXENV=py27-1.11-postgis
   - TOXENV=py32-1.8-sqlite
   - TOXENV=py32-1.8-postgresql
   - TOXENV=py32-1.8-postgis
@@ -38,6 +38,9 @@ env:
   - TOXENV=py34-1.10-sqlite
   - TOXENV=py34-1.10-postgresql
   - TOXENV=py34-1.10-postgis
+  - TOXENV=py34-1.11-sqlite
+  - TOXENV=py34-1.11-postgresql
+  - TOXENV=py34-1.11-postgis
   - TOXENV=py34-master-sqlite
   - TOXENV=py34-master-postgresql
   - TOXENV=py34-master-postgis
@@ -58,15 +61,18 @@ matrix:
     - python: 3.5
       env: TOXENV=py35-1.10-postgis
     - python: 3.5
+      env: TOXENV=py35-1.11-sqlite
+    - python: 3.5
+      env: TOXENV=py35-1.11-postgresql
+    - python: 3.5
+      env: TOXENV=py35-1.11-postgis
+    - python: 3.5
       env: TOXENV=py35-master-sqlite
     - python: 3.5
       env: TOXENV=py35-master-postgresql
     - python: 3.5
       env: TOXENV=py35-master-postgis
   allow_failures:
-    - env: TOXENV=py27-master-sqlite
-    - env: TOXENV=py27-master-postgresql
-    - env: TOXENV=py27-master-postgis
     - env: TOXENV=py34-master-sqlite
     - env: TOXENV=py34-master-postgresql
     - env: TOXENV=py34-master-postgis
