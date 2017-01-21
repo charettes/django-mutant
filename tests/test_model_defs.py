@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from django.test.utils import CaptureQueriesContext
 from django.utils.translation import ugettext as _
 
+from mutant.compat import many_to_many_set
 from mutant.contrib.related.models import ForeignKeyDefinition
 from mutant.contrib.text.models import CharFieldDefinition
 from mutant.db.models import MutableModel
@@ -612,7 +613,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
             f2 = CharFieldDefinition.objects.create(
                 model_def=other_model_def, name='f2', max_length=25
             )
-        self.ut.field_defs = (self.f1, f2)
+        many_to_many_set(self.ut, 'field_defs', [self.f1, f2])
         self.assertRaises(ValidationError, self.ut.clean)
 
     def test_db_column(self):
@@ -620,7 +621,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         custom `db_column`. This is needed for unique FK's columns."""
         self.f2.db_column = 'f2_column'
         self.f2.save()
-        self.ut.field_defs = (self.f1, self.f2)
+        many_to_many_set(self.ut, 'field_defs', [self.f1, self.f2])
         self.f2.db_column = 'f2'
         self.f2.save()
         self.ut.delete()
@@ -633,12 +634,12 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         with captured_stderr():
             with self.assertRaises(IntegrityError):
                 with transaction.atomic():
-                    self.ut.field_defs = (self.f1, self.f2)
+                    many_to_many_set(self.ut, 'field_defs', [self.f1, self.f2])
 
     def test_cannot_insert_duplicate_row(self):
         """Inserting a duplicate rows shouldn't work."""
         self.model_class.objects.create(f1='a', f2='b')
-        self.ut.field_defs = (self.f1, self.f2)
+        many_to_many_set(self.ut, 'field_defs', [self.f1, self.f2])
         with captured_stderr():
             with self.assertRaises(IntegrityError):
                 with transaction.atomic():
@@ -647,7 +648,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
     def test_cannot_remove_unique(self):
         """Removing a unique constraint that cause duplicate rows shouldn't
         work."""
-        self.ut.field_defs = (self.f1, self.f2)
+        many_to_many_set(self.ut, 'field_defs', [self.f1, self.f2])
         self.model_class.objects.create(f1='a', f2='b')
         self.model_class.objects.create(f1='a', f2='c')
         with captured_stderr():
@@ -661,7 +662,7 @@ class UniqueTogetherDefinitionTest(BaseModelDefinitionTestCase):
         validation
         """
         self.model_class.objects.create(f1='a', f2='b')
-        self.ut.field_defs = self.f1, self.f2
+        many_to_many_set(self.ut, 'field_defs', [self.f1, self.f2])
         self.ut.field_defs.clear()
         self.model_class.objects.create(f1='a', f2='b')
 
