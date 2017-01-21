@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-import warnings
-
-import django
 from django.db import models
 from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
 
@@ -18,21 +15,7 @@ class FieldDefinitionQuerySet(PolymorphicQuerySet):
         return obj
 
 
-class FieldDefinitionManager(PolymorphicManager):
-    def get_queryset(self):
-        return FieldDefinitionQuerySet(self.model, using=self._db)
-
-    if django.VERSION < (1, 8):
-        def get_query_set(self):
-            warnings.warn(
-                "`FieldDefinitionManager.get_query_set` is deprecated, "
-                "use `get_queryset` instead.",
-                DeprecationWarning if django.VERSION >= (1, 7)
-                else PendingDeprecationWarning,
-                stacklevel=2
-            )
-            return FieldDefinitionManager.get_queryset(self)
-
+class FieldDefinitionManager(PolymorphicManager.from_queryset(FieldDefinitionQuerySet)):
     def get_by_natural_key(self, app_label, model, name):
         qs = self.select_subclasses()
         return qs.get(model_def__app_label=app_label,
@@ -58,22 +41,5 @@ class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
         return tuple(choices_from_dict(choices))
 
 
-class FieldDefinitionChoiceManager(models.Manager):
+class FieldDefinitionChoiceManager(models.Manager.from_queryset(FieldDefinitionChoiceQuerySet)):
     use_for_related_fields = True
-
-    def get_queryset(self):
-        return FieldDefinitionChoiceQuerySet(self.model, using=self._db)
-
-    if django.VERSION < (1, 8):
-        def get_query_set(self):
-            warnings.warn(
-                "`FieldDefinitionChoiceManager.get_query_set` is"
-                "deprecated, use `get_queryset` instead.",
-                DeprecationWarning if django.VERSION >= (1, 7)
-                else PendingDeprecationWarning,
-                stacklevel=2
-            )
-            return FieldDefinitionChoiceManager.get_queryset(self)
-
-    def construct(self):
-        return self.get_queryset().construct()
