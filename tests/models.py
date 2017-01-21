@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -13,6 +14,8 @@ class CustomFieldDefinition(FieldDefinition):
         app_label = 'tests'
         defined_field_category = _('Custom category')
         defined_field_description = _('Custom description')
+        if (1, 10) <= django.VERSION < (2, 0):
+            manager_inheritance_from_future = True
 
 
 class FieldDefinitionModel(models.Model):

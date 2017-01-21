@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django.db import models
 
 
@@ -21,4 +22,5 @@ class ModelDefinitionQuerySet(models.QuerySet):
 
 
 class ModelDefinitionManager(models.Manager.from_queryset(ModelDefinitionQuerySet)):
-    use_for_related_fields = True
+    if django.VERSION < (1, 10):
+        use_for_related_fields = True

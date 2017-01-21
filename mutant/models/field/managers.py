@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django.db import models
 from polymodels.managers import PolymorphicManager, PolymorphicQuerySet
 
@@ -42,4 +43,5 @@ class FieldDefinitionChoiceQuerySet(models.query.QuerySet):
 
 
 class FieldDefinitionChoiceManager(models.Manager.from_queryset(FieldDefinitionChoiceQuerySet)):
-    use_for_related_fields = True
+    if django.VERSION < (1, 10):
+        use_for_related_fields = True
