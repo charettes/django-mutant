@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
 from ... import logger
-from ...compat import get_opts_label, get_remote_field_model
+from ...compat import get_opts_label, get_remote_field, get_remote_field_model
 from ...db.deletion import CASCADE_MARK_ORIGIN
 from ...db.fields import LazilyTranslatedField, PythonIdentifierField
 from ...db.models import MutableModel
@@ -403,7 +403,7 @@ class BaseDefinition(OrderedModelDefinitionAttribute):
                         fields.append(clone)
             elif not opts.proxy and not any(
                     isinstance(field, models.OneToOneField) and
-                    field.rel.parent_link and
+                    get_remote_field(field).parent_link and
                     get_remote_field_model(field) == get_opts_label(opts)
                     for field in existing_fields):
                 # This is a concrete model base, we must declare a o2o
