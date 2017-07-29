@@ -23,7 +23,7 @@ class CacheStateHandler(object):
 
     def set_checksum(self, definition_pk, checksum):
         cache_key = self.get_cache_key(definition_pk)
-        return self.cache.set(cache_key, checksum)
+        return self.cache.set(cache_key, checksum, timeout=None)
 
     def clear_checksum(self, definition_pk):
         cache_key = self.get_cache_key(definition_pk)
