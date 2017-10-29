@@ -9,6 +9,8 @@ addons:
     packages:
       - postgresql-9.6-postgis-2.3
 
+cache: pip
+
 services:
   - redis-server
 
