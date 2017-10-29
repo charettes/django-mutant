@@ -23,12 +23,6 @@ env:
   - TOXENV=py27-1.11-sqlite
   - TOXENV=py27-1.11-postgresql
   - TOXENV=py27-1.11-postgis
-  - TOXENV=py32-1.8-sqlite
-  - TOXENV=py32-1.8-postgresql
-  - TOXENV=py32-1.8-postgis
-  - TOXENV=py33-1.8-sqlite
-  - TOXENV=py33-1.8-postgresql
-  - TOXENV=py33-1.8-postgis
   - TOXENV=py34-1.8-sqlite
   - TOXENV=py34-1.8-postgresql
   - TOXENV=py34-1.8-postgis
@@ -81,7 +75,7 @@ matrix:
     - env: TOXENV=py35-master-postgis
 
 install:
-  - pip install tox coveralls "virtualenv<14.0"
+  - pip install tox coveralls
 
 before_script:
   - if echo $TOXENV | grep -E '(-postgresql|-postgis)' -q; then psql -U postgres -c "CREATE DATABASE mutant;"; fi
