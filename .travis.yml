@@ -1,9 +1,13 @@
+dist: trusty
 sudo: no
 
 language: python
 
 addons:
-  postgresql: "9.3"
+  postgresql: "9.6"
+  apt:
+    packages:
+      - postgresql-9.6-postgis-2.3
 
 services:
   - redis-server
