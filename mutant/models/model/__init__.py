@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import pickle
 from hashlib import md5
 
+import django
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -203,7 +204,12 @@ class ModelDefinition(ContentType):
         return tuple(bases)
 
     def get_model_opts(self):
-        opts = {'app_label': self.app_label, 'managed': self.managed}
+        opts = {
+            'app_label': self.app_label,
+            'managed': self.managed,
+        }
+        if (1, 10) <= django.VERSION < (2, 0):
+            opts['manager_inheritance_from_future'] = True
         # Database table
         db_table = self.db_table
         if db_table is None:

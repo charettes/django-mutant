@@ -1,9 +1,15 @@
+dist: trusty
 sudo: no
 
 language: python
 
 addons:
-  postgresql: "9.3"
+  postgresql: "9.6"
+  apt:
+    packages:
+      - postgresql-9.6-postgis-2.3
+
+cache: pip
 
 services:
   - redis-server
@@ -11,43 +17,72 @@ services:
 env:
   - TOXENV=flake8
   - TOXENV=isort
-  - TOXENV=py27-1.8-sqlite
-  - TOXENV=py27-1.8-postgresql
-  - TOXENV=py27-1.8-postgis
-  - TOXENV=py27-1.9-sqlite
-  - TOXENV=py27-1.9-postgresql
-  - TOXENV=py27-1.9-postgis
-  - TOXENV=py27-1.10-sqlite
-  - TOXENV=py27-1.10-postgresql
-  - TOXENV=py27-1.10-postgis
-  - TOXENV=py27-1.11-sqlite
-  - TOXENV=py27-1.11-postgresql
-  - TOXENV=py27-1.11-postgis
-  - TOXENV=py32-1.8-sqlite
-  - TOXENV=py32-1.8-postgresql
-  - TOXENV=py32-1.8-postgis
-  - TOXENV=py33-1.8-sqlite
-  - TOXENV=py33-1.8-postgresql
-  - TOXENV=py33-1.8-postgis
-  - TOXENV=py34-1.8-sqlite
-  - TOXENV=py34-1.8-postgresql
-  - TOXENV=py34-1.8-postgis
-  - TOXENV=py34-1.9-sqlite
-  - TOXENV=py34-1.9-postgresql
-  - TOXENV=py34-1.9-postgis
-  - TOXENV=py34-1.10-sqlite
-  - TOXENV=py34-1.10-postgresql
-  - TOXENV=py34-1.10-postgis
-  - TOXENV=py34-1.11-sqlite
-  - TOXENV=py34-1.11-postgresql
-  - TOXENV=py34-1.11-postgis
-  - TOXENV=py34-master-sqlite
-  - TOXENV=py34-master-postgresql
-  - TOXENV=py34-master-postgis
 
 matrix:
   fast_finish: true
   include:
+    - python: 2.7
+      env: TOXENV=py27-1.8-sqlite
+    - python: 2.7
+      env: TOXENV=py27-1.8-postgresql
+    - python: 2.7
+      env: TOXENV=py27-1.8-postgis
+    - python: 2.7
+      env: TOXENV=py27-1.9-sqlite
+    - python: 2.7
+      env: TOXENV=py27-1.9-postgresql
+    - python: 2.7
+      env: TOXENV=py27-1.9-postgis
+    - python: 2.7
+      env: TOXENV=py27-1.10-sqlite
+    - python: 2.7
+      env: TOXENV=py27-1.10-postgresql
+    - python: 2.7
+      env: TOXENV=py27-1.10-postgis
+    - python: 2.7
+      env: TOXENV=py27-1.11-sqlite
+    - python: 2.7
+      env: TOXENV=py27-1.11-postgresql
+    - python: 2.7
+      env: TOXENV=py27-1.11-postgis
+
+    - python: 3.4
+      env: TOXENV=py34-1.8-sqlite
+    - python: 3.4
+      env: TOXENV=py34-1.8-postgresql
+    - python: 3.4
+      env: TOXENV=py34-1.8-postgis
+    - python: 3.4
+      env: TOXENV=py34-1.9-sqlite
+    - python: 3.4
+      env: TOXENV=py34-1.9-postgresql
+    - python: 3.4
+      env: TOXENV=py34-1.9-postgis
+    - python: 3.4
+      env: TOXENV=py34-1.10-sqlite
+    - python: 3.4
+      env: TOXENV=py34-1.10-postgresql
+    - python: 3.4
+      env: TOXENV=py34-1.10-postgis
+    - python: 3.4
+      env: TOXENV=py34-1.11-sqlite
+    - python: 3.4
+      env: TOXENV=py34-1.11-postgresql
+    - python: 3.4
+      env: TOXENV=py34-1.11-postgis
+    - python: 3.4
+      env: TOXENV=py34-2.0-sqlite
+    - python: 3.4
+      env: TOXENV=py34-2.0-postgresql
+    - python: 3.4
+      env: TOXENV=py34-2.0-postgis
+
+    - python: 3.5
+      env: TOXENV=py35-1.8-sqlite
+    - python: 3.5
+      env: TOXENV=py35-1.8-postgresql
+    - python: 3.5
+      env: TOXENV=py35-1.8-postgis
     - python: 3.5
       env: TOXENV=py35-1.9-sqlite
     - python: 3.5
@@ -67,21 +102,55 @@ matrix:
     - python: 3.5
       env: TOXENV=py35-1.11-postgis
     - python: 3.5
+      env: TOXENV=py35-2.0-sqlite
+    - python: 3.5
+      env: TOXENV=py35-2.0-postgresql
+    - python: 3.5
+      env: TOXENV=py35-2.0-postgis
+    - python: 3.5
       env: TOXENV=py35-master-sqlite
     - python: 3.5
       env: TOXENV=py35-master-postgresql
     - python: 3.5
       env: TOXENV=py35-master-postgis
+
+    - python: 3.6
+      env: TOXENV=py36-1.11-sqlite
+    - python: 3.6
+      env: TOXENV=py36-1.11-postgresql
+    - python: 3.6
+      env: TOXENV=py36-1.11-postgis
+    - python: 3.6
+      env: TOXENV=py36-2.0-sqlite
+    - python: 3.6
+      env: TOXENV=py36-2.0-postgresql
+    - python: 3.6
+      env: TOXENV=py36-2.0-postgis
+    - python: 3.6
+      env: TOXENV=py36-master-sqlite
+    - python: 3.6
+      env: TOXENV=py36-master-postgresql
+    - python: 3.6
+      env: TOXENV=py36-master-postgis
   allow_failures:
-    - env: TOXENV=py34-master-sqlite
-    - env: TOXENV=py34-master-postgresql
-    - env: TOXENV=py34-master-postgis
+    - env: TOXENV=py34-2.0-sqlite
+    - env: TOXENV=py34-2.0-postgresql
+    - env: TOXENV=py34-2.0-postgis
+    - env: TOXENV=py35-2.0-sqlite
+    - env: TOXENV=py35-2.0-postgresql
+    - env: TOXENV=py35-2.0-postgis
+    - env: TOXENV=py36-2.0-sqlite
+    - env: TOXENV=py36-2.0-postgresql
+    - env: TOXENV=py36-2.0-postgis
     - env: TOXENV=py35-master-sqlite
     - env: TOXENV=py35-master-postgresql
     - env: TOXENV=py35-master-postgis
+    - env: TOXENV=py36-master-sqlite
+    - env: TOXENV=py36-master-postgresql
+    - env: TOXENV=py36-master-postgis
 
 install:
-  - pip install tox coveralls "virtualenv<14.0"
+  - pip install tox coveralls
 
 before_script:
   - if echo $TOXENV | grep -E '(-postgresql|-postgis)' -q; then psql -U postgres -c "CREATE DATABASE mutant;"; fi
