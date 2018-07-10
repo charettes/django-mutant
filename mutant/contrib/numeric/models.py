@@ -10,6 +10,13 @@ class _NumericMeta:
     defined_field_category = _('Numeric')
 
 
+class BigAutoFieldDefinition(FieldDefinition):
+    class Meta(_NumericMeta):
+        app_label = 'numeric'
+        proxy = True
+        defined_field_class = fields.BigAutoField
+
+
 class SmallIntegerFieldDefinition(FieldDefinition):
     class Meta(_NumericMeta):
         app_label = 'numeric'
