@@ -6,12 +6,10 @@ from hashlib import md5
 import django
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, FieldDoesNotExist
 from django.db import models
 from django.db.migrations.state import ModelState
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.fields import FieldDoesNotExist
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from picklefield.fields import PickledObjectField
 
@@ -133,7 +131,6 @@ class MutableModelProxy(object):
         return (_model_class_from_pk, model._definition)
 
 
-@python_2_unicode_compatible
 class ModelDefinition(ContentType):
     object_name = PythonIdentifierField(_('object name'))
     db_table = models.CharField(
@@ -269,7 +266,7 @@ class ModelDefinition(ContentType):
 
         identifier = (
             self.pk, self.object_name, state.options, dict(
-                (name, field.deconstruct()) for name, field in state.fields
+                (name, field.deconstruct()) for name, field in state.fields.items()
             ), [
                 MutableModelProxy(base).checksum()
                 if base is not MutableModel and issubclass(base, MutableModel) else base
@@ -463,7 +460,6 @@ class OrderingFieldDefinition(OrderedModelDefinitionAttribute):
         return ("-%s" % self.lookup) if self.descending else self.lookup
 
 
-@python_2_unicode_compatible
 class UniqueTogetherDefinition(ModelDefinitionAttribute):
     field_defs = models.ManyToManyField(
         'FieldDefinition', related_name='unique_together_defs'

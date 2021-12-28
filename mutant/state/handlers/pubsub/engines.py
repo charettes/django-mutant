@@ -6,7 +6,11 @@ import math
 import time
 from threading import Thread
 
-import redis
+try:
+    import redis
+except ImportError:
+    redis = None
+
 from django.utils.encoding import force_str
 
 logger = logging.getLogger(__name__)

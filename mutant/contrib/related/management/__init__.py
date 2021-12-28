@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.db.models import Q
 from django.db.models.fields.related import RelatedField
-from django.utils.six import string_types
+from six import string_types
 
 from ....compat import get_remote_field_model
 from ....db.models import MutableModel

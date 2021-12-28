@@ -18,3 +18,5 @@ INSTALLED_APPS = [
 ]
 
 SILENCED_SYSTEM_CHECKS = ['1_7.W001']
+
+from .postgresql_psycopg2 import *

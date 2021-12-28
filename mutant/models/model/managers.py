@@ -10,12 +10,12 @@ class ModelDefinitionQuerySet(models.QuerySet):
         # bases and fields to be passed to ModelDefinition's initializer.
         bases = defaults.pop('bases', None)
         fields = defaults.pop('fields', None)
-        lookup, params = super(ModelDefinitionQuerySet, self)._extract_model_params(defaults, **kwargs)
+        params = super(ModelDefinitionQuerySet, self)._extract_model_params(defaults, **kwargs)
         if bases is not None:
             params['bases'] = bases
         if fields is not None:
             params['fields'] = fields
-        return lookup, params
+        return params
 
     def get_by_natural_key(self, app_label, model):
         return self.get(app_label=app_label, model=model)

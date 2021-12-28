@@ -105,9 +105,7 @@ class ModelDefinitionTest(BaseModelDefinitionTestCase):
 
     def test_fixture_loading(self):
         """Make model and field definitions can be loaded from fixtures."""
-        call_command(
-            'loaddata', 'fixture_loading_test', verbosity=0, commit=False
-        )
+        call_command('loaddata', 'fixture_loading_test', verbosity=0)
         self.assertTrue(
             ModelDefinition.objects.filter(
                 app_label='tests', object_name='MyFixtureModel'

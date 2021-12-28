@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, FieldDoesNotExist
 from django.db.models import fields
-from django.db.models.fields import FieldDoesNotExist
+
 from django.db.models.signals import class_prepared
-from django.utils import six
+import six
 
 from ...compat import get_remote_field_model
 from ...models import ModelDefinition

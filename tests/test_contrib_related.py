@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 from unittest import skip
 
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, FieldDoesNotExist
 from django.core.management import call_command
 from django.db.models.deletion import ProtectedError
-from django.db.models.fields import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
 from mutant.compat import get_remote_field_model
@@ -138,10 +137,7 @@ class ForeignKeyDefinitionTest(RelatedFieldDefinitionTestMixin,
 
     def test_fixture_loading(self):
         with app_cache_restorer():
-            call_command(
-                'loaddata', 'test_fk_to_loading.json',
-                verbosity=0, commit=False
-            )
+            call_command('loaddata', 'test_fk_to_loading.json', verbosity=0)
         to_model_def = ModelDefinition.objects.get_by_natural_key(
             'tests', 'tomodel'
         )

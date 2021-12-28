@@ -8,7 +8,7 @@ from operator import itemgetter
 
 from django.apps import AppConfig, apps
 from django.db import connections, models, router
-from django.utils import six
+import six
 from django.utils.encoding import force_text
 from django.utils.functional import lazy
 

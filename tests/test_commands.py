@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.core.serializers.base import DeserializationError
 from django.core.serializers.json import Serializer as JSONSerializer
 from django.utils.encoding import force_bytes
-from django.utils.six import StringIO
+from six import StringIO
 
 from mutant.utils import remove_from_app_cache
 
@@ -26,9 +26,7 @@ class DumpDataTestCase(DataCommandTestCase):
         # actually testing it's correctly loaded.
         output = StringIO()
         remove_from_app_cache(self.model_cls)
-        call_command(
-            'dumpdata', str(self.model_def), stdout=output, commit=False
-        )
+        call_command('dumpdata', str(self.model_def), stdout=output)
         output.seek(0)
         return json.load(output)
 
@@ -75,9 +73,7 @@ class LoadDataTestCase(DataCommandTestCase):
         with NamedTemporaryFile(suffix='.json') as stream:
             self.serializer.serialize([instance], stream=BytesWritter(stream))
             stream.seek(0)
-            call_command(
-                'loaddata', stream.name, stdout=StringIO(), commit=False
-            )
+            call_command('loaddata', stream.name, stdout=StringIO())
         self.assertTrue(self.model_cls.objects.filter(pk=instance.pk).exists())
 
     def test_invalid_model_idenfitier_raises(self):

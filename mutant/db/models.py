@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.migrations.state import ModelState, StateApps
-from django.utils.six import string_types
+from six import string_types
 from django.utils.translation import ugettext_lazy as _
 
 from .. import logger
@@ -41,7 +41,7 @@ class MutableModel(models.Model):
     @classmethod
     def get_related_model_states(cls, model_state):
         model_states = {}
-        for _name, field in model_state.fields:
+        for _name, field in model_state.fields.items():
             related_model_reference = get_remote_field_model(field)
             if related_model_reference:
                 related_model = cls._meta.apps.get_model(related_model_reference)

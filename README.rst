@@ -4,15 +4,14 @@ django-mutant
 
 Dynamic model definition and alteration (evolving schemas).
 
-.. image:: https://travis-ci.org/charettes/django-mutant.svg?branch=master
-    :target: https://travis-ci.org/charettes/django-mutant
-
-.. image:: https://coveralls.io/repos/charettes/django-mutant/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/charettes/django-mutant?branch=master
-
 ********
 Overview
 ********
+
+This is a fork of the repository created by Simon Charette, my contribution on top has been to make it compatible with
+the latest version of Django (3.1) and python 3.8
+
+Information below is the orignial readme file:
 
 `Django`_ provides a great ORM and with the power of `migrations`_ one can easily perform schema alteration.
 

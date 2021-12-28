@@ -165,7 +165,8 @@ class FieldDefinitionTestMixin(object):
         instance = model_class.objects.get()
         self.assertEqual(self.get_field_value(instance, 'renamed_field'), value)
         # The old field shouldn't be accessible anymore
-        msg = "'field' is an invalid keyword argument for this function"
+        msg = "Model() got an unexpected keyword argument 'field'"
+        #msg = "'field' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg, model_class, field=value)
         # It should be possible to create objects using the new field name
         model_class.objects.create(renamed_field=value)
@@ -181,7 +182,8 @@ class FieldDefinitionTestMixin(object):
             self.field.delete()
         self.assertModelTablesColumnDoesntExists(model_class, field_column_name)
         # The deleted field shouldn't be accessible anymore
-        msg = "'field' is an invalid keyword argument for this function"
+        msg = "Model() got an unexpected keyword argument 'field'"
+        # msg = "'field' is an invalid keyword argument for this function"
         self.assertRaisesMessage(TypeError, msg, model_class, field=value)
 
     def test_field_unique(self):
